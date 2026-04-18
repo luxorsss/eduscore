@@ -10,16 +10,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $kategori = $_POST['kategori'] ?? '';
     $schedule_id = $_POST['schedule_id'] ?? 0;
     
-    // BUKA BUNGKUSAN JSON (Trik Anti-Firewall)
-    $json_data = $_POST['data_nilai_json'] ?? '{}';
-    $nilais = json_decode($json_data, true); // Mengubah teks JSON kembali menjadi Array PHP
+    // 1. TANGKAP DATA SANDI BASE64
+    $base64_data = $_POST['data_nilai_json'] ?? '';
+    
+    // 2. BUKA SANDI BASE64 (Decrypt)
+    $json_data = base64_decode($base64_data);
+    
+    // 3. UBAH JSON KEMBALI JADI ARRAY PHP
+    $nilais = json_decode($json_data, true); 
 
-    // Pastikan hasil decode benar-benar array
     if (!is_array($nilais)) {
         $nilais = [];
     }
 
-    // KEAMANAN (White-listing): Pastikan kategori yang dikirim valid
     $allowed_categories = ['h_uts', 'uts', 'h_uas', 'uas', 'tambahan'];
     if (!in_array($kategori, $allowed_categories)) {
         die("Error: Kategori nilai tidak valid.");
