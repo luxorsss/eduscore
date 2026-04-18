@@ -170,7 +170,6 @@ require_once '../components/header.php';
         // 1. Ubah jadi teks JSON
         const jsonString = JSON.stringify(paketNilai);
         
-        // 2. ENKRIPSI KE BASE64 (Ini yang akan mengecoh Firewall Plesk)
         const base64String = btoa(jsonString);
         
         // 3. Masukkan ke input tersembunyi
