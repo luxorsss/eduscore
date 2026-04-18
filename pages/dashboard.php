@@ -6,14 +6,42 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
+// 1. Panggil koneksi database
+require_once '../config/koneksi.php'; 
+$user_id = $_SESSION['user_id'];
+
+// 2. Tarik Data KELAS berdasarkan Jadwal Guru ini
+$stmt_kelas = $pdo->prepare("
+    SELECT DISTINCT c.id, c.nama_kelas 
+    FROM teaching_schedules ts 
+    JOIN classes c ON ts.class_id = c.id 
+    WHERE ts.user_id = ?
+");
+$stmt_kelas->execute([$user_id]);
+$kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
+
+// 3. Tarik Data MAPEL berdasarkan Jadwal Guru ini
+$stmt_mapel = $pdo->prepare("
+    SELECT DISTINCT s.id, s.nama_mapel 
+    FROM teaching_schedules ts 
+    JOIN subjects s ON ts.subject_id = s.id 
+    WHERE ts.user_id = ?
+");
+$stmt_mapel->execute([$user_id]);
+$mapel_list = $stmt_mapel->fetchAll(PDO::FETCH_ASSOC);
 
 $page_title = "EduScore - Dashboard Pengajar";
-require_once '../components/header.php'; 
+require_once '../components/header.php';
 ?>
 
     <nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
+
+                <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-colors mr-1">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+
                 <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary">
                     <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">school</span>
                 </div>
@@ -65,21 +93,31 @@ require_once '../components/header.php';
 
                 <div class="flex flex-col gap-2">
                     <label class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant" for="kelas">Kelas</label>
-                    <select id="kelas" name="kelas" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-md border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3.5 transition-colors cursor-pointer font-medium">
+                    <select id="kelas" name="kelas" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-md border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3.5 transition-colors cursor-pointer font-medium" required>
                         <option value="" disabled selected>-- Pilih Kelas --</option>
-                        <option value="7a">7A Reguler</option>
-                        <option value="7b">7B Reguler</option>
-                        <option value="10ipa1">10 IPA 1</option>
+                        
+                        <?php foreach ($kelas_list as $k): ?>
+                            <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
+                        <?php endforeach; ?>
+                        
+                        <?php if(empty($kelas_list)): ?>
+                            <option value="" disabled>Belum ada jadwal kelas. Atur di menu Jadwal.</option>
+                        <?php endif; ?>
                     </select>
                 </div>
 
                 <div class="flex flex-col gap-2">
                     <label class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant" for="mapel">Mata Pelajaran</label>
-                    <select id="mapel" name="mapel" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-md border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3.5 transition-colors cursor-pointer font-medium">
+                    <select id="mapel" name="mapel" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-md border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3.5 transition-colors cursor-pointer font-medium" required>
                         <option value="" disabled selected>-- Pilih Mata Pelajaran --</option>
-                        <option value="mtk">Matematika</option>
-                        <option value="ipa">Ilmu Pengetahuan Alam</option>
-                        <option value="fisika">Fisika</option>
+                        
+                        <?php foreach ($mapel_list as $m): ?>
+                            <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
+                        <?php endforeach; ?>
+                        
+                        <?php if(empty($mapel_list)): ?>
+                            <option value="" disabled>Belum ada jadwal mapel.</option>
+                        <?php endif; ?>
                     </select>
                 </div>
 

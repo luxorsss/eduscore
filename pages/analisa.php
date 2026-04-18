@@ -15,6 +15,9 @@ require_once '../components/header.php';
     <nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-colors mr-1">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
                 <a href="dashboard.php" class="md:hidden w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface hover:bg-outline-variant/30 transition mr-2" title="Kembali ke Dashboard">
                     <span class="material-symbols-outlined text-sm">home</span>
                 </a>

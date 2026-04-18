@@ -15,9 +15,12 @@ require_once '../components/header.php';
     <nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <a href="dashboard.php" class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface hover:bg-outline-variant/30 transition mr-2">
-                    <span class="material-symbols-outlined text-sm">home</span>
-                </a>
+                <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-colors mr-1">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary hidden md:flex">
+                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">school</span>
+                </div>
                 <span class="font-headline font-bold text-primary tracking-tight text-lg">EduScore</span>
                 <span class="text-on-surface-variant ml-2 text-sm font-medium hidden md:block">| Data Induk Siswa</span>
             </div>
