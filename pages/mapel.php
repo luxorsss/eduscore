@@ -15,6 +15,26 @@ $page_title = "EduScore - Mata Pelajaran";
 require_once '../components/header.php'; 
 ?>
 
+<nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-colors mr-1">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary hidden md:flex">
+                <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">open_in_new</span>
+            </div>
+            <span class="font-headline font-bold text-primary tracking-tight text-lg">EduScore</span>
+            <span class="text-on-surface-variant ml-2 text-sm font-medium hidden md:block">| Manajemen Mata Pelajaran</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="w-8 h-8 rounded-full bg-[#d6e3ff] text-primary flex items-center justify-center font-bold text-sm">
+                <?= strtoupper(substr($_SESSION['nama_lengkap'], 0, 2)); ?>
+            </div>
+        </div>
+    </div>
+</nav>
+
 <main class="flex-grow max-w-5xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6">
     <div>
         <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary mb-1">Daftar Mata Pelajaran</h1>
