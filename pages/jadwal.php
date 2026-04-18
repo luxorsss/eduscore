@@ -1,9 +1,32 @@
 <?php
 session_start();
+require_once '../config/koneksi.php';
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
+
+$user_id = $_SESSION['user_id'];
+
+// 1. Ambil Semua Data Kelas untuk Dropdown
+$stmt_kelas = $pdo->query("SELECT * FROM classes ORDER BY jenjang, nama_kelas");
+$semua_kelas = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
+
+// 2. Ambil Semua Data Mapel untuk Dropdown
+$stmt_mapel = $pdo->query("SELECT * FROM subjects ORDER BY nama_mapel");
+$semua_mapel = $stmt_mapel->fetchAll(PDO::FETCH_ASSOC);
+
+// 3. Ambil Jadwal Aktif Milik Guru Ini
+$stmt_jadwal = $pdo->prepare("
+    SELECT ts.id as jadwal_id, c.nama_kelas, s.nama_mapel 
+    FROM teaching_schedules ts
+    JOIN classes c ON ts.class_id = c.id
+    JOIN subjects s ON ts.subject_id = s.id
+    WHERE ts.user_id = ?
+");
+$stmt_jadwal->execute([$user_id]);
+$jadwal_aktif = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
 
 $page_title = "EduScore - Jadwal Mengajar";
 require_once '../components/header.php'; 
@@ -43,13 +66,15 @@ require_once '../components/header.php';
                 </h2>
                 
                 <form action="proses_jadwal.php" method="POST" class="flex flex-col gap-4">
+                    <input type="hidden" name="aksi" value="tambah">
+                    
                     <div class="flex flex-col gap-2">
                         <label class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Pilih Kelas</label>
                         <select name="class_id" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-lg border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3 transition-colors cursor-pointer" required>
                             <option value="" disabled selected>-- Daftar Kelas --</option>
-                            <option value="1">10 IPA 1</option>
-                            <option value="2">10 IPA 2</option>
-                            <option value="3">10 IPS 1</option>
+                            <?php foreach($semua_kelas as $k): ?>
+                                <option value="<?= $k['id'] ?>"><?= $k['jenjang'] ?> - <?= $k['nama_kelas'] ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
@@ -57,9 +82,9 @@ require_once '../components/header.php';
                         <label class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Pilih Mata Pelajaran</label>
                         <select name="subject_id" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-lg border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3 transition-colors cursor-pointer" required>
                             <option value="" disabled selected>-- Daftar Mata Pelajaran --</option>
-                            <option value="1">Fisika</option>
-                            <option value="2">Matematika</option>
-                            <option value="3">Biologi</option>
+                            <?php foreach($semua_mapel as $m): ?>
+                                <option value="<?= $m['id'] ?>"><?= $m['nama_mapel'] ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
@@ -74,48 +99,39 @@ require_once '../components/header.php';
             <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden flex flex-col h-full">
                 <div class="p-5 border-b border-outline-variant/20 bg-surface-container-low flex justify-between items-center">
                     <h2 class="font-bold text-on-surface">Jadwal Mengajar Saya Saat Ini</h2>
-                    <span class="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded">2 Jadwal Aktif</span>
+                    <span class="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded"><?= count($jadwal_aktif) ?> Jadwal Aktif</span>
                 </div>
 
                 <div class="p-5 flex flex-col gap-3">
                     
-                    <div class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/30 hover:border-primary/50 hover:shadow-md transition-all group bg-surface">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                                <span class="material-symbols-outlined">science</span>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-on-surface text-lg">Fisika</h3>
-                                <p class="text-sm font-medium text-on-surface-variant flex items-center gap-1 mt-0.5">
-                                    <span class="material-symbols-outlined text-[16px]">meeting_room</span> 
-                                    Kelas 10 IPA 1
-                                </p>
-                            </div>
+                    <?php if(empty($jadwal_aktif)): ?>
+                        <div class="flex flex-col items-center justify-center py-10 text-center opacity-60">
+                            <span class="material-symbols-outlined text-5xl mb-3">calendar_add_on</span>
+                            <p class="font-medium">Belum ada jadwal mengajar.<br>Silakan tambah kelas dan mapel di samping.</p>
                         </div>
-                        <button class="text-on-surface-variant hover:text-error hover:bg-error-container p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Hapus Jadwal">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
-                    </div>
-
-                    <div class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/30 hover:border-primary/50 hover:shadow-md transition-all group bg-surface">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                                <span class="material-symbols-outlined">calculate</span>
+                    <?php else: ?>
+                        <?php foreach($jadwal_aktif as $jadwal): ?>
+                            <div class="flex items-center justify-between p-4 rounded-xl border border-outline-variant/30 hover:border-primary/50 hover:shadow-md transition-all group bg-surface">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                                        <span class="material-symbols-outlined">book</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-on-surface text-lg"><?= htmlspecialchars($jadwal['nama_mapel']) ?></h3>
+                                        <p class="text-sm font-medium text-on-surface-variant flex items-center gap-1 mt-0.5">
+                                            <span class="material-symbols-outlined text-[16px]">meeting_room</span> 
+                                            Kelas <?= htmlspecialchars($jadwal['nama_kelas']) ?>
+                                        </p>
+                                    </div>
+                                </div>
+                                <a href="proses_jadwal.php?hapus=<?= $jadwal['jadwal_id'] ?>" onclick="return confirm('Hapus jadwal ini?')" class="text-on-surface-variant hover:text-error hover:bg-error-container p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Hapus Jadwal">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </a>
                             </div>
-                            <div>
-                                <h3 class="font-bold text-on-surface text-lg">Matematika</h3>
-                                <p class="text-sm font-medium text-on-surface-variant flex items-center gap-1 mt-0.5">
-                                    <span class="material-symbols-outlined text-[16px]">meeting_room</span> 
-                                    Kelas 10 IPA 1
-                                </p>
-                            </div>
-                        </div>
-                        <button class="text-on-surface-variant hover:text-error hover:bg-error-container p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Hapus Jadwal">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
-                    </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
 
-                    </div>
+                </div>
             </div>
         </div>
         
