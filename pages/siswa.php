@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Ambil Data Siswa + Nama Kelasnya (Mendeteksi yang Tanpa Kelas dengan LEFT JOIN)
+// Ambil Data Siswa (LEFT JOIN agar yang tidak punya kelas tetap muncul)
 $sql = "SELECT s.*, c.nama_kelas 
         FROM students s 
         LEFT JOIN classes c ON s.class_id = c.id 
@@ -40,7 +40,7 @@ require_once '../components/header.php';
     </div>
 </nav>
 
-<main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6">
+<main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6 relative">
     
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
         <div>
@@ -54,7 +54,7 @@ require_once '../components/header.php';
                 <input type="text" id="searchInput" class="w-full bg-surface-container-lowest border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg pl-10 pr-4 py-2 text-sm font-medium shadow-sm transition-all" placeholder="Cari nama siswa...">
             </div>
             
-            <select id="filterKelas" class="w-full sm:w-auto bg-surface-container-lowest text-on-surface text-sm rounded-lg border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary px-3 py-2 font-medium shadow-sm">
+            <select id="filterKelas" class="w-full sm:w-auto bg-surface-container-lowest text-on-surface text-sm rounded-lg border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary px-3 py-2 font-medium shadow-sm cursor-pointer">
                 <option value="">Semua Kelas</option>
                 <option value="Tanpa Kelas">⚠️ Tanpa Kelas</option>
                 <?php foreach($list_kelas as $lk): ?>
@@ -65,7 +65,7 @@ require_once '../components/header.php';
     </div>
 
     <form action="proses_bulk_siswa.php" method="POST">
-        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden relative">
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden relative pb-16 md:pb-0">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse min-w-[500px]">
                     <thead class="bg-surface-container-low text-xs uppercase font-semibold text-on-surface-variant border-b border-outline-variant/20">
@@ -81,16 +81,15 @@ require_once '../components/header.php';
                     
                     <tbody id="tabelDataSiswa" class="text-sm divide-y divide-outline-variant/10">
                         <?php foreach ($daftar_siswa as $s): ?>
-                        <?php 
-                            $nama_kelas_label = !empty($s['nama_kelas']) ? htmlspecialchars($s['nama_kelas']) : "Tanpa Kelas"; 
-                        ?>
+                        <?php $nama_kelas_label = !empty($s['nama_kelas']) ? htmlspecialchars($s['nama_kelas']) : "Tanpa Kelas"; ?>
+                        
                         <tr class="student-row hover:bg-surface-container-low/50 group transition-colors" data-nama="<?= strtolower(htmlspecialchars($s['nama'])) ?>" data-kelas="<?= strtolower($nama_kelas_label) ?>">
                             <td class="px-4 py-4 text-center">
-                                <input type="checkbox" name="id_hapus[]" value="<?= $s['id'] ?>" class="cb-siswa rounded text-primary border-outline-variant/50 w-4 h-4">
+                                <input type="checkbox" name="id_hapus[]" value="<?= $s['id'] ?>" class="cb-siswa rounded text-primary border-outline-variant/50 w-4 h-4 cursor-pointer">
                             </td>
                             <td class="px-4 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                    <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
                                         <?= strtoupper(substr($s['nama'], 0, 2)); ?>
                                     </div>
                                     <span class="font-bold text-base"><?= htmlspecialchars($s['nama']) ?></span>
@@ -108,7 +107,7 @@ require_once '../components/header.php';
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-4 text-center">
-                                <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="return confirm('Hapus siswa ini?')" class="text-error opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="return confirm('Hapus siswa ini?')" class="text-error opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-error-container rounded-lg">
                                     <span class="material-symbols-outlined text-[18px]">delete</span>
                                 </a>
                             </td>
@@ -117,7 +116,7 @@ require_once '../components/header.php';
                     </tbody>
 
                     <tbody id="containerInputSiswa" class="text-sm divide-y divide-outline-variant/10">
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
 
@@ -131,15 +130,33 @@ require_once '../components/header.php';
             </div>
         </div>
 
-        <div id="bulkActionBar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-surface-container-lowest border border-outline-variant/30 shadow-lg rounded-2xl px-5 py-3 flex items-center gap-5 transition-all duration-300 translate-y-24 opacity-0 z-50">
-            <span class="text-sm font-bold text-on-surface"><span id="selectedCount">0</span> Siswa Terpilih</span>
-            <button type="submit" name="aksi" value="hapus_massal" onclick="return confirm('Yakin ingin menghapus?')" class="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-error hover:bg-error-container rounded-lg transition-colors">
-                <span class="material-symbols-outlined text-[18px]">delete</span> Hapus Massal
+        <div id="bulkActionBar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-surface-container-lowest border border-outline-variant/30 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl px-5 py-3 flex flex-wrap items-center justify-center gap-3 md:gap-5 transition-all duration-300 translate-y-32 opacity-0 z-50 w-[95%] md:w-auto">
+            
+            <span class="text-sm font-bold text-on-surface whitespace-nowrap"><span id="selectedCount" class="text-primary font-black text-lg">0</span> Terpilih</span>
+            
+            <div class="hidden md:block w-px h-6 bg-outline-variant/30"></div>
+
+            <div class="flex items-center gap-2">
+                <select name="target_class_id" class="text-xs font-bold rounded-lg border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary py-2 pl-3 pr-8 bg-surface text-on-surface cursor-pointer">
+                    <option value="" disabled selected>-- Pindah ke Kelas --</option>
+                    <?php foreach($list_kelas as $lk): ?>
+                        <option value="<?= $lk['id'] ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" name="aksi" value="pindah_massal" onclick="return confirm('Yakin pindahkan siswa yang dicentang ke kelas tersebut?')" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-primary text-on-primary rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[16px]">move_up</span> Pindah
+                </button>
+            </div>
+
+            <div class="w-px h-6 bg-outline-variant/30"></div>
+
+            <button type="submit" name="aksi" value="hapus_massal" onclick="return confirm('Yakin ingin menghapus siswa beserta riwayat nilainya?')" class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-error hover:bg-error-container hover:text-error rounded-lg transition-colors whitespace-nowrap">
+                <span class="material-symbols-outlined text-[16px]">delete</span> Hapus
             </button>
         </div>
     </form>
 
-    <div class="mt-8 bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden">
+    <div class="mt-2 bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden mb-10">
         <div class="p-5 border-b border-outline-variant/20 bg-surface-container-low flex justify-between items-center">
             <div>
                 <h2 class="font-bold text-lg text-primary flex items-center gap-2">
@@ -150,19 +167,17 @@ require_once '../components/header.php';
             </div>
         </div>
         <form action="proses_bulk_siswa.php" method="POST" class="p-5 flex flex-col gap-4">
-            <textarea name="data_copas" rows="5" class="w-full bg-surface-container-highest border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl p-4 text-sm font-mono text-on-surface" 
-            placeholder="Contoh:&#10;Budi-Santoso, 10 IPA 1&#10;Siti Nurhaliza-Putri, 10 IPA 1&#10;Andi Wijaya, 10 IPA 2" required></textarea>
+            <textarea name="data_copas" rows="4" class="w-full bg-surface-container-highest border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl p-4 text-sm font-mono text-on-surface leading-relaxed" placeholder="Contoh:&#10;Budi-Santoso, 10 IPA 1&#10;Siti Nurhaliza, 10 IPA 1" required></textarea>
             
-            <button type="submit" name="aksi" value="copas_massal" class="bg-tertiary text-on-primary px-6 py-3 rounded-xl font-bold shadow-md hover:bg-tertiary/90 w-fit flex items-center gap-2 transition-transform hover:scale-105">
-                <span class="material-symbols-outlined text-[18px]">fact_check</span>
-                Simpan Data Massal
+            <button type="submit" name="aksi" value="copas_massal" class="bg-tertiary text-on-primary px-6 py-2.5 rounded-xl font-bold shadow-md hover:bg-tertiary/90 w-fit flex items-center gap-2 transition-transform hover:scale-105">
+                <span class="material-symbols-outlined text-[18px]">fact_check</span> Simpan Data Copas
             </button>
         </form>
     </div>
 </main>
 
 <script>
-    // --- 1. FITUR LIVE SEARCH & FILTER KELAS ---
+    // 1. LIVE SEARCH & FILTER KELAS
     const searchInput = document.getElementById('searchInput');
     const filterKelas = document.getElementById('filterKelas');
     const studentRows = document.querySelectorAll('.student-row');
@@ -175,29 +190,26 @@ require_once '../components/header.php';
             const namaSiswa = row.getAttribute('data-nama');
             const kelasSiswa = row.getAttribute('data-kelas');
 
-            // Cek apakah nama cocok DENGAN pencarian DAN kelas cocok dengan dropdown
             const matchesSearch = namaSiswa.includes(querySearch);
             const matchesKelas = queryKelas === "" || kelasSiswa === queryKelas;
 
             if (matchesSearch && matchesKelas) {
-                row.style.display = ''; // Munculkan baris
+                row.style.display = '';
             } else {
-                row.style.display = 'none'; // Sembunyikan baris
+                row.style.display = 'none';
             }
         });
     }
 
-    // Jalankan filter tiap kali ngetik atau milih dropdown
     searchInput.addEventListener('input', filterData);
     filterKelas.addEventListener('change', filterData);
 
 
-    // --- 2. FITUR TAMBAH BARIS INPUT MASSAL ---
+    // 2. TAMBAH BARIS MANUAL (Tanpa NIS)
     function tambahBarisInput() {
         const container = document.getElementById('containerInputSiswa');
         const row = document.createElement('tr');
         row.className = "bg-primary/5 border-t-2 border-primary/20";
-        // Perhatikan: Kolom NIS sudah dicabut dari HTML baris baru ini
         row.innerHTML = `
             <td class="px-4 py-4 text-center">
                 <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-error-variant hover:text-error" title="Batal Tambah">
@@ -206,7 +218,8 @@ require_once '../components/header.php';
             </td>
             <td class="px-4 py-3">
                 <input type="text" name="nama_siswa[]" required class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 text-sm font-bold placeholder-primary/50" placeholder="Ketik Nama Siswa Baru...">
-                <input type="hidden" name="nis_siswa[]" value="AUTO"> </td>
+                <input type="hidden" name="nis_siswa[]" value="AUTO"> 
+            </td>
             <td class="px-4 py-3">
                 <select name="class_id_siswa[]" class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 text-xs font-bold" required>
                     <option value="" disabled selected>Pilih Kelas</option>
@@ -220,26 +233,35 @@ require_once '../components/header.php';
         container.appendChild(row);
     }
 
-    // --- 3. FITUR FLOATING ACTION BAR ---
+    // 3. LOGIKA FLOATING ACTION BAR 
     const checkAll = document.getElementById('checkAll');
     const checkboxes = document.querySelectorAll('.cb-siswa');
     const actionBar = document.getElementById('bulkActionBar');
     const selectedCountLabel = document.getElementById('selectedCount');
 
     function updateActionBar() {
-        const selectedCount = document.querySelectorAll('.cb-siswa:checked').length;
-        if (selectedCount > 0) {
-            selectedCountLabel.innerText = selectedCount;
-            actionBar.classList.remove('translate-y-24', 'opacity-0');
+        // Hitung checkbox yang dicentang AND yang tidak di-hide oleh filter
+        let count = 0;
+        checkboxes.forEach(cb => {
+            if (cb.checked && cb.closest('tr').style.display !== 'none') {
+                count++;
+            }
+        });
+
+        selectedCountLabel.innerText = count;
+
+        if (count > 0) {
+            // Tampilkan Bar: hapus class hide (translate-y-32, opacity-0)
+            actionBar.classList.remove('translate-y-32', 'opacity-0');
         } else {
-            actionBar.classList.add('translate-y-24', 'opacity-0');
+            // Sembunyikan Bar
+            actionBar.classList.add('translate-y-32', 'opacity-0');
         }
     }
 
     if(checkAll) {
         checkAll.addEventListener('change', function() {
             checkboxes.forEach(cb => {
-                // Hanya centang checkbox yang sedang terlihat (tidak di-filter/sembunyi)
                 if(cb.closest('tr').style.display !== 'none') {
                     cb.checked = this.checked;
                 }

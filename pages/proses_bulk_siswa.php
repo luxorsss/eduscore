@@ -126,6 +126,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             die("Error: " . $e->getMessage());
         }
     }
+
+    // D. FITUR BULK MOVE (Pindah Kelas Massal)
+    if ($aksi === 'pindah_massal') {
+        $ids = $_POST['id_hapus'] ?? []; // Mengambil ID siswa yang dicentang
+        $target_class = $_POST['target_class_id'] ?? ''; // Mengambil kelas tujuan
+
+        if (!empty($ids) && !empty($target_class)) {
+            try {
+                // Membuat tanda tanya sebanyak jumlah ID yang dicentang (?,?,?)
+                $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+                
+                // Siapkan SQL untuk Update (Ubah) class_id
+                $sql = "UPDATE students SET class_id = ? WHERE id IN ($placeholders)";
+                
+                // Susun data yang mau dimasukkan: [ID Kelas Tujuan, ID Siswa 1, ID Siswa 2, ...]
+                $params = array_merge([$target_class], $ids);
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+
+                $jumlah = count($ids);
+                echo "<script>alert('Berhasil memindahkan $jumlah siswa ke kelas baru!'); window.location.href='siswa.php';</script>";
+                exit;
+            } catch (PDOException $e) {
+                die("Gagal memindahkan siswa: " . $e->getMessage());
+            }
+        } else {
+            echo "<script>alert('Pilih siswa yang dicentang DAN pilih kelas tujuan di dropdown terlebih dahulu!'); window.history.back();</script>";
+            exit;
+        }
+    }
 }
 
 // D. HAPUS SINGLE (Via tombol tong sampah)
