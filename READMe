@@ -1,0 +1,140 @@
+1. Executive Summary
+Problem: Sistem pencatatan nilai manual tidak efisien bagi guru yang mengajar lintas jenjang (SMP/SMA) dan multi-mapel. Proses input lambat, rentan kehilangan data riwayat saat siswa naik kelas, dan sulitnya merekap berbagai komponen ujian (Harian, UTS, UAS, Tambahan) secara bersamaan, terutama jika diakses via perangkat mobile.
+
+Solution: EduScore v2, sebuah aplikasi web manajemen nilai berbasis PHP Native dan MySQL yang mengusung skema database dinamis berdasarkan "Tahun Ajaran". Sistem dilengkapi antarmuka mobile-first, fitur bulk actions (Input, Edit, Delete), dan kemampuan copy-paste untuk mempercepat alur kerja pengajar.
+
+Success Criteria:
+
+Performance: Waktu proses Bulk Save untuk 1 kelas penuh (contoh: 40 siswa x 5 komponen nilai) < 2.0 detik.
+
+Accessibility: Skor Mobile-Friendly standar Lighthouse Google > 90/100.
+
+Reliability: Error rate pada transaksi database saat pergantian Tahun Ajaran (kenaikan kelas) = 0%.
+
+2. User Experience & Functionality
+User Stories:
+
+Sebagai Pengajar, saya ingin memilih jenjang (SMP/SMA), kelas, dan mata pelajaran di awal, sehingga saya tidak salah memasukkan nilai ke kelas atau mapel yang berbeda.
+
+Sebagai Pengajar, saya ingin menyalin data (copy) dari file Excel dan mem-paste-nya ke sistem (atau menggunakan fitur input Lanjut di HP), sehingga waktu input per kelas berkurang drastis (< 3 menit).
+
+Sebagai Pengajar, saya ingin melihat Halaman Rekapitulasi per kelas yang menampilkan Nilai Harian UTS, UTS, Harian UAS, UAS, dan Nilai Tambahan, sehingga saya bisa memantau rata-rata akhir siswa secara komprehensif.
+
+Sebagai Admin/Sistem, saya ingin memisahkan data berdasarkan Tahun Ajaran, sehingga data nilai siswa yang naik kelas/lulus tidak tertimpa atau hilang.
+
+Acceptance Criteria (AC):
+
+Filter Logic: Sistem memunculkan dropdown Kelas dan Mapel HANYA berdasarkan data yang berelasi dengan ID Guru yang login (berdasarkan tabel teaching_schedules). Waktu muat dropdown < 300ms.
+
+Bulk Action: Tombol "Hapus Terpilih" dan "Simpan Massal" memproses array data dalam satu Database Transaction. Jika gagal, seluruh operasi dibatalkan (Rollback).
+
+Mobile Input: Di perangkat mobile, tombol "Enter" di keyboard virtual otomatis memindahkan kursor ke baris input siswa di bawahnya.
+
+Edge Cases & Error Handling:
+
+Data Kosong di Rekap: Jika ada siswa yang belum mendapatkan Nilai Tambahan, sel akan dibiarkan kosong (NULL) tanpa memengaruhi perhitungan Rata-rata Pembagi tetap.
+
+Copy-Paste Meleset: Jika teks yang di-paste dari Excel mengandung huruf atau format di luar angka (0-100), sistem otomatis menolak baris tersebut dan memberikan highlight warna merah di UI.
+
+Non-Goals:
+
+Tidak ada otomatisasi cetak rapor berstandar e-Rapor Kemdikbud di fase ini.
+
+Tidak ada fitur portal siswa/orang tua.
+
+3. UI/UX & Structural Layout
+User Flow Map:
+Login -> Pilih Tahun Ajaran & Semester -> Pilih Jenjang (SMP/SMA) -> Pilih Kelas & Mapel -> Pilih Mode (Input Per Komponen ATAU Rekap Kelas) -> Eksekusi Data (Ketik/Copy-Paste/Bulk Delete) -> Simpan Massal.
+
+ASCII Wireframe (Halaman Rekap - Mobile View):
+(Keterangan: Di perangkat mobile, tabel rekap otomatis dikunci ke mode landscape atau menggunakan antarmuka Card-based agar tidak memaksakan tabel horizontal yang merusak layout).
+
+Plaintext
++---------------------------------------------------------+
+| [≡] EduScore                   [ Tahun Ajaran 24/25 ]   |
++---------------------------------------------------------+
+| Jenjang: SMA | Kelas: 10 IPA 1 | Mapel: Fisika          |
+|---------------------------------------------------------|
+| [ ] Pilih Semua   [ Hapus Data Terpilih ]   [ Simpan ]  |
+|---------------------------------------------------------|
+| [x] 1. Ahmad Fulan (NIS: 1001)                          |
+|     H-UTS: [ 85 ]   UTS: [ 90 ]                         |
+|     H-UAS: [ 88 ]   UAS: [ 92 ]   Tambahan: [ -  ]      |
+|     Rata-Rata: 88.75                                    |
+|---------------------------------------------------------|
+| [ ] 2. Budi Santoso (NIS: 1002)                         |
+|     H-UTS: [ 70 ]   UTS: [ 75 ]                         |
+|     H-UAS: [ 80 ]   UAS: [ 85 ]   Tambahan: [ 10 ]      |
+|     Rata-Rata: 80.00                                    |
++---------------------------------------------------------+
+State Management:
+
+Loading: Muncul indikator Skeleton Table abu-abu saat sistem melakukan penarikan data relasional (siswa, mapel, kelas).
+
+Success State: Toast notification hijau melayang di sudut atas "X Data Berhasil Disimpan" lalu hilang otomatis dalam 3 detik.
+
+4. Data Model & Database Schema
+Pendekatan Relational Database ketat untuk mendukung kenaikan kelas dan multi-roles.
+
+users: id (PK), username, password_hash, role (Admin/Guru), nama_lengkap.
+
+academic_years: id (PK), nama_tahun (contoh: '2025/2026'), semester (1/2), status_aktif (Boolean).
+
+classes: id (PK), jenjang (ENUM: 'SMP', 'SMA'), nama_kelas.
+
+students: id (PK), nis, nama.
+
+class_enrollments: id (PK), student_id (FK), class_id (FK), academic_year_id (FK). (Menyelesaikan kasus kenaikan kelas).
+
+subjects: id (PK), jenjang (ENUM: 'SMP', 'SMA', 'UMUM'), nama_mapel.
+
+teaching_schedules: id (PK), teacher_id (FK_users), class_id (FK), subject_id (FK), academic_year_id (FK). (Satu guru bisa mengajar banyak mapel/kelas).
+
+grade_categories: id (PK), nama_komponen (ENUM: 'Harian_UTS', 'UTS', 'Harian_UAS', 'UAS', 'Tambahan').
+
+grades: id (PK), enrollment_id (FK), schedule_id (FK_teaching_schedules), category_id (FK), score (Decimal/Int).
+
+5. Technical Specifications & Tech Stack
+Frontend / UI:
+
+HTML5 & CSS3.
+
+Bootstrap 5 (untuk Grid System yang responsive di berbagai ukuran layar HP/Tablet/Desktop).
+
+Vanilla JavaScript (untuk DOM Manipulation: logika copy-paste dari Excel, checkbox bulk-select, dan kalkulasi rata-rata real-time di sisi client tanpa perlu reload).
+
+Backend / Logic:
+
+PHP 8.x (Native).
+
+Wajib menggunakan mekanisme PDO Transaction ($pdo->beginTransaction(); ... $pdo->commit();) saat mengeksekusi fitur Bulk Insert/Update agar data tidak corrupt jika terjadi kegagalan jaringan di tengah proses penyimpanan.
+
+Database:
+
+MySQL (InnoDB Engine). Indeks (Indexing) wajib ditambahkan pada kolom academic_year_id dan teacher_id untuk mempercepat pemuatan query Filter.
+
+Deployment: GitHub (Code Repo) -> Shared Hosting (Apache2/Nginx, cPanel).
+
+6. AI System Requirements
+[TBD - Tidak relevan untuk produk ini].
+
+7. Analytics, Risks & Roadmap
+Event Tracking:
+
+Menghitung durasi session login hingga aksi Logout.
+
+Melacak aktivitas fitur Copy-Paste vs Manual Typing untuk menganalisis kebiasaan guru.
+
+Phased Rollout:
+
+Fase 1 (Core Engine): Penyiapan skema database, fitur manajemen data master (Admin), dan login Guru.
+
+Fase 2 (Mobile & Input): Pembangunan UI Mobile-Friendly, fitur penginputan dinamis (UTS/UAS/Tambahan), dan kapabilitas Copy-Paste.
+
+Fase 3 (Reporting): Pembangunan Halaman Rekapitulasi (Ledger) dan optimasi query kalkulasi rata-rata.
+
+Technical Risks & Mitigation:
+
+Risiko: Beban memori server (RAM) tinggi atau Timeout PHP saat mengeksekusi query Bulk Save untuk ratusan data secara bersamaan.
+
+Mitigasi: Menerapkan perintah MySQL INSERT INTO ... ON DUPLICATE KEY UPDATE agar eksekusi database hanya memerlukan satu koneksi query tunggal, dibandingkan melakukan looping query INSERT berulang kali di sisi PHP. Serta membatasi maksimal input massal pada rentang 1 kelas per proses (maksimal +- 50 baris).
