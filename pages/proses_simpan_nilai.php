@@ -9,24 +9,30 @@ if (!isset($_SESSION['user_id'])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $kategori = $_POST['kategori'] ?? '';
     $schedule_id = $_POST['schedule_id'] ?? 0;
-    $nilais = $_POST['nilai'] ?? []; // Array dari form
+    
+    // BUKA BUNGKUSAN JSON (Trik Anti-Firewall)
+    $json_data = $_POST['data_nilai_json'] ?? '{}';
+    $nilais = json_decode($json_data, true); // Mengubah teks JSON kembali menjadi Array PHP
 
-    // KEAMANAN (White-listing): Pastikan kategori yang dikirim valid dan sesuai dengan nama kolom di database
+    // Pastikan hasil decode benar-benar array
+    if (!is_array($nilais)) {
+        $nilais = [];
+    }
+
+    // KEAMANAN (White-listing): Pastikan kategori yang dikirim valid
     $allowed_categories = ['h_uts', 'uts', 'h_uas', 'uas', 'tambahan'];
     if (!in_array($kategori, $allowed_categories)) {
-        die("Error: Kategori nilai tidak valid/dikenali sistem.");
+        die("Error: Kategori nilai tidak valid.");
     }
 
     if ($schedule_id == 0 || empty($nilais)) {
-        header("Location: dashboard.php");
+        echo "<script>alert('Tidak ada data nilai yang diisi!'); window.history.back();</script>";
         exit();
     }
 
     try {
         $pdo->beginTransaction();
 
-        // Query Dinamis: ON DUPLICATE KEY UPDATE memungkinkan kita menambah baris baru 
-        // atau MEMPERBARUI nilai jika siswa tersebut sudah pernah diinput sebelumnya.
         $sql = "INSERT INTO grades (student_id, schedule_id, $kategori) 
                 VALUES (?, ?, ?) 
                 ON DUPLICATE KEY UPDATE $kategori = VALUES($kategori)";
@@ -35,7 +41,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $berhasil = 0;
         foreach ($nilais as $student_id => $nilai) {
-            // Hanya simpan jika kotaknya diisi (tidak kosong)
             if (trim($nilai) !== "") {
                 $stmt->execute([$student_id, $schedule_id, $nilai]);
                 $berhasil++;
@@ -46,7 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         echo "<script>
                 alert('Berhasil! $berhasil Data Nilai $kategori telah disimpan.');
-                // Kembalikan ke halaman sebelumnya agar guru bisa mengecek lagi
                 window.history.back(); 
               </script>";
               
