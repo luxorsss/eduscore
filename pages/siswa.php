@@ -1,5 +1,13 @@
 <?php
-// 1. Set judul halaman & Panggil Header
+session_start();
+
+// PENJAGA PINTU: Tendang ke login jika belum ada tiket (session)
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+// Set judul halaman dan panggil komponen Header (yang sudah include Sidebar)
 $page_title = "EduScore - Data Induk Siswa";
 require_once '../components/header.php'; 
 ?>
