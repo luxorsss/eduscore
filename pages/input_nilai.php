@@ -36,14 +36,20 @@ $schedule = $stmt_sched->fetch(PDO::FETCH_ASSOC);
 $schedule_id = $schedule['id'] ?? 0;
 
 // 3. Ambil Daftar Siswa BESERTA Nilainya saat ini (jika sudah pernah diinput)
-// Perhatikan: Kolom $kategori kita panggil dinamis
+$allowed_columns = ['h_uts', 'uts', 'h_uas', 'uas', 'tambahan'];
+if (!in_array($kategori, $allowed_columns)) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $stmt_siswa = $pdo->prepare("
-    SELECT st.id, st.nis, st.nama, g.$kategori as nilai_sekarang 
+    SELECT st.id, st.nis, st.nama, g.{$kategori} as nilai_sekarang 
     FROM students st 
     LEFT JOIN grades g ON g.student_id = st.id AND g.schedule_id = ? 
     WHERE st.class_id = ? 
     ORDER BY st.nama ASC
 ");
+
 $stmt_siswa->execute([$schedule_id, $class_id]);
 $students = $stmt_siswa->fetchAll(PDO::FETCH_ASSOC);
 
