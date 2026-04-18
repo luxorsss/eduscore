@@ -121,6 +121,18 @@ require_once '../components/header.php';
                     </select>
                 </div>
 
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant" for="kategori">Kategori Nilai</label>
+                    <select id="kategori" name="kategori" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-md border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3.5 transition-colors cursor-pointer font-medium" required>
+                        <option value="" disabled selected>-- Pilih Kategori --</option>
+                        <option value="h_uts">Nilai Harian UTS</option>
+                        <option value="uts">Ujian Tengah Semester (UTS)</option>
+                        <option value="h_uas">Nilai Harian UAS</option>
+                        <option value="uas">Ujian Akhir Semester (UAS)</option>
+                        <option value="tambahan">Nilai Tambahan</option>
+                    </select>
+                </div>
+
             </div>
 
             <div class="mt-8 pt-6 border-t border-outline-variant/20">

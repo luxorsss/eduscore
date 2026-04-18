@@ -7,26 +7,47 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Ambil Parameter dari Dashboard
+$user_id = $_SESSION['user_id'];
 $class_id = $_GET['kelas'] ?? null;
 $mapel_id = $_GET['mapel'] ?? null;
+$kategori = $_GET['kategori'] ?? null;
 
-if (!$class_id || !$mapel_id) {
+if (!$class_id || !$mapel_id || !$kategori) {
     header("Location: dashboard.php");
     exit();
 }
 
-// Ambil Info Kelas & Mapel
+// Label Kategori untuk UI
+$kategori_labels = [
+    'h_uts' => 'Harian UTS', 'uts' => 'UTS', 'h_uas' => 'Harian UAS', 
+    'uas' => 'UAS', 'tambahan' => 'Tambahan'
+];
+$label_kategori = $kategori_labels[$kategori] ?? 'Kategori Umum';
+
+// 1. Ambil Info Kelas & Mapel
 $stmt_info = $pdo->prepare("SELECT c.nama_kelas, s.nama_mapel FROM classes c, subjects s WHERE c.id = ? AND s.id = ?");
 $stmt_info->execute([$class_id, $mapel_id]);
 $info = $stmt_info->fetch(PDO::FETCH_ASSOC);
 
-// Ambil Daftar Siswa di Kelas Ini
-$stmt_siswa = $pdo->prepare("SELECT * FROM students WHERE class_id = ? ORDER BY nama ASC");
-$stmt_siswa->execute([$class_id]);
+// 2. Cari ID Jadwal (schedule_id) yang Tepat
+$stmt_sched = $pdo->prepare("SELECT id FROM teaching_schedules WHERE user_id = ? AND class_id = ? AND subject_id = ?");
+$stmt_sched->execute([$user_id, $class_id, $mapel_id]);
+$schedule = $stmt_sched->fetch(PDO::FETCH_ASSOC);
+$schedule_id = $schedule['id'] ?? 0;
+
+// 3. Ambil Daftar Siswa BESERTA Nilainya saat ini (jika sudah pernah diinput)
+// Perhatikan: Kolom $kategori kita panggil dinamis
+$stmt_siswa = $pdo->prepare("
+    SELECT st.id, st.nis, st.nama, g.$kategori as nilai_sekarang 
+    FROM students st 
+    LEFT JOIN grades g ON g.student_id = st.id AND g.schedule_id = ? 
+    WHERE st.class_id = ? 
+    ORDER BY st.nama ASC
+");
+$stmt_siswa->execute([$schedule_id, $class_id]);
 $students = $stmt_siswa->fetchAll(PDO::FETCH_ASSOC);
 
-$page_title = "EduScore - Input Nilai UAS";
+$page_title = "EduScore - Input Nilai";
 require_once '../components/header.php'; 
 ?>
 
@@ -36,25 +57,35 @@ require_once '../components/header.php';
             <button onclick="toggleSidebar()" class="md:hidden p-2 text-on-surface-variant"><span class="material-symbols-outlined">menu</span></button>
             <div class="flex flex-col">
                 <span class="font-bold text-sm leading-tight"><?= $info['nama_kelas'] ?> - <?= $info['nama_mapel'] ?></span>
-                <span class="text-[10px] text-primary font-bold uppercase">Input Nilai UAS</span>
+                <span class="text-[10px] text-primary font-bold uppercase">Input Nilai: <?= $label_kategori ?></span>
             </div>
         </div>
-        <button form="formNilai" class="bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-bold shadow-sm">Simpan</button>
+        <button form="formNilai" class="bg-primary text-on-primary px-6 py-2 rounded-lg text-sm font-bold shadow-sm hover:scale-105 transition-transform">Simpan Data</button>
     </div>
 </nav>
 
 <div class="bg-surface/90 backdrop-blur-md sticky top-16 z-40 border-b border-outline-variant/20 shadow-sm">
-    <div class="max-w-4xl mx-auto p-4">
-        <div class="relative">
+    <div class="max-w-4xl mx-auto p-4 flex gap-2">
+        <div class="relative flex-1">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-            <input type="text" id="cariSiswa" class="w-full bg-surface-container-lowest border-outline-variant/50 focus:ring-primary rounded-xl pl-10 py-3 text-sm font-medium" placeholder="Cari nama siswa di kertas ujian...">
+            <input type="text" id="cariSiswa" class="w-full bg-surface-container-lowest border-outline-variant/50 focus:ring-primary rounded-xl pl-10 py-3 text-sm font-medium" placeholder="Cari nama siswa...">
         </div>
     </div>
 </div>
 
 <main class="max-w-4xl mx-auto w-full p-4 flex flex-col gap-3">
+    
+    <div class="bg-primary/5 border border-primary/20 rounded-xl p-3 flex flex-col gap-2 mb-2">
+        <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-primary uppercase">Fitur Paste Massal</span>
+            <span class="text-[10px] text-on-surface-variant">Klik kotak di bawah lalu tekan <b>Ctrl + V</b></span>
+        </div>
+        <textarea id="pasteBox" rows="1" class="w-full bg-surface-container-lowest border-dashed border-2 border-primary/30 rounded-lg text-xs p-2 focus:ring-primary font-mono text-center" placeholder="Tempel kolom nilai dari Excel di sini..."></textarea>
+    </div>
+
     <form id="formNilai" action="proses_simpan_nilai.php" method="POST">
-        <input type="hidden" name="mapel_id" value="<?= $mapel_id ?>">
+        <input type="hidden" name="kategori" value="<?= $kategori ?>">
+        <input type="hidden" name="schedule_id" value="<?= $schedule_id ?>">
         
         <div class="flex flex-col gap-3" id="daftarSiswa">
             <?php foreach ($students as $s): ?>
@@ -65,11 +96,11 @@ require_once '../components/header.php';
                     </div>
                     <div class="overflow-hidden">
                         <h3 class="student-name font-bold text-on-surface text-sm truncate"><?= htmlspecialchars($s['nama']) ?></h3>
-                        <p class="text-[10px] text-on-surface-variant font-medium uppercase">NIS: <?= $s['nis'] ?></p>
+                        <p class="text-[10px] text-on-surface-variant font-medium uppercase">NIS: <?= htmlspecialchars($s['nis']) ?></p>
                     </div>
                 </div>
                 <div class="w-[80px] shrink-0">
-                    <input type="number" name="nilai_uas[<?= $s['id'] ?>]" class="nilai-input w-full bg-surface-container-highest border-0 border-b-2 border-transparent focus:border-primary rounded-t-md py-3 text-xl text-center font-black text-primary" placeholder="0" min="0" max="100">
+                    <input type="number" name="nilai[<?= $s['id'] ?>]" value="<?= $s['nilai_sekarang'] !== null ? $s['nilai_sekarang'] : '' ?>" class="nilai-input w-full bg-surface-container-highest border-0 border-b-2 border-transparent focus:border-primary rounded-t-md py-3 text-xl text-center font-black text-primary transition-colors" placeholder="-" min="0" max="100">
                 </div>
             </div>
             <?php endforeach; ?>
@@ -78,9 +109,9 @@ require_once '../components/header.php';
 </main>
 
 <script>
+    // Fitur Search
     const searchInput = document.getElementById('cariSiswa');
     const cards = document.querySelectorAll('.student-card');
-
     searchInput.addEventListener('input', function() {
         const q = this.value.toLowerCase();
         cards.forEach(card => {
@@ -89,17 +120,29 @@ require_once '../components/header.php';
         });
     });
 
-    // Trik Enter to Search (Reset pencarian setelah isi nilai)
-    const inputs = document.querySelectorAll('.nilai-input');
-    inputs.forEach(input => {
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchInput.value = '';
-                searchInput.dispatchEvent(new Event('input'));
-                searchInput.focus();
+    // Fitur Smart Paste
+    const pasteBox = document.getElementById('pasteBox');
+    const nilaiInputs = document.querySelectorAll('.nilai-input');
+
+    pasteBox.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        const rows = text.split(/\r?\n/).filter(row => row.trim() !== "");
+        
+        let counter = 0;
+        rows.forEach((value, index) => {
+            if (nilaiInputs[index]) {
+                const cleanedValue = value.replace(/[^0-9]/g, '');
+                if(cleanedValue !== "") {
+                    nilaiInputs[index].value = cleanedValue;
+                    nilaiInputs[index].classList.add('bg-tertiary-container', 'text-tertiary');
+                    setTimeout(() => nilaiInputs[index].classList.remove('bg-tertiary-container', 'text-tertiary'), 1500);
+                    counter++;
+                }
             }
         });
+        pasteBox.value = '';
+        if(counter > 0) alert(counter + " baris nilai berhasil di-paste massal!");
     });
 </script>
 

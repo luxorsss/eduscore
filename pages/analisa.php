@@ -1,197 +1,147 @@
 <?php
 session_start();
+require_once '../config/koneksi.php';
 
-// PENJAGA PINTU: Tendang ke login jika belum ada tiket (session)
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Set judul halaman dan panggil komponen Header (yang sudah include Sidebar)
-$page_title = "EduScore - Analisis & Rekapitulasi";
+// 1. Ambil Kategori yang ingin ditampilkan (Default: uas)
+$kategori = $_GET['kategori'] ?? 'uas';
+$kategori_list = [
+    'h_uts' => 'Harian UTS',
+    'uts' => 'UTS',
+    'h_uas' => 'Harian UAS',
+    'uas' => 'UAS',
+    'tambahan' => 'Tambahan'
+];
+
+// 2. Pilih Kelas yang ingin dianalisa
+$stmt_classes = $pdo->query("SELECT * FROM classes ORDER BY nama_kelas ASC");
+$classes = $stmt_classes->fetchAll(PDO::FETCH_ASSOC);
+$active_class_id = $_GET['kelas_id'] ?? ($classes[0]['id'] ?? null);
+
+// 3. Ambil Semua Mapel yang diajarkan di kelas ini (berdasarkan Jadwal)
+$subjects_in_class = [];
+if ($active_class_id) {
+    $stmt_subj = $pdo->prepare("
+        SELECT DISTINCT s.nama_mapel, ts.id as schedule_id 
+        FROM teaching_schedules ts 
+        JOIN subjects s ON ts.subject_id = s.id 
+        WHERE ts.class_id = ?
+    ");
+    $stmt_subj->execute([$active_class_id]);
+    $subjects_in_class = $stmt_subj->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// 4. Ambil Daftar Siswa dan Nilai mereka
+$data_rekap = [];
+if ($active_class_id) {
+    $stmt_siswa = $pdo->prepare("SELECT id, nama FROM students WHERE class_id = ? ORDER BY nama ASC");
+    $stmt_siswa->execute([$active_class_id]);
+    $students = $stmt_siswa->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($students as $s) {
+        $nilai_per_mapel = [];
+        foreach ($subjects_in_class as $subj) {
+            // Ambil nilai berdasarkan kategori yang dipilih
+            $stmt_val = $pdo->prepare("SELECT $kategori FROM grades WHERE student_id = ? AND schedule_id = ?");
+            $stmt_val->execute([$s['id'], $subj['schedule_id']]);
+            $val = $stmt_val->fetchColumn();
+            $nilai_per_mapel[$subj['nama_mapel']] = $val ?: 0;
+        }
+        $data_rekap[] = [
+            'nama' => $s['nama'],
+            'nilai' => $nilai_per_mapel
+        ];
+    }
+}
+
+$page_title = "EduScore - Leger Nilai";
 require_once '../components/header.php'; 
 ?>
 
-    <nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-colors mr-1">
-                    <span class="material-symbols-outlined">menu</span>
-                </button>
-                <a href="dashboard.php" class="md:hidden w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface hover:bg-outline-variant/30 transition mr-2" title="Kembali ke Dashboard">
-                    <span class="material-symbols-outlined text-sm">home</span>
-                </a>
-                <span class="font-headline font-bold text-primary tracking-tight text-lg md:hidden">EduScore</span>
-                <span class="font-headline font-bold text-primary tracking-tight text-lg hidden md:block">Buku Nilai & Analisis</span>
-            </div>
-            
-            <div class="flex items-center gap-4">
-                <span class="text-sm font-medium text-on-surface-variant hidden md:block">
-                    <?= htmlspecialchars($_SESSION['nama_lengkap']); ?>
-                </span>
-                <div class="w-8 h-8 rounded-full bg-[#d6e3ff] text-primary flex items-center justify-center font-bold text-sm cursor-pointer">
-                    <?= strtoupper(substr($_SESSION['nama_lengkap'], 0, 2)); ?>
-                </div>
-            </div>
+<nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <button onclick="toggleSidebar()" class="md:hidden p-2"><span class="material-symbols-outlined">menu</span></button>
+            <span class="font-bold text-primary">Rekapitulasi Lintas Mapel</span>
         </div>
-    </nav>
+        <button onclick="copyTableData()" class="bg-tertiary text-on-primary px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">content_copy</span> Salin Leger
+        </button>
+    </div>
+</nav>
 
-    <main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6">
-        
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary mb-2">Statistik Kelas</h1>
-                <p class="text-on-surface-variant text-sm">Tinjauan komprehensif performa akademik siswa berdasarkan kelas.</p>
-            </div>
-            
-            <div class="flex items-center gap-2 w-full md:w-auto">
-                <select class="bg-surface-container-lowest text-on-surface text-sm rounded-lg border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary px-3 py-2.5 font-medium shadow-sm flex-1 md:flex-none">
-                    <option>10 IPA 1 - Fisika</option>
-                    <option>10 IPA 2 - Fisika</option>
-                    <option>12 IPS 1 - Matematika</option>
-                </select>
-                <button class="flex items-center gap-2 bg-tertiary text-on-primary px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-tertiary/90 transition-colors shadow-sm">
-                    <span class="material-symbols-outlined text-[18px]">download</span>
-                    <span class="hidden md:inline">Ekspor Excel</span>
-                </button>
-            </div>
+<main class="max-w-7xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6">
+    <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/20">
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-on-surface-variant uppercase">Pilih Kelas</label>
+            <select name="kelas_id" onchange="this.form.submit()" class="rounded-lg border-outline-variant/50 text-sm">
+                <?php foreach($classes as $c): ?>
+                    <option value="<?= $c['id'] ?>" <?= $active_class_id == $c['id'] ? 'selected' : '' ?>><?= $c['nama_kelas'] ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col gap-1">
-                <span class="text-xs font-semibold uppercase text-on-surface-variant tracking-wider">Total Siswa</span>
-                <div class="flex items-end gap-2">
-                    <span class="text-3xl font-black text-primary">36</span>
-                    <span class="text-sm font-medium text-on-surface-variant mb-1">Siswa</span>
-                </div>
-            </div>
-            
-            <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col gap-1">
-                <span class="text-xs font-semibold uppercase text-on-surface-variant tracking-wider">Rata-Rata Kelas</span>
-                <div class="flex items-end gap-2">
-                    <span class="text-3xl font-black text-primary">82.4</span>
-                    <span class="text-xs font-bold text-tertiary bg-tertiary-container px-1.5 py-0.5 rounded mb-1.5">B+</span>
-                </div>
-            </div>
-
-            <div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col gap-1">
-                <span class="text-xs font-semibold uppercase text-on-surface-variant tracking-wider">Nilai Tertinggi</span>
-                <div class="flex items-end gap-2">
-                    <span class="text-3xl font-black text-tertiary">98</span>
-                    <span class="text-sm font-medium text-on-surface-variant mb-1">(Citra)</span>
-                </div>
-            </div>
-
-            <div class="bg-surface-container-lowest p-5 rounded-xl border border-error-container shadow-sm flex flex-col gap-1 relative overflow-hidden">
-                <div class="absolute right-[-10px] bottom-[-10px] text-error-container opacity-50">
-                    <span class="material-symbols-outlined text-8xl">warning</span>
-                </div>
-                <span class="text-xs font-semibold uppercase text-error tracking-wider z-10">Remedial (< 75)</span>
-                <div class="flex items-end gap-2 z-10">
-                    <span class="text-3xl font-black text-error">4</span>
-                    <span class="text-sm font-medium text-error mb-1">Siswa</span>
-                </div>
-            </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-on-surface-variant uppercase">Pilih Kategori Nilai</label>
+            <select name="kategori" onchange="this.form.submit()" class="rounded-lg border-outline-variant/50 text-sm">
+                <?php foreach($kategori_list as $key => $label): ?>
+                    <option value="<?= $key ?>" <?= $kategori == $key ? 'selected' : '' ?>><?= $label ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
+    </form>
 
-        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden flex flex-col">
-            
-            <div class="p-4 border-b border-outline-variant/20 bg-surface-container-low flex justify-between items-center">
-                <h2 class="font-bold text-on-surface">Detail Nilai Akhir</h2>
-                <span class="text-xs font-medium bg-surface-container-highest px-2 py-1 rounded text-on-surface-variant">KKM: 75</span>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[800px]">
-                    <thead class="bg-surface-container-highest text-xs uppercase font-semibold text-on-surface-variant">
-                        <tr>
-                            <th class="px-4 py-3 w-12 text-center border-b border-outline-variant/30">No</th>
-                            <th class="px-4 py-3 border-b border-outline-variant/30">NIS</th>
-                            <th class="px-4 py-3 border-b border-outline-variant/30">Nama Siswa</th>
-                            <th class="px-4 py-3 text-center border-b border-outline-variant/30">H-UTS <span class="text-[10px] font-normal block">(20%)</span></th>
-                            <th class="px-4 py-3 text-center border-b border-outline-variant/30">UTS <span class="text-[10px] font-normal block">(30%)</span></th>
-                            <th class="px-4 py-3 text-center border-b border-outline-variant/30">H-UAS <span class="text-[10px] font-normal block">(20%)</span></th>
-                            <th class="px-4 py-3 text-center border-b border-outline-variant/30">UAS <span class="text-[10px] font-normal block">(30%)</span></th>
-                            <th class="px-4 py-3 text-center border-b border-outline-variant/30 bg-[#d6e3ff]/30">+ Tamb.</th>
-                            <th class="px-4 py-3 text-center border-b border-outline-variant/30 bg-primary text-on-primary">Akhir</th>
-                            <th class="px-4 py-3 text-center border-b border-outline-variant/30">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-sm font-medium text-on-surface">
-                        
-                        <tr class="hover:bg-surface-container-low transition-colors border-b border-outline-variant/10">
-                            <td class="px-4 py-4 text-center text-on-surface-variant">1</td>
-                            <td class="px-4 py-4 text-on-surface-variant">1001</td>
-                            <td class="px-4 py-4 font-bold">Ahmad Fulan</td>
-                            <td class="px-4 py-4 text-center">85</td>
-                            <td class="px-4 py-4 text-center">90</td>
-                            <td class="px-4 py-4 text-center">88</td>
-                            <td class="px-4 py-4 text-center">92</td>
-                            <td class="px-4 py-4 text-center bg-[#d6e3ff]/10">-</td>
-                            <td class="px-4 py-4 text-center font-black text-primary bg-primary/5 text-base">89.2</td>
-                            <td class="px-4 py-4 text-center">
-                                <span class="inline-flex items-center gap-1 bg-tertiary-container text-tertiary px-2 py-1 rounded text-xs font-bold">
-                                    LULUS
-                                </span>
+    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table id="tabelLeger" class="w-full text-left border-collapse">
+                <thead class="bg-surface-container-low text-[10px] uppercase font-bold text-on-surface-variant border-b border-outline-variant/20">
+                    <tr>
+                        <th class="px-4 py-3 border-r border-outline-variant/20">Nama Siswa</th>
+                        <?php foreach($subjects_in_class as $subj): ?>
+                            <th class="px-4 py-3 text-center border-r border-outline-variant/20"><?= $subj['nama_mapel'] ?></th>
+                        <?php endforeach; ?>
+                        <th class="px-4 py-3 text-center bg-primary text-on-primary">Rata-rata</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm divide-y divide-outline-variant/10">
+                    <?php foreach($data_rekap as $row): ?>
+                        <tr class="hover:bg-surface-container-low">
+                            <td class="px-4 py-3 font-bold border-r border-outline-variant/20"><?= htmlspecialchars($row['nama']) ?></td>
+                            <?php 
+                            $total = 0;
+                            foreach($subjects_in_class as $subj): 
+                                $n = $row['nilai'][$subj['nama_mapel']];
+                                $total += $n;
+                            ?>
+                                <td class="px-4 py-3 text-center border-r border-outline-variant/20"><?= $n ?></td>
+                            <?php endforeach; ?>
+                            <td class="px-4 py-3 text-center font-black text-primary bg-primary/5">
+                                <?= count($subjects_in_class) > 0 ? round($total / count($subjects_in_class), 1) : 0 ?>
                             </td>
                         </tr>
-
-                        <tr class="hover:bg-error-container/20 transition-colors border-b border-outline-variant/10 bg-error-container/5">
-                            <td class="px-4 py-4 text-center text-on-surface-variant">2</td>
-                            <td class="px-4 py-4 text-on-surface-variant">1002</td>
-                            <td class="px-4 py-4 font-bold">Budi Santoso</td>
-                            <td class="px-4 py-4 text-center">65</td>
-                            <td class="px-4 py-4 text-center">70</td>
-                            <td class="px-4 py-4 text-center">75</td>
-                            <td class="px-4 py-4 text-center">72</td>
-                            <td class="px-4 py-4 text-center bg-[#d6e3ff]/10">5</td>
-                            <td class="px-4 py-4 text-center font-black text-error bg-error/5 text-base">70.6</td>
-                            <td class="px-4 py-4 text-center">
-                                <span class="inline-flex items-center gap-1 bg-error-container text-error px-2 py-1 rounded text-xs font-bold">
-                                    REMEDIAL
-                                </span>
-                            </td>
-                        </tr>
-
-                        <tr class="hover:bg-surface-container-low transition-colors border-b border-outline-variant/10">
-                            <td class="px-4 py-4 text-center text-on-surface-variant">3</td>
-                            <td class="px-4 py-4 text-on-surface-variant">1003</td>
-                            <td class="px-4 py-4 font-bold">Citra Kirana</td>
-                            <td class="px-4 py-4 text-center">95</td>
-                            <td class="px-4 py-4 text-center">100</td>
-                            <td class="px-4 py-4 text-center">95</td>
-                            <td class="px-4 py-4 text-center">98</td>
-                            <td class="px-4 py-4 text-center bg-[#d6e3ff]/10">2</td>
-                            <td class="px-4 py-4 text-center font-black text-primary bg-primary/5 text-base">98.0</td>
-                            <td class="px-4 py-4 text-center">
-                                <span class="inline-flex items-center gap-1 bg-tertiary-container text-tertiary px-2 py-1 rounded text-xs font-bold">
-                                    LULUS
-                                </span>
-                            </td>
-                        </tr>
-
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="p-4 border-t border-outline-variant/20 bg-surface text-sm text-on-surface-variant flex justify-between items-center">
-                <span>Menampilkan 3 dari 36 siswa</span>
-                <div class="flex gap-1">
-                    <button class="w-8 h-8 rounded flex items-center justify-center border border-outline-variant/50 hover:bg-surface-container-high disabled:opacity-50" disabled>
-                        <span class="material-symbols-outlined text-sm">chevron_left</span>
-                    </button>
-                    <button class="w-8 h-8 rounded flex items-center justify-center bg-primary text-on-primary">1</button>
-                    <button class="w-8 h-8 rounded flex items-center justify-center border border-outline-variant/50 hover:bg-surface-container-high">2</button>
-                    <button class="w-8 h-8 rounded flex items-center justify-center border border-outline-variant/50 hover:bg-surface-container-high">
-                        <span class="material-symbols-outlined text-sm">chevron_right</span>
-                    </button>
-                </div>
-            </div>
-
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
-    </main>
+    </div>
+</main>
 
-<?php 
-// Panggil Komponen Footer
-require_once '../components/footer.php'; 
-?>
+<script>
+function copyTableData() {
+    const table = document.getElementById('tabelLeger');
+    let tsv = "";
+    for (let i = 0; i < table.rows.length; i++) {
+        let rowData = [];
+        for (let j = 0; j < table.rows[i].cells.length; j++) {
+            rowData.push(table.rows[i].cells[j].innerText.trim());
+        }
+        tsv += rowData.join("\t") + "\n";
+    }
+    navigator.clipboard.writeText(tsv).then(() => alert("Leger Nilai berhasil disalin!"));
+}
+</script>
+
+<?php require_once '../components/footer.php'; ?>
