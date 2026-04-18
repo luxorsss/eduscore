@@ -41,4 +41,13 @@
         }
     </script>
 </head>
-<body class="bg-surface font-body text-on-surface min-h-screen flex flex-col antialiased">
+<body class="bg-surface font-body text-on-surface min-h-screen flex antialiased">
+    
+    <?php 
+    // Tampilkan Sidebar HANYA jika bukan di halaman Login atau Register
+    if (isset($_SESSION['user_id'])) {
+        require_once 'sidebar.php'; 
+    }
+    ?>
+
+    <div class="flex-1 <?= isset($_SESSION['user_id']) ? 'md:ml-64' : '' ?> flex flex-col min-h-screen">
