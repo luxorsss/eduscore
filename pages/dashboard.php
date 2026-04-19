@@ -10,9 +10,9 @@ if (!isset($_SESSION['user_id'])) {
 require_once '../config/koneksi.php'; 
 $user_id = $_SESSION['user_id'];
 
-// 2. Tarik Data KELAS berdasarkan Jadwal Guru ini
+// 2. Tarik Data KELAS & JENJANG berdasarkan Jadwal Guru ini
 $stmt_kelas = $pdo->prepare("
-    SELECT DISTINCT c.id, c.nama_kelas 
+    SELECT DISTINCT c.id, c.nama_kelas, c.jenjang 
     FROM teaching_schedules ts 
     JOIN classes c ON ts.class_id = c.id 
     WHERE ts.user_id = ?
@@ -20,15 +20,29 @@ $stmt_kelas = $pdo->prepare("
 $stmt_kelas->execute([$user_id]);
 $kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
 
-// 3. Tarik Data MAPEL berdasarkan Jadwal Guru ini
-$stmt_mapel = $pdo->prepare("
-    SELECT DISTINCT s.id, s.nama_mapel 
+// 3. Tarik Pemetaan Kelas -> Mapel berdasarkan Jadwal Guru ini
+// Ini untuk JavaScript agar tahu kelas mana punya mapel apa
+$stmt_jadwal = $pdo->prepare("
+    SELECT ts.class_id, s.id as subject_id, s.nama_mapel 
     FROM teaching_schedules ts 
     JOIN subjects s ON ts.subject_id = s.id 
     WHERE ts.user_id = ?
 ");
-$stmt_mapel->execute([$user_id]);
-$mapel_list = $stmt_mapel->fetchAll(PDO::FETCH_ASSOC);
+$stmt_jadwal->execute([$user_id]);
+$jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
+
+// Siapkan data (Format JSON) untuk dibaca oleh JavaScript
+$kelas_json = json_encode($kelas_list);
+
+// Kelompokkan mapel ke dalam array berdasarkan ID Kelas
+$mapel_per_kelas = [];
+foreach ($jadwal_list as $row) {
+    $mapel_per_kelas[$row['class_id']][] = [
+        'id' => $row['subject_id'],
+        'nama' => $row['nama_mapel']
+    ];
+}
+$mapel_json = json_encode($mapel_per_kelas);
 
 $page_title = "EduScore - Dashboard Pengajar";
 require_once '../components/header.php';
@@ -95,14 +109,6 @@ require_once '../components/header.php';
                     <label class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant" for="kelas">Kelas</label>
                     <select id="kelas" name="kelas" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-md border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3.5 transition-colors cursor-pointer font-medium" required>
                         <option value="" disabled selected>-- Pilih Kelas --</option>
-                        
-                        <?php foreach ($kelas_list as $k): ?>
-                            <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
-                        <?php endforeach; ?>
-                        
-                        <?php if(empty($kelas_list)): ?>
-                            <option value="" disabled>Belum ada jadwal kelas. Atur di menu Jadwal.</option>
-                        <?php endif; ?>
                     </select>
                 </div>
 
@@ -110,14 +116,6 @@ require_once '../components/header.php';
                     <label class="text-sm font-semibold uppercase tracking-wider text-on-surface-variant" for="mapel">Mata Pelajaran</label>
                     <select id="mapel" name="mapel" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-md border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3.5 transition-colors cursor-pointer font-medium" required>
                         <option value="" disabled selected>-- Pilih Mata Pelajaran --</option>
-                        
-                        <?php foreach ($mapel_list as $m): ?>
-                            <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
-                        <?php endforeach; ?>
-                        
-                        <?php if(empty($mapel_list)): ?>
-                            <option value="" disabled>Belum ada jadwal mapel.</option>
-                        <?php endif; ?>
                     </select>
                 </div>
 
@@ -145,6 +143,73 @@ require_once '../components/header.php';
         </form>
     </main>
 
+    <script>
+        // Ambil data JSON dari PHP
+        const dataKelas = <?= $kelas_json ?>;
+        const dataMapel = <?= $mapel_json ?>;
+
+        const radioJenjang = document.querySelectorAll('input[name="jenjang"]');
+        const selectKelas = document.getElementById('kelas');
+        const selectMapel = document.getElementById('mapel');
+
+        // Fungsi 1: Filter Kelas saat Jenjang (SMP/SMA) diklik
+        function updateDropdownKelas() {
+            // Cari radio button yang sedang aktif
+            const jenjangTerpilih = document.querySelector('input[name="jenjang"]:checked').value.toUpperCase();
+            
+            // Reset/Kosongkan dropdown kelas dan mapel
+            selectKelas.innerHTML = '<option value="" disabled selected>-- Pilih Kelas --</option>';
+            selectMapel.innerHTML = '<option value="" disabled selected>-- Pilih Mata Pelajaran --</option>';
+            
+            let adaKelas = false;
+
+            // Looping data kelas, jika jenjang cocok, tambahkan ke dropdown
+            dataKelas.forEach(kelas => {
+                if (kelas.jenjang === jenjangTerpilih) {
+                    const option = document.createElement('option');
+                    option.value = kelas.id;
+                    option.textContent = kelas.nama_kelas;
+                    selectKelas.appendChild(option);
+                    adaKelas = true;
+                }
+            });
+
+            // Pesan error jika guru belum punya jadwal di jenjang tersebut
+            if (!adaKelas) {
+                selectKelas.innerHTML = '<option value="" disabled selected>Belum ada jadwal kelas ' + jenjangTerpilih + '</option>';
+            }
+        }
+
+        // Fungsi 2: Filter Mapel saat Kelas dipilih
+        function updateDropdownMapel() {
+            const idKelasTerpilih = selectKelas.value;
+            
+            // Reset/Kosongkan dropdown mapel
+            selectMapel.innerHTML = '<option value="" disabled selected>-- Pilih Mata Pelajaran --</option>';
+            
+            // Cek apakah ada mapel yang tersimpan untuk kelas yang dipilih
+            if (idKelasTerpilih && dataMapel[idKelasTerpilih]) {
+                dataMapel[idKelasTerpilih].forEach(mapel => {
+                    const option = document.createElement('option');
+                    option.value = mapel.id;
+                    option.textContent = mapel.nama;
+                    selectMapel.appendChild(option);
+                });
+            } else {
+                selectMapel.innerHTML = '<option value="" disabled selected>Belum ada jadwal mapel.</option>';
+            }
+        }
+
+        // Pasang "Detektor" (Event Listener) ke elemen HTML
+        radioJenjang.forEach(radio => {
+            radio.addEventListener('change', updateDropdownKelas);
+        });
+        
+        selectKelas.addEventListener('change', updateDropdownMapel);
+
+        // Jalankan fungsi satu kali saat halaman pertama kali dibuka
+        updateDropdownKelas();
+    </script>
 <?php 
 require_once '../components/footer.php'; 
 ?>
