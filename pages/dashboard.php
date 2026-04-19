@@ -64,7 +64,7 @@ require_once '../components/header.php';
     </nav>
 
     <main class="flex-grow flex items-center justify-center p-6 md:p-10">
-        <form action="input_nilai.php" method="GET" class="w-full max-w-2xl bg-surface-container-lowest rounded-xl p-8 md:p-10 shadow-[0px_8px_24px_rgba(26,28,30,0.04)] border border-outline-variant/20">
+        <form action="input_nilai.php" method="POST" class="w-full max-w-2xl bg-surface-container-lowest rounded-xl p-8 md:p-10 shadow-[0px_8px_24px_rgba(26,28,30,0.04)] border border-outline-variant/20">
             
             <div class="mb-8 text-center">
                 <h1 class="text-2xl md:text-3xl font-headline font-bold text-primary tracking-tight mb-2">Pilih Kelas</h1>

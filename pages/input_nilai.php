@@ -8,9 +8,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$class_id = $_GET['kelas'] ?? null;
-$mapel_id = $_GET['mapel'] ?? null;
-$kategori = $_GET['kategori'] ?? null;
+$class_id = $_POST['kelas'] ?? null;
+$mapel_id = $_POST['mapel'] ?? null;
+$kategori = $_POST['kategori'] ?? null;
 
 if (!$class_id || !$mapel_id || !$kategori) {
     header("Location: dashboard.php");
