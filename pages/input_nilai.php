@@ -17,39 +17,32 @@ if (!$class_id || !$mapel_id || !$kategori) {
     exit();
 }
 
-// Label Kategori untuk UI
+// Label Kategori
 $kategori_labels = [
     'h_uts' => 'Harian UTS', 'uts' => 'UTS', 'h_uas' => 'Harian UAS', 
     'uas' => 'UAS', 'tambahan' => 'Tambahan'
 ];
 $label_kategori = $kategori_labels[$kategori] ?? 'Kategori Umum';
 
-// 1. Ambil Info Kelas & Mapel
+// Ambil Info Kelas & Mapel
 $stmt_info = $pdo->prepare("SELECT c.nama_kelas, s.nama_mapel FROM classes c, subjects s WHERE c.id = ? AND s.id = ?");
 $stmt_info->execute([$class_id, $mapel_id]);
 $info = $stmt_info->fetch(PDO::FETCH_ASSOC);
 
-// 2. Cari ID Jadwal (schedule_id) yang Tepat
+// Cari ID Jadwal (schedule_id)
 $stmt_sched = $pdo->prepare("SELECT id FROM teaching_schedules WHERE user_id = ? AND class_id = ? AND subject_id = ?");
 $stmt_sched->execute([$user_id, $class_id, $mapel_id]);
 $schedule = $stmt_sched->fetch(PDO::FETCH_ASSOC);
 $schedule_id = $schedule['id'] ?? 0;
 
-// 3. Ambil Daftar Siswa BESERTA Nilainya saat ini (jika sudah pernah diinput)
-$allowed_columns = ['h_uts', 'uts', 'h_uas', 'uas', 'tambahan'];
-if (!in_array($kategori, $allowed_columns)) {
-    header("Location: dashboard.php");
-    exit();
-}
-
+// Ambil Daftar Siswa BESERTA Nilainya saat ini
 $stmt_siswa = $pdo->prepare("
-    SELECT st.id, st.nis, st.nama, g.{$kategori} as nilai_sekarang 
+    SELECT st.id, st.nis, st.nama, g.$kategori as nilai_sekarang 
     FROM students st 
     LEFT JOIN grades g ON g.student_id = st.id AND g.schedule_id = ? 
     WHERE st.class_id = ? 
     ORDER BY st.nama ASC
 ");
-
 $stmt_siswa->execute([$schedule_id, $class_id]);
 $students = $stmt_siswa->fetchAll(PDO::FETCH_ASSOC);
 
@@ -63,10 +56,10 @@ require_once '../components/header.php';
             <button onclick="toggleSidebar()" class="md:hidden p-2 text-on-surface-variant"><span class="material-symbols-outlined">menu</span></button>
             <div class="flex flex-col">
                 <span class="font-bold text-sm leading-tight"><?= $info['nama_kelas'] ?> - <?= $info['nama_mapel'] ?></span>
-                <span class="text-[10px] text-primary font-bold uppercase">Input Nilai: <?= $label_kategori ?></span>
+                <span class="text-[10px] text-primary font-bold uppercase">Input: <?= $label_kategori ?></span>
             </div>
         </div>
-        <button form="formNilai" class="bg-primary text-on-primary px-6 py-2 rounded-lg text-sm font-bold shadow-sm hover:scale-105 transition-transform">Simpan Data</button>
+        <button form="formNilai" type="submit" class="bg-primary text-on-primary px-6 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-primary-container transition-colors">Simpan Data</button>
     </div>
 </nav>
 
@@ -89,11 +82,9 @@ require_once '../components/header.php';
         <textarea id="pasteBox" rows="1" class="w-full bg-surface-container-lowest border-dashed border-2 border-primary/30 rounded-lg text-xs p-2 focus:ring-primary font-mono text-center" placeholder="Tempel kolom nilai dari Excel di sini..."></textarea>
     </div>
 
-    <form id="formNilai" action="proses_simpan_nilai.php" method="POST" onsubmit="siapkanData(event)">
-        <input type="hidden" name="kategori" value="<?= $kategori ?>">
+    <form id="formNilai" action="proses_simpan_nilai.php" method="POST">
+        <input type="hidden" name="kategori" value="<?= htmlspecialchars($kategori) ?>">
         <input type="hidden" name="schedule_id" value="<?= $schedule_id ?>">
-        
-        <input type="hidden" name="data_nilai_json" id="data_nilai_json">
         
         <div class="flex flex-col gap-3" id="daftarSiswa">
             <?php foreach ($students as $s): ?>
@@ -104,11 +95,10 @@ require_once '../components/header.php';
                     </div>
                     <div class="overflow-hidden">
                         <h3 class="student-name font-bold text-on-surface text-sm truncate"><?= htmlspecialchars($s['nama']) ?></h3>
-                        <p class="text-[10px] text-on-surface-variant font-medium uppercase">NIS: <?= htmlspecialchars($s['nis']) ?></p>
                     </div>
                 </div>
                 <div class="w-[80px] shrink-0">
-                    <input type="number" data-studentid="<?= $s['id'] ?>" value="<?= $s['nilai_sekarang'] !== null ? $s['nilai_sekarang'] : '' ?>" class="nilai-input w-full bg-surface-container-highest border-0 border-b-2 border-transparent focus:border-primary rounded-t-md py-3 text-xl text-center font-black text-primary transition-colors" placeholder="-" min="0" max="100">
+                    <input type="number" name="nilai[<?= $s['id'] ?>]" value="<?= $s['nilai_sekarang'] !== null ? $s['nilai_sekarang'] : '' ?>" class="nilai-input w-full bg-surface-container-highest border-0 border-b-2 border-transparent focus:border-primary rounded-t-md py-3 text-xl text-center font-black text-primary transition-colors" placeholder="-" min="0" max="100">
                 </div>
             </div>
             <?php endforeach; ?>
@@ -117,18 +107,16 @@ require_once '../components/header.php';
 </main>
 
 <script>
-    // Fitur Search
-    const searchInput = document.getElementById('cariSiswa');
-    const cards = document.querySelectorAll('.student-card');
-    searchInput.addEventListener('input', function() {
+    // Fitur Search Murni
+    document.getElementById('cariSiswa').addEventListener('input', function() {
         const q = this.value.toLowerCase();
-        cards.forEach(card => {
+        document.querySelectorAll('.student-card').forEach(card => {
             const name = card.querySelector('.student-name').innerText.toLowerCase();
             card.style.display = name.includes(q) ? 'flex' : 'none';
         });
     });
 
-    // Fitur Smart Paste
+    // Fitur Smart Paste (Hanya UI, tidak merubah logika pengiriman form)
     const pasteBox = document.getElementById('pasteBox');
     const nilaiInputs = document.querySelectorAll('.nilai-input');
 
@@ -137,7 +125,6 @@ require_once '../components/header.php';
         const text = (e.clipboardData || window.clipboardData).getData('text');
         const rows = text.split(/\r?\n/).filter(row => row.trim() !== "");
         
-        let counter = 0;
         rows.forEach((value, index) => {
             if (nilaiInputs[index]) {
                 const cleanedValue = value.replace(/[^0-9]/g, '');
@@ -145,36 +132,11 @@ require_once '../components/header.php';
                     nilaiInputs[index].value = cleanedValue;
                     nilaiInputs[index].classList.add('bg-tertiary-container', 'text-tertiary');
                     setTimeout(() => nilaiInputs[index].classList.remove('bg-tertiary-container', 'text-tertiary'), 1500);
-                    counter++;
                 }
             }
         });
         pasteBox.value = '';
-        if(counter > 0) alert(counter + " baris nilai berhasil di-paste massal!");
     });
-
-    // Trik Ultimate: Bungkus JSON lalu Enkripsi ke Base64
-    function siapkanData(event) {
-        const paketNilai = {};
-        const inputs = document.querySelectorAll('.nilai-input');
-        
-        inputs.forEach(input => {
-            const studentId = input.getAttribute('data-studentid');
-            const nilai = input.value;
-            
-            if (nilai.trim() !== "") {
-                paketNilai[studentId] = nilai;
-            }
-        });
-
-        // 1. Ubah jadi teks JSON
-        const jsonString = JSON.stringify(paketNilai);
-        
-        const base64String = btoa(jsonString);
-        
-        // 3. Masukkan ke input tersembunyi
-        document.getElementById('data_nilai_json').value = base64String;
-    }
 </script>
 
 <?php require_once '../components/footer.php'; ?>
