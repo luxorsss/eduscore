@@ -7,18 +7,16 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Tangkap data dari Form standar HTML
     $kategori = $_POST['kategori'] ?? '';
     $schedule_id = $_POST['schedule_id'] ?? 0;
-    $nilais = $_POST['nilai'] ?? []; // Mengambil array nilai secara langsung
 
-    // Validasi Keamanan (Pastikan kategori tidak dimanipulasi)
+    // Validasi Keamanan Kategori
     $allowed_categories = ['h_uts', 'uts', 'h_uas', 'uas', 'tambahan'];
     if (!in_array($kategori, $allowed_categories)) {
         die("Error: Kategori nilai tidak valid.");
     }
 
-    if ($schedule_id == 0 || empty($nilais)) {
+    if ($schedule_id == 0) {
         echo "<script>alert('Data kosong atau tidak ada kelas yang dipilih.'); window.history.back();</script>";
         exit();
     }
@@ -31,15 +29,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ON DUPLICATE KEY UPDATE $kategori = VALUES($kategori)";
         
         $stmt = $pdo->prepare($sql);
-
         $berhasil = 0;
         
-        // Looping murni standar PHP array
-        foreach ($nilais as $student_id => $nilai) {
-            // Abaikan jika kotaknya tidak diisi sama sekali
-            if (trim($nilai) !== "") {
-                $stmt->execute([$student_id, $schedule_id, $nilai]);
-                $berhasil++;
+        // BACA SEMUA DATA POST, CARI YANG NAMANYA BERAWALAN "n_"
+        foreach ($_POST as $key => $nilai) {
+            // Jika nama input-nya dimulai dengan "n_" (contoh: n_12)
+            if (strpos($key, 'n_') === 0) {
+                // Ambil ID siswanya saja (buang huruf "n_")
+                $student_id = str_replace('n_', '', $key);
+                
+                // Simpan jika nilainya tidak kosong
+                if (trim($nilai) !== "") {
+                    $stmt->execute([$student_id, $schedule_id, $nilai]);
+                    $berhasil++;
+                }
             }
         }
 

@@ -98,7 +98,7 @@ require_once '../components/header.php';
                     </div>
                 </div>
                 <div class="w-[80px] shrink-0">
-                    <input type="number" name="nilai[<?= $s['id'] ?>]" value="<?= $s['nilai_sekarang'] !== null ? $s['nilai_sekarang'] : '' ?>" class="nilai-input w-full bg-surface-container-highest border-0 border-b-2 border-transparent focus:border-primary rounded-t-md py-3 text-xl text-center font-black text-primary transition-colors" placeholder="-" min="0" max="100">
+                    <input type="number" name="n_<?= $s['id'] ?>" value="<?= $s['nilai_sekarang'] !== null ? $s['nilai_sekarang'] : '' ?>" class="nilai-input w-full bg-surface-container-highest border-0 border-b-2 border-transparent focus:border-primary rounded-t-md py-3 text-xl text-center font-black text-primary transition-colors" placeholder="-" min="0" max="100">
                 </div>
             </div>
             <?php endforeach; ?>
