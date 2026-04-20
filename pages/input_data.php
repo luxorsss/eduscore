@@ -82,7 +82,7 @@ require_once '../components/header.php';
         <textarea id="pasteBox" rows="1" class="w-full bg-surface-container-lowest border-dashed border-2 border-primary/30 rounded-lg text-xs p-2 focus:ring-primary font-mono text-center" placeholder="Tempel kolom nilai dari Excel di sini..."></textarea>
     </div>
 
-    <form id="formNilai" action="proses_simpan_nilai.php" method="POST">
+    <form id="formNilai" action="proses_simpan_data.php" method="POST">
         <input type="hidden" name="kategori" value="<?= htmlspecialchars($kategori) ?>">
         <input type="hidden" name="schedule_id" value="<?= $schedule_id ?>">
         
