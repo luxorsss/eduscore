@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         echo "<script>
                 alert('Berhasil! $berhasil nilai telah disimpan ke database.');
-                window.history.back(); 
+                window.location.href = 'dashboard.php';
               </script>";
               
     } catch (Exception $e) {
