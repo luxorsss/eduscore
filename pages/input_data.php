@@ -137,6 +137,22 @@ require_once '../components/header.php';
         });
         pasteBox.value = '';
     });
+
+    // Fitur Enter kembali ke Search Bar (Cegah Auto-Submit)
+    const kolomPencarian = document.getElementById('cariSiswa');
+    const semuaInputNilai = document.querySelectorAll('.nilai-input');
+
+    semuaInputNilai.forEach(input => {
+        input.addEventListener('keydown', function(e) {
+            // Jika tombol yang ditekan adalah Enter
+            if (e.key === 'Enter') {
+                e.preventDefault(); // CEGAH form tersubmit/tersimpan!
+                
+                kolomPencarian.focus(); // Pindahkan kursor ke kotak pencarian
+                kolomPencarian.select(); // Block/highlight teks pencarian sebelumnya agar langsung tertimpa saat mengetik
+            }
+        });
+    });
 </script>
 
 <?php require_once '../components/footer.php'; ?>
