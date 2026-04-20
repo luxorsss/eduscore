@@ -141,6 +141,28 @@ require_once '../components/header.php';
             </div>
 
         </form>
+
+        <div class="w-full max-w-2xl mt-8 bg-error-container/30 rounded-xl p-6 md:p-8 border border-error/20 shadow-sm">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="text-center md:text-left">
+                    <h2 class="text-lg font-bold text-error flex items-center justify-center md:justify-start gap-2">
+                        <span class="material-symbols-outlined">warning</span>
+                        Persiapan Semester Baru
+                    </h2>
+                    <p class="text-sm text-on-surface-variant mt-1 leading-relaxed">
+                        Fitur ini akan menghapus <b>seluruh data nilai</b> dari semua kelas secara permanen. <br class="hidden md:block">Data master (Siswa, Kelas, Jadwal) tetap aman dan tidak akan hilang.
+                    </p>
+                </div>
+                
+                <form action="proses_reset.php" method="POST" class="w-full md:w-auto shrink-0">
+                    <input type="hidden" name="reset_semua_nilai" value="1">
+                    <button type="submit" onclick="return confirm('PERINGATAN KERAS!\n\nApakah Anda yakin ingin MENGHAPUS SEMUA NILAI di sistem ini?\n\nSemua kolom nilai akan kembali kosong. Aksi ini tidak bisa dibatalkan!')" class="w-full bg-error text-on-primary px-6 py-3.5 rounded-lg text-sm font-bold shadow-md hover:bg-[#93000a] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+                        Kosongkan Nilai
+                    </button>
+                </form>
+            </div>
+        </div>
     </main>
 
     <script>
