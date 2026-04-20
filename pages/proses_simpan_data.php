@@ -2,62 +2,60 @@
 session_start();
 require_once '../config/koneksi.php';
 
-if (!isset($_SESSION['user_id'])) {
-    die("Akses ditolak.");
+if (!isset($_SESSION['user_id']) || $_SERVER["REQUEST_METHOD"] != "POST") {
+    header("Location: dashboard.php");
+    exit();
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $kategori = $_POST['kategori'] ?? '';
-    $schedule_id = $_POST['schedule_id'] ?? 0;
+$schedule_id = $_POST['schedule_id'] ?? 0;
+$n_h_uts = $_POST['n_h_uts'] ?? [];
+$n_uts = $_POST['n_uts'] ?? [];
+$n_t_uts = $_POST['n_t_uts'] ?? [];
+$n_h_uas = $_POST['n_h_uas'] ?? [];
+$n_uas = $_POST['n_uas'] ?? [];
+$n_t_uas = $_POST['n_t_uas'] ?? [];
 
-    // Validasi Keamanan Kategori
-    $allowed_categories = ['h_uts', 'uts', 'tambahan_uts', 'h_uas', 'uas', 'tambahan_uas'];
-    if (!in_array($kategori, $allowed_categories)) {
-        die("Error: Kategori nilai tidak valid.");
-    }
+$berhasil = 0;
 
-    if ($schedule_id == 0) {
-        echo "<script>alert('Data kosong atau tidak ada kelas yang dipilih.'); window.history.back();</script>";
-        exit();
-    }
+try {
+    $pdo->beginTransaction();
 
-    try {
-        $pdo->beginTransaction();
+    foreach ($n_uts as $student_id => $val) {
+        // Ambil nilai, jadikan null jika kosong
+        $val_h_uts = ($n_h_uts[$student_id] !== '') ? $n_h_uts[$student_id] : null;
+        $val_uts   = ($n_uts[$student_id] !== '') ? $n_uts[$student_id] : null;
+        $val_t_uts = ($n_t_uts[$student_id] !== '') ? $n_t_uts[$student_id] : null;
+        $val_h_uas = ($n_h_uas[$student_id] !== '') ? $n_h_uas[$student_id] : null;
+        $val_uas   = ($n_uas[$student_id] !== '') ? $n_uas[$student_id] : null;
+        $val_t_uas = ($n_t_uas[$student_id] !== '') ? $n_t_uas[$student_id] : null;
 
-        $sql = "INSERT INTO grades (student_id, schedule_id, $kategori) 
-                VALUES (?, ?, ?) 
-                ON DUPLICATE KEY UPDATE $kategori = VALUES($kategori)";
-        
-        $stmt = $pdo->prepare($sql);
-        $berhasil = 0;
-        
-        // BACA SEMUA DATA POST, CARI YANG NAMANYA BERAWALAN "n_"
-        foreach ($_POST as $key => $nilai) {
-            // Jika nama input-nya dimulai dengan "n_" (contoh: n_12)
-            if (strpos($key, 'n_') === 0) {
-                // Ambil ID siswanya saja (buang huruf "n_")
-                $student_id = str_replace('n_', '', $key);
-                
-                // Simpan jika nilainya tidak kosong
-                if (trim($nilai) !== "") {
-                    $stmt->execute([$student_id, $schedule_id, $nilai]);
-                    $berhasil++;
-                }
+        // Cek apakah data nilai siswa ini di mapel ini sudah ada
+        $stmt_check = $pdo->prepare("SELECT id FROM grades WHERE student_id = ? AND schedule_id = ?");
+        $stmt_check->execute([$student_id, $schedule_id]);
+        $exists = $stmt_check->fetchColumn();
+
+        if ($exists) {
+            // Update jika sudah ada
+            $stmt_update = $pdo->prepare("UPDATE grades SET h_uts=?, uts=?, tambahan_uts=?, h_uas=?, uas=?, tambahan_uas=? WHERE student_id=? AND schedule_id=?");
+            $stmt_update->execute([$val_h_uts, $val_uts, $val_t_uts, $val_h_uas, $val_uas, $val_t_uas, $student_id, $schedule_id]);
+        } else {
+            // Jika belum pernah ada nilainya sama sekali tapi ada kotak yang diisi
+            if ($val_h_uts !== null || $val_uts !== null || $val_t_uts !== null || $val_h_uas !== null || $val_uas !== null || $val_t_uas !== null) {
+                $stmt_insert = $pdo->prepare("INSERT INTO grades (student_id, schedule_id, h_uts, uts, tambahan_uts, h_uas, uas, tambahan_uas) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt_insert->execute([$student_id, $schedule_id, $val_h_uts, $val_uts, $val_t_uts, $val_h_uas, $val_uas, $val_t_uas]);
             }
         }
-
-        $pdo->commit();
-        
-        echo "<script>
-                alert('Berhasil! $berhasil nilai telah disimpan ke database.');
-                window.location.href = 'dashboard.php';
-              </script>";
-              
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        die("Gagal menyimpan nilai: " . $e->getMessage());
+        $berhasil++;
     }
-} else {
-    header("Location: dashboard.php");
+
+    $pdo->commit();
+    echo "<script>
+            alert('Berhasil! Data nilai $berhasil siswa telah disimpan/diperbarui.');
+            window.location.href = 'dashboard.php';
+          </script>";
+
+} catch (PDOException $e) {
+    $pdo->rollBack();
+    die("Gagal menyimpan data: " . $e->getMessage());
 }
 ?>
