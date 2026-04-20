@@ -51,7 +51,7 @@ require_once '../components/header.php';
 ?>
 
 <nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div class="max-w-4xl mx-auto px-2 md:px-4 h-16 flex items-center justify-between">
         <div class="flex items-center gap-2">
             <button onclick="toggleSidebar()" class="md:hidden p-2 text-on-surface-variant"><span class="material-symbols-outlined">menu</span></button>
             <div class="flex flex-col">
@@ -64,7 +64,7 @@ require_once '../components/header.php';
 </nav>
 
 <div class="bg-surface/90 backdrop-blur-md sticky top-16 z-40 border-b border-outline-variant/20 shadow-sm">
-    <div class="max-w-4xl mx-auto p-4 flex gap-2">
+    <div class="max-w-4xl mx-auto p-2 md:p-4 flex gap-2">
         <div class="relative flex-1">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
             <input type="text" id="cariSiswa" class="w-full bg-surface-container-lowest border-outline-variant/50 focus:ring-primary rounded-xl pl-10 py-3 text-sm font-medium" placeholder="Cari nama siswa...">
@@ -72,7 +72,7 @@ require_once '../components/header.php';
     </div>
 </div>
 
-<main class="max-w-4xl mx-auto w-full p-4 flex flex-col gap-3">
+<main class="max-w-4xl mx-auto w-full p-2 md:p-4 flex flex-col gap-3">
     
     <div class="bg-primary/5 border border-primary/20 rounded-xl p-3 flex flex-col gap-2 mb-2">
         <div class="flex items-center justify-between">
@@ -88,17 +88,17 @@ require_once '../components/header.php';
         
         <div class="flex flex-col gap-3" id="daftarSiswa">
             <?php foreach ($students as $s): ?>
-            <div class="student-card bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-outline-variant/10 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3 overflow-hidden">
-                    <div class="w-10 h-10 rounded-full bg-primary/5 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+            <div class="student-card bg-surface-container-lowest rounded-xl p-2.5 md:p-4 shadow-sm border border-outline-variant/10 flex items-center justify-between gap-2 md:gap-4">
+                <div class="flex items-center gap-2 md:gap-3 overflow-hidden">
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/5 text-primary flex items-center justify-center font-bold text-xs shrink-0">
                         <?= strtoupper(substr($s['nama'], 0, 2)) ?>
                     </div>
                     <div class="overflow-hidden">
                         <h3 class="student-name font-bold text-on-surface text-sm truncate"><?= htmlspecialchars($s['nama']) ?></h3>
                     </div>
                 </div>
-                <div class="w-[80px] shrink-0">
-                    <input type="number" name="n_<?= $s['id'] ?>" value="<?= $s['nilai_sekarang'] !== null ? $s['nilai_sekarang'] : '' ?>" class="nilai-input w-full bg-surface-container-highest border-0 border-b-2 border-transparent focus:border-primary rounded-t-md py-3 text-xl text-center font-black text-primary transition-colors" placeholder="-" min="0" max="100">
+                <div class="w-[65px] md:w-[80px] shrink-0">
+                    <input type="number" name="n_<?= $s['id'] ?>" value="<?= $s['nilai_sekarang'] !== null ? $s['nilai_sekarang'] : '' ?>" class="nilai-input w-full bg-surface-container-highest border-0 border-b-2 border-transparent focus:border-primary rounded-t-md py-2 md:py-3 text-lg md:text-xl text-center font-black text-primary transition-colors" placeholder="-" min="0" max="100">
                 </div>
             </div>
             <?php endforeach; ?>
@@ -175,6 +175,18 @@ require_once '../components/header.php';
             }
         });
     });
+
+    const searchInput = document.getElementById('cariSiswa');
+
+    // Fitur: Klik langsung blok tulisan
+    searchInput.addEventListener('focus', function() {
+        this.select();
+    });
+
+    // Opsional: Untuk beberapa browser mobile (iOS/Safari), tambahkan ini agar lebih stabil
+    searchInput.addEventListener('mouseup', function(e) {
+        e.preventDefault();
+    }, { once: true });
 </script>
 
 <?php require_once '../components/footer.php'; ?>
