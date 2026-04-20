@@ -138,18 +138,40 @@ require_once '../components/header.php';
         pasteBox.value = '';
     });
 
-    // Fitur Enter kembali ke Search Bar (Cegah Auto-Submit)
+    // ==========================================
+    // FITUR SUPER SAT-SET: Siklus Enter Otomatis
+    // ==========================================
     const kolomPencarian = document.getElementById('cariSiswa');
     const semuaInputNilai = document.querySelectorAll('.nilai-input');
 
+    // 1. Logika saat menekan Enter di Kotak Pencarian (Turun ke Input Nilai)
+    kolomPencarian.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Mencegah form submit
+            
+            // Ambil semua baris siswa yang sedang TAMPIL di layar (hasil filter)
+            const siswaTampil = Array.from(document.querySelectorAll('.student-card'))
+                                     .filter(card => card.style.display !== 'none');
+            
+            // Jika ada siswa yang cocok, ambil kotak nilai milik siswa urutan pertama
+            if (siswaTampil.length > 0) {
+                const inputTarget = siswaTampil[0].querySelector('.nilai-input');
+                if (inputTarget) {
+                    inputTarget.focus();
+                    inputTarget.select(); // Blok angka lama (jika ada) agar ketikan baru langsung menimpa
+                }
+            }
+        }
+    });
+
+    // 2. Logika saat menekan Enter di Kotak Nilai (Lompat Naik ke Pencarian)
     semuaInputNilai.forEach(input => {
         input.addEventListener('keydown', function(e) {
-            // Jika tombol yang ditekan adalah Enter
             if (e.key === 'Enter') {
-                e.preventDefault(); // CEGAH form tersubmit/tersimpan!
+                e.preventDefault(); // Mencegah form submit/simpan
                 
-                kolomPencarian.focus(); // Pindahkan kursor ke kotak pencarian
-                kolomPencarian.select(); // Block/highlight teks pencarian sebelumnya agar langsung tertimpa saat mengetik
+                kolomPencarian.focus();
+                kolomPencarian.select(); // Blok teks nama sebelumnya agar langsung tertimpa
             }
         });
     });
