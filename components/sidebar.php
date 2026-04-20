@@ -25,7 +25,7 @@
             <span class="material-symbols-outlined text-[20px]">group</span>
             <span class="font-medium text-sm">Data Siswa</span>
         </a>
-        <a href="input_nilai.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'input_nilai.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+        <a href="input_data.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'input_nilai.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">edit_square</span>
             <span class="font-medium text-sm">Input Nilai</span>
         </a>
