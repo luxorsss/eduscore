@@ -66,16 +66,16 @@ require_once '../components/header.php';
 
     <form action="proses_bulk_siswa.php" method="POST">
         <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden relative pb-16 md:pb-0">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[500px]">
-                    <thead class="bg-surface-container-low text-xs uppercase font-semibold text-on-surface-variant border-b border-outline-variant/20">
+            <div class="overflow-auto max-h-[60vh] relative">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-low text-[10px] md:text-xs uppercase font-semibold text-on-surface-variant border-b border-outline-variant/30 sticky top-0 z-10 shadow-sm">
                         <tr>
-                            <th class="px-4 py-3 w-12 text-center">
+                            <th class="px-2 md:px-4 py-3 w-10 md:w-12 text-center">
                                 <input type="checkbox" id="checkAll" class="rounded text-primary focus:ring-primary border-outline-variant/50 bg-surface w-4 h-4 cursor-pointer">
                             </th>
-                            <th class="px-4 py-3">Profil Siswa</th>
-                            <th class="px-4 py-3 w-40">Kelas</th>
-                            <th class="px-4 py-3 w-20 text-center">Aksi</th>
+                            <th class="px-2 md:px-4 py-3">Profil Siswa</th>
+                            <th class="px-2 md:px-4 py-3 w-24 md:w-40">Kelas</th>
+                            <th class="px-2 md:px-4 py-3 w-20 md:w-24 text-center">Aksi</th>
                         </tr>
                     </thead>
                     
@@ -84,39 +84,44 @@ require_once '../components/header.php';
                         <?php $nama_kelas_label = !empty($s['nama_kelas']) ? htmlspecialchars($s['nama_kelas']) : "Tanpa Kelas"; ?>
                         
                         <tr class="student-row hover:bg-surface-container-low/50 group transition-colors" data-nama="<?= strtolower(htmlspecialchars($s['nama'])) ?>" data-kelas="<?= strtolower($nama_kelas_label) ?>">
-                            <td class="px-4 py-4 text-center">
+                            <td class="px-2 md:px-4 py-2 md:py-3 text-center">
                                 <input type="checkbox" name="id_hapus[]" value="<?= $s['id'] ?>" class="cb-siswa rounded text-primary border-outline-variant/50 w-4 h-4 cursor-pointer">
                             </td>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                            <td class="px-2 md:px-4 py-2 md:py-3">
+                                <div class="flex items-center gap-2 md:gap-3">
+                                    <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px] md:text-xs shrink-0">
                                         <?= strtoupper(substr($s['nama'], 0, 2)); ?>
                                     </div>
-                                    <span class="font-bold text-base"><?= htmlspecialchars($s['nama']) ?></span>
+                                    <span class="font-bold text-xs md:text-sm line-clamp-1 leading-tight"><?= htmlspecialchars($s['nama']) ?></span>
                                 </div>
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-2 md:px-4 py-2 md:py-3">
                                 <?php if (!empty($s['nama_kelas'])): ?>
-                                    <span class="bg-surface-container-highest px-2.5 py-1 rounded-md text-xs font-bold text-on-surface border border-outline-variant/30">
+                                    <span class="bg-surface-container-highest px-2 py-1 rounded-md text-[10px] md:text-xs font-bold text-on-surface border border-outline-variant/30 whitespace-nowrap">
                                         <?= htmlspecialchars($s['nama_kelas']) ?>
                                     </span>
                                 <?php else: ?>
-                                    <span class="bg-error-container text-error px-2 py-1 rounded text-xs font-bold flex items-center gap-1 w-fit">
-                                        <span class="material-symbols-outlined text-[14px]">warning</span> Tanpa Kelas
+                                    <span class="bg-error-container text-error px-1.5 py-1 rounded text-[10px] md:text-xs font-bold flex items-center gap-1 w-fit whitespace-nowrap">
+                                        <span class="material-symbols-outlined text-[12px] md:text-[14px]">warning</span> Tanpa Kelas
                                     </span>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-4 py-4 text-center">
-                                <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="return confirm('Hapus siswa ini?')" class="text-error opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-error-container rounded-lg">
-                                    <span class="material-symbols-outlined text-[18px]">delete</span>
-                                </a>
+                            <td class="px-2 md:px-4 py-2 md:py-3 text-center">
+                                <div class="flex items-center justify-center gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity flex-nowrap">
+                                    <button type="button" onclick="bukaModalEdit(<?= $s['id'] ?>, '<?= addslashes($s['nama']) ?>', '<?= $s['class_id'] ?>')" class="text-primary p-1 md:p-2 hover:bg-primary-container rounded-lg transition-colors shrink-0" title="Edit">
+                                        <span class="material-symbols-outlined text-[16px] md:text-[18px]">edit</span>
+                                    </button>
+                                    <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="return confirm('Hapus siswa ini?')" class="text-error p-1 md:p-2 hover:bg-error-container rounded-lg transition-colors shrink-0" title="Hapus">
+                                        <span class="material-symbols-outlined text-[16px] md:text-[18px]">delete</span>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
 
-                    <tbody id="containerInputSiswa" class="text-sm divide-y divide-outline-variant/10">
-                        </tbody>
+                    <tbody id="containerInputSiswa" class="divide-y divide-outline-variant/10">
+                    </tbody>
                 </table>
             </div>
 
@@ -174,6 +179,41 @@ require_once '../components/header.php';
             </button>
         </form>
     </div>
+
+    <div id="modalEditSiswa" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-surface-container-lowest w-full max-w-sm rounded-2xl shadow-xl overflow-hidden transform scale-95 transition-transform duration-300" id="modalEditContent">
+            <div class="p-4 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
+                <h3 class="font-bold text-primary flex items-center gap-2"><span class="material-symbols-outlined">edit_square</span> Edit Siswa</h3>
+                <button type="button" onclick="tutupModalEdit()" class="text-on-surface-variant hover:text-error transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form action="proses_bulk_siswa.php" method="POST" class="p-5 flex flex-col gap-4">
+                <input type="hidden" name="aksi" value="edit_single">
+                <input type="hidden" id="edit_id" name="id_siswa" value="">
+                
+                <div>
+                    <label class="text-xs font-bold text-on-surface-variant uppercase mb-1 block">Nama Lengkap</label>
+                    <input type="text" id="edit_nama" name="nama_siswa" class="w-full bg-surface-container-highest rounded-lg px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-primary" required>
+                </div>
+                
+                <div>
+                    <label class="text-xs font-bold text-on-surface-variant uppercase mb-1 block">Penempatan Kelas</label>
+                    <select id="edit_kelas" name="class_id" class="w-full bg-surface-container-highest rounded-lg px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-primary cursor-pointer">
+                        <option value="">-- Kosongkan (Tanpa Kelas) --</option>
+                        <?php foreach($list_kelas as $lk): ?>
+                            <option value="<?= $lk['id'] ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="mt-2 flex justify-end gap-3 pt-4 border-t border-outline-variant/20">
+                    <button type="button" onclick="tutupModalEdit()" class="px-5 py-2 rounded-lg font-bold text-sm text-on-surface-variant hover:bg-surface-container-highest transition-colors">Batal</button>
+                    <button type="submit" class="bg-primary text-on-primary px-5 py-2 rounded-lg font-bold text-sm shadow hover:bg-primary-container transition-colors">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </main>
 
 <script>
@@ -211,17 +251,17 @@ require_once '../components/header.php';
         const row = document.createElement('tr');
         row.className = "bg-primary/5 border-t-2 border-primary/20";
         row.innerHTML = `
-            <td class="px-4 py-4 text-center">
-                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-error-variant hover:text-error" title="Batal Tambah">
-                    <span class="material-symbols-outlined text-[18px]">remove_circle</span>
+            <td class="px-2 md:px-4 py-2 md:py-3 text-center">
+                <button type="button" onclick="this.closest('tr').remove()" class="text-error-variant hover:text-error">
+                    <span class="material-symbols-outlined text-[16px] md:text-[18px]">remove_circle</span>
                 </button>
             </td>
-            <td class="px-4 py-3">
-                <input type="text" name="nama_siswa[]" required class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 text-sm font-bold placeholder-primary/50" placeholder="Ketik Nama Siswa Baru...">
+            <td class="px-2 md:px-4 py-2">
+                <input type="text" name="nama_siswa[]" required class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 text-xs md:text-sm font-bold placeholder-primary/50" placeholder="Nama Siswa Baru...">
                 <input type="hidden" name="nis_siswa[]" value="AUTO"> 
             </td>
-            <td class="px-4 py-3">
-                <select name="class_id_siswa[]" class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 text-xs font-bold" required>
+            <td class="px-2 md:px-4 py-2">
+                <select name="class_id_siswa[]" class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 text-[10px] md:text-xs font-bold" required>
                     <option value="" disabled selected>Pilih Kelas</option>
                     <?php foreach($list_kelas as $lk): ?>
                         <option value="<?= $lk['id'] ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>
@@ -231,6 +271,10 @@ require_once '../components/header.php';
             <td></td>
         `;
         container.appendChild(row);
+        
+        // Auto-scroll ke bawah saat tambah baris
+        const tableContainer = document.querySelector('.overflow-auto');
+        tableContainer.scrollTop = tableContainer.scrollHeight;
     }
 
     // 3. LOGIKA FLOATING ACTION BAR 
@@ -271,6 +315,35 @@ require_once '../components/header.php';
     }
 
     checkboxes.forEach(cb => cb.addEventListener('change', updateActionBar));
+
+    // --- Lojik MODAL EDIT ---
+    const modalEdit = document.getElementById('modalEditSiswa');
+    const modalEditContent = document.getElementById('modalEditContent');
+    const inputEditId = document.getElementById('edit_id');
+    const inputEditNama = document.getElementById('edit_nama');
+    const inputEditKelas = document.getElementById('edit_kelas');
+
+    function bukaModalEdit(id, nama, idKelas) {
+        inputEditId.value = id;
+        inputEditNama.value = nama;
+        inputEditKelas.value = idKelas || ""; 
+        
+        modalEdit.classList.remove('hidden');
+        modalEdit.classList.add('flex');
+        setTimeout(() => {
+            modalEdit.classList.remove('opacity-0');
+            modalEditContent.classList.remove('scale-95');
+        }, 10);
+    }
+
+    function tutupModalEdit() {
+        modalEdit.classList.add('opacity-0');
+        modalEditContent.classList.add('scale-95');
+        setTimeout(() => {
+            modalEdit.classList.add('hidden');
+            modalEdit.classList.remove('flex');
+        }, 300);
+    }
 </script>
 
 <?php require_once '../components/footer.php'; ?>

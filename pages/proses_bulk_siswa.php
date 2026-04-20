@@ -7,6 +7,28 @@ if (!isset($_SESSION['user_id'])) exit;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $aksi = $_POST['aksi'] ?? '';
 
+    // --- FITUR BARU: Edit Single ---
+    if ($aksi == 'edit_single') {
+        $id_siswa = $_POST['id_siswa'] ?? 0;
+        $nama_siswa = trim($_POST['nama_siswa'] ?? '');
+        $class_id = !empty($_POST['class_id']) ? $_POST['class_id'] : null;
+
+        if ($id_siswa > 0 && !empty($nama_siswa)) {
+            try {
+                $stmt = $pdo->prepare("UPDATE students SET nama = ?, class_id = ? WHERE id = ?");
+                $stmt->execute([$nama_siswa, $class_id, $id_siswa]);
+                
+                echo "<script>
+                        alert('Data siswa berhasil diperbarui!');
+                        window.location.href = 'siswa.php';
+                      </script>";
+            } catch (PDOException $e) {
+                die("Gagal memperbarui data: " . $e->getMessage());
+            }
+        }
+        exit();
+    }
+
     // A. FITUR BULK DELETE (Hapus Massal)
     if ($aksi === 'hapus_massal') {
         $ids = $_POST['id_hapus'] ?? []; // Mengambil array ID yang dicentang

@@ -125,9 +125,10 @@ require_once '../components/header.php';
                         <option value="" disabled selected>-- Pilih Kategori --</option>
                         <option value="h_uts">Nilai Harian UTS</option>
                         <option value="uts">Ujian Tengah Semester (UTS)</option>
+                        <option value="tambahan_uts">Tambahan / Remedial UTS</option>
                         <option value="h_uas">Nilai Harian UAS</option>
                         <option value="uas">Ujian Akhir Semester (UAS)</option>
-                        <option value="tambahan">Nilai Tambahan</option>
+                        <option value="tambahan_uas">Tambahan / Remedial UAS</option>
                     </select>
                 </div>
 

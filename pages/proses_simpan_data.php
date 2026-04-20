@@ -11,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $schedule_id = $_POST['schedule_id'] ?? 0;
 
     // Validasi Keamanan Kategori
-    $allowed_categories = ['h_uts', 'uts', 'h_uas', 'uas', 'tambahan'];
+    $allowed_categories = ['h_uts', 'uts', 'tambahan_uts', 'h_uas', 'uas', 'tambahan_uas'];
     if (!in_array($kategori, $allowed_categories)) {
         die("Error: Kategori nilai tidak valid.");
     }

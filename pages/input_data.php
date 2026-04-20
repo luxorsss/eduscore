@@ -17,10 +17,10 @@ if (!$class_id || !$mapel_id || !$kategori) {
     exit();
 }
 
-// Label Kategori
+// Label Kategori Baru
 $kategori_labels = [
-    'h_uts' => 'Harian UTS', 'uts' => 'UTS', 'h_uas' => 'Harian UAS', 
-    'uas' => 'UAS', 'tambahan' => 'Tambahan'
+    'h_uts' => 'Harian UTS', 'uts' => 'UTS', 'tambahan_uts' => 'Tambahan UTS',
+    'h_uas' => 'Harian UAS', 'uas' => 'UAS', 'tambahan_uas' => 'Tambahan UAS'
 ];
 $label_kategori = $kategori_labels[$kategori] ?? 'Kategori Umum';
 
