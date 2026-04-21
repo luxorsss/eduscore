@@ -22,12 +22,12 @@ try {
 
     foreach ($n_uts as $student_id => $val) {
         // Ambil nilai, jadikan null jika kosong
-        $val_h_uts = ($n_h_uts[$student_id] !== '') ? $n_h_uts[$student_id] : null;
-        $val_uts   = ($n_uts[$student_id] !== '') ? $n_uts[$student_id] : null;
-        $val_t_uts = ($n_t_uts[$student_id] !== '') ? $n_t_uts[$student_id] : null;
-        $val_h_uas = ($n_h_uas[$student_id] !== '') ? $n_h_uas[$student_id] : null;
-        $val_uas   = ($n_uas[$student_id] !== '') ? $n_uas[$student_id] : null;
-        $val_t_uas = ($n_t_uas[$student_id] !== '') ? $n_t_uas[$student_id] : null;
+        $val_h_uts = ($n_h_uts[$student_id] !== '') ? str_replace(',', '.', $n_h_uts[$student_id]) : null;
+        $val_uts   = ($n_uts[$student_id] !== '') ? str_replace(',', '.', $n_uts[$student_id]) : null;
+        $val_t_uts = ($n_t_uts[$student_id] !== '') ? str_replace(',', '.', $n_t_uts[$student_id]) : null;
+        $val_h_uas = ($n_h_uas[$student_id] !== '') ? str_replace(',', '.', $n_h_uas[$student_id]) : null;
+        $val_uas   = ($n_uas[$student_id] !== '') ? str_replace(',', '.', $n_uas[$student_id]) : null;
+        $val_t_uas = ($n_t_uas[$student_id] !== '') ? str_replace(',', '.', $n_t_uas[$student_id]) : null;
 
         // Cek apakah data nilai siswa ini di mapel ini sudah ada
         $stmt_check = $pdo->prepare("SELECT id FROM grades WHERE student_id = ? AND schedule_id = ?");

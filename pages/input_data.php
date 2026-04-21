@@ -123,23 +123,23 @@ require_once '../components/header.php';
                         </td>
                         
                         <td class="p-1 border border-outline-variant/30">
-                            <input type="number" name="n_h_uts[<?= $s['id'] ?>]" value="<?= $s['h_uts'] ?>" class="nilai-input input-h_uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
+                            <input type="number" step="any" name="n_h_uts[<?= $s['id'] ?>]" value="<?= $s['h_uts'] ?>" class="nilai-input input-h_uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
                         </td>
                         <td class="p-1 border border-outline-variant/30">
-                            <input type="number" name="n_uts[<?= $s['id'] ?>]" value="<?= $s['uts'] ?>" class="nilai-input input-uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
+                            <input type="number" step="any" step="any" name="n_uts[<?= $s['id'] ?>]" value="<?= $s['uts'] ?>" class="nilai-input input-uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
                         </td>
                         <td class="p-1 border border-outline-variant/30 bg-primary/5">
-                            <input type="number" name="n_t_uts[<?= $s['id'] ?>]" value="<?= $s['tambahan_uts'] ?>" class="nilai-input input-t_uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold text-primary" placeholder="-">
+                            <input type="number" step="any" name="n_t_uts[<?= $s['id'] ?>]" value="<?= $s['tambahan_uts'] ?>" class="nilai-input input-t_uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold text-primary" placeholder="-">
                         </td>
                         
                         <td class="p-1 border border-outline-variant/30">
-                            <input type="number" name="n_h_uas[<?= $s['id'] ?>]" value="<?= $s['h_uas'] ?>" class="nilai-input input-h_uas w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
+                            <input type="number" step="any" name="n_h_uas[<?= $s['id'] ?>]" value="<?= $s['h_uas'] ?>" class="nilai-input input-h_uas w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
                         </td>
                         <td class="p-1 border border-outline-variant/30">
-                            <input type="number" name="n_uas[<?= $s['id'] ?>]" value="<?= $s['uas'] ?>" class="nilai-input input-uas w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
+                            <input type="number" step="any" name="n_uas[<?= $s['id'] ?>]" value="<?= $s['uas'] ?>" class="nilai-input input-uas w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
                         </td>
                         <td class="p-1 border border-outline-variant/30 bg-primary/5">
-                            <input type="number" name="n_t_uas[<?= $s['id'] ?>]" value="<?= $s['tambahan_uas'] ?>" class="nilai-input input-t_uas w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold text-primary" placeholder="-">
+                            <input type="number" step="any" name="n_t_uas[<?= $s['id'] ?>]" value="<?= $s['tambahan_uas'] ?>" class="nilai-input input-t_uas w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold text-primary" placeholder="-">
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -213,9 +213,17 @@ require_once '../components/header.php';
         rows.forEach((value, index) => {
             if (barisTerlihat[index]) {
                 const targetInput = barisTerlihat[index].querySelector('.input-' + targetClass);
-                const cleanedValue = value.replace(/[^0-9]/g, ''); // Buang huruf, ambil angka
-                
+                // Izinkan angka, koma, dan titik
+                let cleanedValue = value.replace(/[^0-9,.]/g, ''); 
+                                
                 if(cleanedValue !== "" && targetInput) {
+                    // Ubah koma jadi titik (format standar yang dibaca komputer)
+                    cleanedValue = cleanedValue.replace(',', '.'); 
+                    
+                    // parseFloat akan otomatis mengubah "90.5" tetap "90.5"
+                    // tetapi mengubah "80.0" menjadi "80"
+                    cleanedValue = parseFloat(cleanedValue).toString(); 
+
                     targetInput.value = cleanedValue;
                     // Efek Visual berkedip hijau
                     targetInput.parentElement.classList.add('bg-tertiary-container');
