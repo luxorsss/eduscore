@@ -161,7 +161,7 @@ require_once '../components/header.php';
                 <form action="proses_reset.php" method="POST" class="w-full md:w-auto">
                     <input type="hidden" name="reset_semua_nilai" value="1">
                     <button type="submit" 
-                        onclick="return confirm('PERINGATAN!\n\nSemua data nilai akan dihapus permanen.\n\nLanjutkan?')" 
+                        onclick="konfirmasiForm(event, 'Semua data nilai akan dihapus permanen. Lanjutkan?')"
                         class="w-full md:w-auto bg-surface-container-highest text-error px-5 py-2.5 rounded-lg text-xs font-bold border border-error/20 hover:bg-error hover:text-on-primary transition-all">
                         Kosongkan Nilai
                     </button>

@@ -111,7 +111,7 @@ require_once '../components/header.php';
                                     <button type="button" onclick="bukaModalEdit(<?= $s['id'] ?>, '<?= addslashes($s['nama']) ?>', '<?= $s['class_id'] ?>')" class="text-primary p-1 md:p-2 hover:bg-primary-container rounded-lg transition-colors shrink-0" title="Edit">
                                         <span class="material-symbols-outlined text-[16px] md:text-[18px]">edit</span>
                                     </button>
-                                    <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="return confirm('Hapus siswa ini?')" class="text-error p-1 md:p-2 hover:bg-error-container rounded-lg transition-colors shrink-0" title="Hapus">
+                                    <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="konfirmasiLink(event, this.href, 'Data siswa dan seluruh riwayat nilainya akan hilang.')" class="text-error p-1 md:p-2 hover:bg-error-container rounded-lg transition-colors shrink-0" title="Hapus">
                                         <span class="material-symbols-outlined text-[16px] md:text-[18px]">delete</span>
                                     </a>
                                 </div>

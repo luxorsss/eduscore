@@ -49,10 +49,18 @@ try {
     }
 
     $pdo->commit();
-    echo "<script>
-            alert('Berhasil! Data nilai $berhasil siswa telah disimpan/diperbarui.');
-            window.location.href = 'dashboard.php';
-          </script>";
+    echo "<!DOCTYPE html><html><body style='background-color:#f8f9ff;'><script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+          <script>
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Berhasil!', 
+                text: 'Data nilai $berhasil siswa telah disimpan.', 
+                showConfirmButton: false, 
+                timer: 1500 // Pop-up otomatis hilang dalam 1,5 detik
+            }).then(() => { 
+                window.location.href = 'dashboard.php'; 
+            });
+          </script></body></html>";
 
 } catch (PDOException $e) {
     $pdo->rollBack();
