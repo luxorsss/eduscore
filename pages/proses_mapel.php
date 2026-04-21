@@ -14,12 +14,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nama_mapel'])) {
 
     if (!empty($nama_mapel)) {
         try {
+            // --- FITUR BARU: Cek Validasi Duplikat ---
+            // Gunakan LOWER agar "Bahasa Indonesia" dan "bahasa indonesia" dianggap sama
+            $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM subjects WHERE LOWER(nama_mapel) = LOWER(?)");
+            $stmt_check->execute([$nama_mapel]);
+            $is_exists = $stmt_check->fetchColumn();
+
+            if ($is_exists > 0) {
+                // Jika mapel sudah ada, hentikan dan beri notifikasi
+                echo "<script>
+                        alert('Gagal! Mata pelajaran \"$nama_mapel\" sudah ada di dalam sistem.');
+                        window.location.href = 'mapel.php';
+                      </script>";
+                exit();
+            }
+
+            // Jika belum ada, eksekusi penyimpanan ke database
             $sql = "INSERT INTO subjects (nama_mapel) VALUES (?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$nama_mapel]);
             
             header("Location: mapel.php");
             exit();
+            
         } catch (PDOException $e) {
             die("Gagal menambah data: " . $e->getMessage());
         }
@@ -28,26 +45,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nama_mapel'])) {
 
 // 2. PROSES HAPUS MAPEL (Metode GET)
 if (isset($_GET['hapus'])) {
-    $id = $_GET['hapus'];
+    $id_mapel = $_GET['hapus'];
 
     try {
-        // Eksekusi penghapusan berdasarkan ID
-        $sql = "DELETE FROM subjects WHERE id = ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$id]);
+        // Cek dulu apakah mapel ini sedang digunakan di jadwal (teaching_schedules)
+        $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM teaching_schedules WHERE subject_id = ?");
+        $stmt_check->execute([$id_mapel]);
+        $is_used = $stmt_check->fetchColumn();
 
-        // Kembali ke halaman mapel
-        header("Location: mapel.php");
-        exit();
+        if ($is_used > 0) {
+            // Jika masih dipakai, jangan dihapus agar data nilai tidak error/berantakan
+            echo "<script>
+                    alert('Gagal menghapus! Mata pelajaran ini masih digunakan dalam jadwal mengajar Anda.');
+                    window.location.href = 'mapel.php';
+                  </script>";
+        } else {
+            // Jika aman, eksekusi penghapusan
+            $stmt_delete = $pdo->prepare("DELETE FROM subjects WHERE id = ?");
+            $stmt_delete->execute([$id_mapel]);
+
+            echo "<script>
+                    alert('Mata pelajaran berhasil dihapus!');
+                    window.location.href = 'mapel.php';
+                  </script>";
+        }
     } catch (PDOException $e) {
-        // Jika gagal karena data sedang digunakan di tabel jadwal (Foreign Key Constraint)
-        echo "<script>
-                alert('Gagal menghapus! Mata pelajaran ini sedang digunakan dalam Jadwal Mengajar.');
-                window.location.href = 'mapel.php';
-              </script>";
+        die("Gagal menghapus data: " . $e->getMessage());
     }
+    exit();
 }
 
-// Jika diakses tanpa parameter, kembalikan ke dashboard
+// Jika file ini diakses langsung tanpa parameter, kembalikan ke dashboard
 header("Location: dashboard.php");
 exit();
+?>
