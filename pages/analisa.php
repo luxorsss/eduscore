@@ -161,13 +161,13 @@ require_once '../components/header.php';
                         <td class="p-3 border border-outline-variant/30 text-center text-on-surface-variant nomor-urut"><?= $no++ ?></td>
                         <td class="p-3 border border-outline-variant/30 font-medium text-xs md:text-sm"><?= htmlspecialchars($s['nama']) ?></td>
                         
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-huts"><?= $s['h_uts'] ?? '' ?></td>
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-uts"><?= $s['uts'] ?? '' ?></td>
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5 col-tuts"><?= $s['tambahan_uts'] ?? '' ?></td>
-                        
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-huas"><?= $s['h_uas'] ?? '' ?></td>
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-uas"><?= $s['uas'] ?? '' ?></td>
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5 col-tuas"><?= $s['tambahan_uas'] ?? '' ?></td>
+                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-huts"><?= $s['h_uts'] !== null ? str_replace('.', ',', (float)$s['h_uts']) : '' ?></td>
+                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-uts"><?= $s['uts'] !== null ? str_replace('.', ',', (float)$s['uts']) : '' ?></td>
+                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5 col-tuts"><?= $s['tambahan_uts'] !== null ? str_replace('.', ',', (float)$s['tambahan_uts']) : '' ?></td>
+
+                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-huas"><?= $s['h_uas'] !== null ? str_replace('.', ',', (float)$s['h_uas']) : '' ?></td>
+                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-uas"><?= $s['uas'] !== null ? str_replace('.', ',', (float)$s['uas']) : '' ?></td>
+                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5 col-tuas"><?= $s['tambahan_uas'] !== null ? str_replace('.', ',', (float)$s['tambahan_uas']) : '' ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
