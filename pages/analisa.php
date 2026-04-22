@@ -2,6 +2,25 @@
 session_start();
 require_once '../config/koneksi.php';
 
+// Tentukan KKM (bisa diubah sesuai kebijakan sekolah)
+$kkm = 60;
+
+function getWarnaNilai($nilai, $kkm) {
+    if ($nilai === null || $nilai === '') return ''; // Jika kosong, tidak ada warna
+    
+    $val = (float)$nilai;
+    
+    if ($val == 0) {
+        return 'bg-red-100 text-red-800 border border-red-200'; // Blok 0
+    } elseif ($val < $kkm) {
+        return 'bg-orange-100 text-orange-800 border border-orange-200'; // Di bawah KKM
+    } elseif ($val < 90) {
+        return 'bg-green-100 text-green-800 border border-green-200'; // Di atas KKM - 89
+    } else {
+        return 'bg-blue-100 text-blue-800 border border-blue-200'; // 90 - 100
+    }
+}
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -87,6 +106,13 @@ require_once '../components/header.php';
 
     <?php if ($class_id && $mapel_id && $info): ?>
     
+    <div class="flex flex-wrap gap-4 mb-4 text-[10px] font-bold uppercase tracking-wider">
+        <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-red-100 border border-red-200 rounded"></span> Nilai 0</div>
+        <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-orange-100 border border-orange-200 rounded"></span> Di Bawah KKM (<?= $kkm ?>)</div>
+        <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-green-100 border border-green-200 rounded"></span> Tuntas (<?= $kkm ?>-89)</div>
+        <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></span> Sangat Baik (90-100)</div>
+    </div>
+
     <div class="bg-primary/5 rounded-xl border border-primary/20 overflow-hidden">
         <button onclick="document.getElementById('syncArea').classList.toggle('hidden')" class="w-full bg-primary/10 px-4 py-3 flex justify-between items-center text-primary font-bold text-sm hover:bg-primary/20 transition-colors">
             <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">sync_alt</span> Mode Sinkronisasi Urutan Excel Sekolah</div>
@@ -161,13 +187,37 @@ require_once '../components/header.php';
                         <td class="p-3 border border-outline-variant/30 text-center text-on-surface-variant nomor-urut"><?= $no++ ?></td>
                         <td class="p-3 border border-outline-variant/30 font-medium text-xs md:text-sm"><?= htmlspecialchars($s['nama']) ?></td>
                         
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-huts"><?= $s['h_uts'] !== null ? str_replace('.', ',', (float)$s['h_uts']) : '' ?></td>
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-uts"><?= $s['uts'] !== null ? str_replace('.', ',', (float)$s['uts']) : '' ?></td>
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5 col-tuts"><?= $s['tambahan_uts'] !== null ? str_replace('.', ',', (float)$s['tambahan_uts']) : '' ?></td>
+                        <td class="p-2 border border-outline-variant/30 text-center col-huts">
+                            <div class="inline-block px-3 py-1 rounded-md font-bold text-xs <?= getWarnaNilai($s['h_uts'], $kkm) ?>">
+                                <?= $s['h_uts'] !== null ? str_replace('.', ',', (float)$s['h_uts']) : '' ?>
+                            </div>
+                        </td>
+                        <td class="p-2 border border-outline-variant/30 text-center col-uts">
+                            <div class="inline-block px-3 py-1 rounded-md font-bold text-xs <?= getWarnaNilai($s['uts'], $kkm) ?>">
+                                <?= $s['uts'] !== null ? str_replace('.', ',', (float)$s['uts']) : '' ?>
+                            </div>
+                        </td>
+                        <td class="p-2 border border-outline-variant/30 text-center bg-primary/5 col-tuts">
+                            <div class="inline-block px-3 py-1 rounded-md font-bold text-xs <?= getWarnaNilai($s['tambahan_uts'], $kkm) ?>">
+                                <?= $s['tambahan_uts'] !== null ? str_replace('.', ',', (float)$s['tambahan_uts']) : '' ?>
+                            </div>
+                        </td>
 
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-huas"><?= $s['h_uas'] !== null ? str_replace('.', ',', (float)$s['h_uas']) : '' ?></td>
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary col-uas"><?= $s['uas'] !== null ? str_replace('.', ',', (float)$s['uas']) : '' ?></td>
-                        <td class="p-3 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5 col-tuas"><?= $s['tambahan_uas'] !== null ? str_replace('.', ',', (float)$s['tambahan_uas']) : '' ?></td>
+                        <td class="p-2 border border-outline-variant/30 text-center col-huas">
+                            <div class="inline-block px-3 py-1 rounded-md font-bold text-xs <?= getWarnaNilai($s['h_uas'], $kkm) ?>">
+                                <?= $s['h_uas'] !== null ? str_replace('.', ',', (float)$s['h_uas']) : '' ?>
+                            </div>
+                        </td>
+                        <td class="p-2 border border-outline-variant/30 text-center col-uas">
+                            <div class="inline-block px-3 py-1 rounded-md font-bold text-xs <?= getWarnaNilai($s['uas'], $kkm) ?>">
+                                <?= $s['uas'] !== null ? str_replace('.', ',', (float)$s['uas']) : '' ?>
+                            </div>
+                        </td>
+                        <td class="p-2 border border-outline-variant/30 text-center bg-primary/5 col-tuas">
+                            <div class="inline-block px-3 py-1 rounded-md font-bold text-xs <?= getWarnaNilai($s['tambahan_uas'], $kkm) ?>">
+                                <?= $s['tambahan_uas'] !== null ? str_replace('.', ',', (float)$s['tambahan_uas']) : '' ?>
+                            </div>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
