@@ -45,6 +45,10 @@
             <span class="material-symbols-outlined text-[20px]">folder_open</span>
             <span class="font-medium text-sm">Kelas</span>
         </a>
+        <a href="walikelas.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'walikelas.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+            <span class="material-symbols-outlined text-[20px]">assignment_ind</span>
+            <span class="font-medium text-sm">Wali Kelas</span>
+        </a>
     </div>
 
     <div class="px-6 border-t border-outline-variant/20 pt-6 mt-auto">
