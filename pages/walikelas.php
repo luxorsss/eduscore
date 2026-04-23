@@ -173,11 +173,17 @@ require_once '../components/header.php';
     const rawSubjects = <?= json_encode($subjects) ?>;
     const gradeMatrix = <?= json_encode($matrix) ?>;
     
-    let currentMode = 'siswa'; // 'siswa' = Baris Siswa, Kolom Mapel | 'mapel' = Baris Mapel, Kolom Siswa
+    let currentMode = 'siswa'; 
     let currentStudents = [...rawStudents];
     let currentSubjects = [...rawSubjects];
 
-    // Format nilai ganti titik ke koma untuk tampilan Indonesia
+    // Helper untuk menentukan warna berdasarkan nilai (Sesuai standar Analisa)
+    function getColorClass(score) {
+        if (score === null || score === undefined) return 'text-on-surface-variant/40';
+        return score < 75 ? 'text-error font-bold' : 'text-success font-bold';
+    }
+
+    // Format nilai ganti titik ke koma untuk tampilan
     function fNum(num) {
         if (num === null || num === undefined) return '-';
         return num.toString().replace('.', ',');
@@ -203,7 +209,6 @@ require_once '../components/header.php';
         let html = '<table class="w-full text-left border-collapse whitespace-nowrap text-sm" id="rekapTable">';
         
         if (currentMode === 'siswa') {
-            // MODE NORMAL: Baris = Siswa, Kolom = Mapel
             html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
                         <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[200px]">Nama Siswa</th>`;
             currentSubjects.forEach(sub => {
@@ -216,12 +221,11 @@ require_once '../components/header.php';
                             <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${stu.nama}</td>`;
                 currentSubjects.forEach(sub => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
-                    html += `<td class="p-2 border border-outline-variant/30 text-center font-medium data-cell">${fNum(score)}</td>`;
+                    html += `<td class="p-2 border border-outline-variant/30 text-center data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
                 html += `</tr>`;
             });
         } else {
-            // MODE TRANSPOSE: Baris = Mapel, Kolom = Siswa
             html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
                         <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[150px]">Mata Pelajaran</th>`;
             currentStudents.forEach(stu => {
@@ -234,7 +238,7 @@ require_once '../components/header.php';
                             <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${sub.nama_mapel}</td>`;
                 currentStudents.forEach(stu => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
-                    html += `<td class="p-2 border border-outline-variant/30 text-center font-medium data-cell">${fNum(score)}</td>`;
+                    html += `<td class="p-2 border border-outline-variant/30 text-center data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
                 html += `</tr>`;
             });
@@ -258,16 +262,14 @@ require_once '../components/header.php';
                 matched.push(remaining.splice(index, 1)[0]);
             }
         });
-        return matched.concat(remaining); // Gabungkan sisa yang tidak ada di textarea ke bawah
+        return matched.concat(remaining);
     }
 
     function terapkanUrutan() {
         const valSiswa = document.getElementById('urutSiswa').value;
         const valMapel = document.getElementById('urutMapel').value;
-        
         currentStudents = customSort(rawStudents, valSiswa, 'nama');
         currentSubjects = customSort(rawSubjects, valMapel, 'nama_mapel');
-        
         renderTable();
         alert('Urutan berhasil diterapkan!');
     }
@@ -280,7 +282,7 @@ require_once '../components/header.php';
         renderTable();
     }
 
-    // --- LOGIKA COPY HANYA ANGKA (TSV) ---
+    // --- LOGIKA COPY HANYA ANGKA ---
     function copyHanyaNilai() {
         const table = document.getElementById('rekapTable');
         if(!table) return;
@@ -293,7 +295,6 @@ require_once '../components/header.php';
             let rowData = [];
             cells.forEach(cell => {
                 let val = cell.innerText.trim();
-                // Ubah '-' jadi kosong agar di excel bersih
                 if (val === '-') val = ''; 
                 rowData.push(val);
             });
@@ -304,17 +305,13 @@ require_once '../components/header.php';
             Swal.fire({
                 icon: 'success',
                 title: 'Tercopy!',
-                text: 'Hanya angka nilai yang dicopy. Silakan Paste (Ctrl+V) di Excel Anda.',
-                timer: 2000,
+                text: 'Angka nilai berhasil disalin tanpa format warna.',
+                timer: 1500,
                 showConfirmButton: false
             });
-        }).catch(err => {
-            console.error('Gagal copy: ', err);
-            alert('Gagal menyalin data.');
         });
     }
 
-    // Render tabel pertama kali diload
     if(document.getElementById('tableContainer')) {
         renderTable();
     }
