@@ -180,7 +180,7 @@ require_once '../components/header.php';
     // Helper untuk menentukan warna berdasarkan nilai (Sesuai standar Analisa)
     function getColorClass(score) {
         if (score === null || score === undefined) return 'text-on-surface-variant/40';
-        return score < 75 ? 'text-error font-bold' : 'text-success font-bold';
+        return score < 60 ? 'text-error font-bold' : 'text-success font-bold';
     }
 
     // Format nilai ganti titik ke koma untuk tampilan
