@@ -187,23 +187,21 @@ require_once '../components/header.php';
     // Default KKM
     let kkmValue = 75;
 
-    // Trigger saat input KKM diketik
     function updateKkm() {
         let val = parseInt(document.getElementById('inputKkm').value);
         kkmValue = isNaN(val) ? 0 : val;
-        renderTable(); // Render ulang tabel secara instan
+        renderTable();
     }
 
-    // Penentuan warna berdasarkan nilai KKM Dinamis
     function getColorClass(score) {
         if (score === null || score === undefined) return 'text-on-surface-variant/40';
         return score < kkmValue ? 'text-error font-bold' : 'text-success font-bold';
     }
 
-    // Format angka
     function fNum(num) {
         if (num === null || num === undefined) return '-';
-        return num.toString().replace('.', ',');
+        // Format angka: 2 desimal, ganti titik jadi koma
+        return parseFloat(num).toFixed(2).replace('.', ',').replace(',00', '');
     }
 
     function setMode(mode) {
@@ -226,53 +224,86 @@ require_once '../components/header.php';
         let html = '<table class="w-full text-left border-collapse whitespace-nowrap text-sm" id="rekapTable">';
         
         if (currentMode === 'siswa') {
-            // HEADER: Siswa (Baris), Mapel (Kolom)
+            // --- MODE SISWA DI SAMPING (BARIS) ---
             html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
                         <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[200px]">Nama Siswa</th>`;
             currentSubjects.forEach(sub => {
                 html += `<th class="p-2 font-bold border border-outline-variant/30 text-center">${sub.nama_mapel}</th>`;
             });
+            // Header Baru: Rata-rata
+            html += `<th class="p-2 font-black border border-outline-variant/30 text-center bg-primary/10 text-primary">RATA-RATA</th>`;
             html += `</tr></thead><tbody class="text-on-surface">`;
             
-            // BARIS KHUSUS KKM
+            // Baris KKM
             html += `<tr class="bg-primary/5 text-primary">
                         <td class="p-3 border border-outline-variant/30 font-black text-xs md:text-sm sticky left-0 z-10 bg-primary/10">NILAI KKM</td>`;
             currentSubjects.forEach(sub => {
                 html += `<td class="p-2 border border-outline-variant/30 text-center font-bold data-cell">${kkmValue}</td>`;
             });
+            html += `<td class="p-2 border border-outline-variant/30 text-center font-black data-cell">${kkmValue}</td>`;
             html += `</tr>`;
 
-            // BARIS SISWA
+            // Baris Data Siswa
             currentStudents.forEach(stu => {
+                let totalScore = 0;
+                let count = 0;
+                
                 html += `<tr class="hover:bg-surface-container-highest transition-colors">
                             <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${stu.nama}</td>`;
+                
                 currentSubjects.forEach(sub => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
+                    if(score !== null) {
+                        totalScore += parseFloat(score);
+                        count++;
+                    }
                     html += `<td class="p-2 border border-outline-variant/30 text-center data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
+
+                // Hitung Rata-rata Siswa
+                let avg = count > 0 ? (totalScore / count) : null;
+                html += `<td class="p-2 border border-outline-variant/30 text-center font-black data-cell ${getColorClass(avg)} bg-primary/5">${fNum(avg)}</td>`;
                 html += `</tr>`;
             });
         } else {
-            // HEADER: Mapel (Baris), Siswa (Kolom)
+            // --- MODE MAPEL DI SAMPING (BARIS) ---
             html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
                         <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[150px]">Mata Pelajaran</th>
-                        <th class="p-3 font-bold border border-outline-variant/30 bg-primary/10 text-primary text-center">KKM</th>`; // KOLOM KKM
+                        <th class="p-3 font-bold border border-outline-variant/30 bg-primary/10 text-primary text-center">KKM</th>`;
             currentStudents.forEach(stu => {
                 html += `<th class="p-2 font-bold border border-outline-variant/30 text-center truncate max-w-[120px]" title="${stu.nama}">${stu.nama}</th>`;
             });
             html += `</tr></thead><tbody class="text-on-surface">`;
             
-            // BARIS MAPEL
+            // Simpan penampung untuk hitung rata-rata tiap siswa (kolom)
+            let colTotals = {};
+            let colCounts = {};
+
             currentSubjects.forEach(sub => {
                 html += `<tr class="hover:bg-surface-container-highest transition-colors">
                             <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${sub.nama_mapel}</td>
                             <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5 data-cell">${kkmValue}</td>`;
+                
                 currentStudents.forEach(stu => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
+                    if(score !== null) {
+                        colTotals[stu.id] = (colTotals[stu.id] || 0) + parseFloat(score);
+                        colCounts[stu.id] = (colCounts[stu.id] || 0) + 1;
+                    }
                     html += `<td class="p-2 border border-outline-variant/30 text-center data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
                 html += `</tr>`;
             });
+
+            // BARIS BARU: Rata-rata Siswa (di posisi paling bawah)
+            html += `<tr class="bg-primary/5">
+                        <td class="p-3 border border-outline-variant/30 font-black text-primary sticky left-0 z-10 bg-primary/10">RATA-RATA SISWA</td>
+                        <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary data-cell">${kkmValue}</td>`;
+            currentStudents.forEach(stu => {
+                let avg = colCounts[stu.id] > 0 ? (colTotals[stu.id] / colCounts[stu.id]) : null;
+                html += `<td class="p-2 border border-outline-variant/30 text-center font-black data-cell ${getColorClass(avg)}">${fNum(avg)}</td>`;
+            });
+            html += `</tr>`;
         }
         
         html += `</tbody></table>`;
@@ -283,15 +314,11 @@ require_once '../components/header.php';
     function customSort(originalArray, textInput, fieldName) {
         const lines = textInput.split(/\r?\n/).map(n => n.trim().toLowerCase()).filter(n => n);
         if (lines.length === 0) return [...originalArray];
-
         let matched = [];
         let remaining = [...originalArray];
-
         lines.forEach(line => {
             const index = remaining.findIndex(item => item[fieldName].toLowerCase() === line);
-            if (index > -1) {
-                matched.push(remaining.splice(index, 1)[0]);
-            }
+            if (index > -1) matched.push(remaining.splice(index, 1)[0]);
         });
         return matched.concat(remaining);
     }
@@ -313,14 +340,11 @@ require_once '../components/header.php';
         renderTable();
     }
 
-    // --- LOGIKA COPY HANYA ANGKA ---
     function copyHanyaNilai() {
         const table = document.getElementById('rekapTable');
         if(!table) return;
-
         let tsv = "";
         const rows = table.querySelectorAll('tbody tr');
-        
         rows.forEach(row => {
             const cells = row.querySelectorAll('.data-cell');
             let rowData = [];
@@ -331,12 +355,11 @@ require_once '../components/header.php';
             });
             tsv += rowData.join("\t") + "\n";
         });
-
         navigator.clipboard.writeText(tsv).then(() => {
             Swal.fire({
                 icon: 'success',
                 title: 'Tercopy!',
-                text: 'Data nilai & KKM berhasil disalin.',
+                text: 'Nilai dan Rata-rata berhasil disalin.',
                 timer: 1500,
                 showConfirmButton: false
             });
