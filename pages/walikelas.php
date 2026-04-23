@@ -124,9 +124,16 @@ require_once '../components/header.php';
             <button onclick="setMode('mapel')" id="btnModeMapel" class="px-4 py-1.5 text-xs font-bold rounded-md text-on-surface-variant hover:text-on-surface transition-all">Mapel di Samping (Baris)</button>
         </div>
         
-        <button onclick="copyHanyaNilai()" class="bg-tertiary text-on-primary px-4 py-2 rounded-lg text-xs font-bold shadow-sm flex items-center gap-2 hover:bg-tertiary/90 transition-all">
-            <span class="material-symbols-outlined text-[16px]">content_copy</span> Copy Angka Saja (Untuk Excel)
-        </button>
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+            <div class="flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-lg border border-outline-variant/30 shadow-sm">
+                <label class="text-[10px] font-bold text-on-surface-variant uppercase">KKM:</label>
+                <input type="number" id="inputKkm" value="75" oninput="updateKkm()" class="w-12 bg-transparent text-sm font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none">
+            </div>
+
+            <button onclick="copyHanyaNilai()" class="bg-tertiary text-on-primary px-4 py-2 rounded-lg text-xs font-bold shadow-sm flex items-center gap-2 hover:bg-tertiary/90 transition-all">
+                <span class="material-symbols-outlined text-[16px]">content_copy</span> Copy Angka 
+            </button>
+        </div>
     </div>
 
     <div class="bg-primary/5 rounded-xl border border-primary/20 overflow-hidden">
@@ -176,14 +183,24 @@ require_once '../components/header.php';
     let currentMode = 'siswa'; 
     let currentStudents = [...rawStudents];
     let currentSubjects = [...rawSubjects];
+    
+    // Default KKM
+    let kkmValue = 75;
 
-    // Helper untuk menentukan warna berdasarkan nilai (Sesuai standar Analisa)
-    function getColorClass(score) {
-        if (score === null || score === undefined) return 'text-on-surface-variant/40';
-        return score < 60 ? 'text-error font-bold' : 'text-success font-bold';
+    // Trigger saat input KKM diketik
+    function updateKkm() {
+        let val = parseInt(document.getElementById('inputKkm').value);
+        kkmValue = isNaN(val) ? 0 : val;
+        renderTable(); // Render ulang tabel secara instan
     }
 
-    // Format nilai ganti titik ke koma untuk tampilan
+    // Penentuan warna berdasarkan nilai KKM Dinamis
+    function getColorClass(score) {
+        if (score === null || score === undefined) return 'text-on-surface-variant/40';
+        return score < kkmValue ? 'text-error font-bold' : 'text-success font-bold';
+    }
+
+    // Format angka
     function fNum(num) {
         if (num === null || num === undefined) return '-';
         return num.toString().replace('.', ',');
@@ -209,6 +226,7 @@ require_once '../components/header.php';
         let html = '<table class="w-full text-left border-collapse whitespace-nowrap text-sm" id="rekapTable">';
         
         if (currentMode === 'siswa') {
+            // HEADER: Siswa (Baris), Mapel (Kolom)
             html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
                         <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[200px]">Nama Siswa</th>`;
             currentSubjects.forEach(sub => {
@@ -216,6 +234,15 @@ require_once '../components/header.php';
             });
             html += `</tr></thead><tbody class="text-on-surface">`;
             
+            // BARIS KHUSUS KKM
+            html += `<tr class="bg-primary/5 text-primary">
+                        <td class="p-3 border border-outline-variant/30 font-black text-xs md:text-sm sticky left-0 z-10 bg-primary/10">NILAI KKM</td>`;
+            currentSubjects.forEach(sub => {
+                html += `<td class="p-2 border border-outline-variant/30 text-center font-bold data-cell">${kkmValue}</td>`;
+            });
+            html += `</tr>`;
+
+            // BARIS SISWA
             currentStudents.forEach(stu => {
                 html += `<tr class="hover:bg-surface-container-highest transition-colors">
                             <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${stu.nama}</td>`;
@@ -226,16 +253,20 @@ require_once '../components/header.php';
                 html += `</tr>`;
             });
         } else {
+            // HEADER: Mapel (Baris), Siswa (Kolom)
             html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
-                        <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[150px]">Mata Pelajaran</th>`;
+                        <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[150px]">Mata Pelajaran</th>
+                        <th class="p-3 font-bold border border-outline-variant/30 bg-primary/10 text-primary text-center">KKM</th>`; // KOLOM KKM
             currentStudents.forEach(stu => {
                 html += `<th class="p-2 font-bold border border-outline-variant/30 text-center truncate max-w-[120px]" title="${stu.nama}">${stu.nama}</th>`;
             });
             html += `</tr></thead><tbody class="text-on-surface">`;
             
+            // BARIS MAPEL
             currentSubjects.forEach(sub => {
                 html += `<tr class="hover:bg-surface-container-highest transition-colors">
-                            <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${sub.nama_mapel}</td>`;
+                            <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${sub.nama_mapel}</td>
+                            <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5 data-cell">${kkmValue}</td>`;
                 currentStudents.forEach(stu => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
                     html += `<td class="p-2 border border-outline-variant/30 text-center data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
@@ -305,7 +336,7 @@ require_once '../components/header.php';
             Swal.fire({
                 icon: 'success',
                 title: 'Tercopy!',
-                text: 'Angka nilai berhasil disalin tanpa format warna.',
+                text: 'Data nilai & KKM berhasil disalin.',
                 timer: 1500,
                 showConfirmButton: false
             });
