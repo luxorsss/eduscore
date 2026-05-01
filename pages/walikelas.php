@@ -232,13 +232,13 @@ require_once '../components/header.php';
             html += `<th class="p-2 font-black border border-outline-variant/30 text-center bg-primary/10 text-primary">RATA-RATA</th>`;
             html += `</tr></thead><tbody class="text-on-surface">`;
             
-            // Baris KKM
-            html += `<tr class="bg-primary/5 text-primary">
+            // Baris KKM (Ditambah class kkm-row agar diabaikan saat copy)
+            html += `<tr class="bg-primary/5 text-primary kkm-row">
                         <td class="p-3 border border-outline-variant/30 font-black text-xs md:text-sm sticky left-0 z-10 bg-primary/10">NILAI KKM</td>`;
             currentSubjects.forEach(sub => {
-                html += `<td class="p-2 border border-outline-variant/30 text-center font-bold data-cell">${kkmValue}</td>`;
+                // Hapus data-cell
+                html += `<td class="p-2 border border-outline-variant/30 text-center font-bold">${kkmValue}</td>`;
             });
-            // Hapus class data-cell di KKM rata-rata agar tidak ikut dicopy
             html += `<td class="p-2 border border-outline-variant/30 text-center font-black">${kkmValue}</td>`;
             html += `</tr>`;
 
@@ -260,7 +260,6 @@ require_once '../components/header.php';
                 });
 
                 let avg = count > 0 ? (totalScore / count) : null;
-                // Hapus class data-cell di nilai rata-rata agar tidak ikut dicopy
                 html += `<td class="p-2 border border-outline-variant/30 text-center font-black ${getColorClass(avg)} bg-primary/5">${fNum(avg)}</td>`;
                 html += `</tr>`;
             });
@@ -280,7 +279,7 @@ require_once '../components/header.php';
             currentSubjects.forEach(sub => {
                 html += `<tr class="hover:bg-surface-container-highest transition-colors">
                             <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${sub.nama_mapel}</td>
-                            <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5 data-cell">${kkmValue}</td>`;
+                            <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5">${kkmValue}</td>`; // Hapus data-cell di sini
                 
                 currentStudents.forEach(stu => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
@@ -293,13 +292,12 @@ require_once '../components/header.php';
                 html += `</tr>`;
             });
 
-            // Tambahkan class avg-row untuk baris rata-rata agar mudah diblokir saat di-copy
+            // Baris Rata-rata
             html += `<tr class="bg-primary/5 avg-row">
                         <td class="p-3 border border-outline-variant/30 font-black text-primary sticky left-0 z-10 bg-primary/10">RATA-RATA SISWA</td>
                         <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary">${kkmValue}</td>`;
             currentStudents.forEach(stu => {
                 let avg = colCounts[stu.id] > 0 ? (colTotals[stu.id] / colCounts[stu.id]) : null;
-                // Hapus data-cell
                 html += `<td class="p-2 border border-outline-variant/30 text-center font-black ${getColorClass(avg)}">${fNum(avg)}</td>`;
             });
             html += `</tr>`;
@@ -339,16 +337,17 @@ require_once '../components/header.php';
         renderTable();
     }
 
-    // --- LOGIKA COPY HANYA ANGKA (TANPA RATA-RATA) ---
+    // --- LOGIKA COPY HANYA ANGKA MURNI (TANPA RATA-RATA & KKM) ---
     function copyHanyaNilai() {
         const table = document.getElementById('rekapTable');
         if(!table) return;
         
         let tsv = "";
-        // Abaikan baris yang merupakan rata-rata (mode mapel)
-        const rows = table.querySelectorAll('tbody tr:not(.avg-row)');
+        // Abaikan baris rata-rata DAN baris KKM
+        const rows = table.querySelectorAll('tbody tr:not(.avg-row):not(.kkm-row)');
         
         rows.forEach(row => {
+            // Hanya ambil yang punya class data-cell
             const cells = row.querySelectorAll('.data-cell');
             if (cells.length === 0) return; // Mencegah baris kosong
 
@@ -364,8 +363,8 @@ require_once '../components/header.php';
         navigator.clipboard.writeText(tsv).then(() => {
             Swal.fire({
                 icon: 'success',
-                title: 'Tercopy!',
-                text: 'Data nilai berhasil disalin (Rata-rata tidak diikutkan).',
+                title: 'Bersih & Tercopy!',
+                text: 'Hanya angka nilai murni yang disalin (KKM dan Rata-rata diabaikan).',
                 timer: 2000,
                 showConfirmButton: false
             });
