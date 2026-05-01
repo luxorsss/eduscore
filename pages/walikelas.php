@@ -200,7 +200,6 @@ require_once '../components/header.php';
 
     function fNum(num) {
         if (num === null || num === undefined) return '-';
-        // Format angka: 2 desimal, ganti titik jadi koma
         return parseFloat(num).toFixed(2).replace('.', ',').replace(',00', '');
     }
 
@@ -230,7 +229,6 @@ require_once '../components/header.php';
             currentSubjects.forEach(sub => {
                 html += `<th class="p-2 font-bold border border-outline-variant/30 text-center">${sub.nama_mapel}</th>`;
             });
-            // Header Baru: Rata-rata
             html += `<th class="p-2 font-black border border-outline-variant/30 text-center bg-primary/10 text-primary">RATA-RATA</th>`;
             html += `</tr></thead><tbody class="text-on-surface">`;
             
@@ -240,7 +238,8 @@ require_once '../components/header.php';
             currentSubjects.forEach(sub => {
                 html += `<td class="p-2 border border-outline-variant/30 text-center font-bold data-cell">${kkmValue}</td>`;
             });
-            html += `<td class="p-2 border border-outline-variant/30 text-center font-black data-cell">${kkmValue}</td>`;
+            // Hapus class data-cell di KKM rata-rata agar tidak ikut dicopy
+            html += `<td class="p-2 border border-outline-variant/30 text-center font-black">${kkmValue}</td>`;
             html += `</tr>`;
 
             // Baris Data Siswa
@@ -260,9 +259,9 @@ require_once '../components/header.php';
                     html += `<td class="p-2 border border-outline-variant/30 text-center data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
 
-                // Hitung Rata-rata Siswa
                 let avg = count > 0 ? (totalScore / count) : null;
-                html += `<td class="p-2 border border-outline-variant/30 text-center font-black data-cell ${getColorClass(avg)} bg-primary/5">${fNum(avg)}</td>`;
+                // Hapus class data-cell di nilai rata-rata agar tidak ikut dicopy
+                html += `<td class="p-2 border border-outline-variant/30 text-center font-black ${getColorClass(avg)} bg-primary/5">${fNum(avg)}</td>`;
                 html += `</tr>`;
             });
         } else {
@@ -275,7 +274,6 @@ require_once '../components/header.php';
             });
             html += `</tr></thead><tbody class="text-on-surface">`;
             
-            // Simpan penampung untuk hitung rata-rata tiap siswa (kolom)
             let colTotals = {};
             let colCounts = {};
 
@@ -295,13 +293,14 @@ require_once '../components/header.php';
                 html += `</tr>`;
             });
 
-            // BARIS BARU: Rata-rata Siswa (di posisi paling bawah)
-            html += `<tr class="bg-primary/5">
+            // Tambahkan class avg-row untuk baris rata-rata agar mudah diblokir saat di-copy
+            html += `<tr class="bg-primary/5 avg-row">
                         <td class="p-3 border border-outline-variant/30 font-black text-primary sticky left-0 z-10 bg-primary/10">RATA-RATA SISWA</td>
-                        <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary data-cell">${kkmValue}</td>`;
+                        <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary">${kkmValue}</td>`;
             currentStudents.forEach(stu => {
                 let avg = colCounts[stu.id] > 0 ? (colTotals[stu.id] / colCounts[stu.id]) : null;
-                html += `<td class="p-2 border border-outline-variant/30 text-center font-black data-cell ${getColorClass(avg)}">${fNum(avg)}</td>`;
+                // Hapus data-cell
+                html += `<td class="p-2 border border-outline-variant/30 text-center font-black ${getColorClass(avg)}">${fNum(avg)}</td>`;
             });
             html += `</tr>`;
         }
@@ -340,13 +339,19 @@ require_once '../components/header.php';
         renderTable();
     }
 
+    // --- LOGIKA COPY HANYA ANGKA (TANPA RATA-RATA) ---
     function copyHanyaNilai() {
         const table = document.getElementById('rekapTable');
         if(!table) return;
+        
         let tsv = "";
-        const rows = table.querySelectorAll('tbody tr');
+        // Abaikan baris yang merupakan rata-rata (mode mapel)
+        const rows = table.querySelectorAll('tbody tr:not(.avg-row)');
+        
         rows.forEach(row => {
             const cells = row.querySelectorAll('.data-cell');
+            if (cells.length === 0) return; // Mencegah baris kosong
+
             let rowData = [];
             cells.forEach(cell => {
                 let val = cell.innerText.trim();
@@ -355,12 +360,13 @@ require_once '../components/header.php';
             });
             tsv += rowData.join("\t") + "\n";
         });
+        
         navigator.clipboard.writeText(tsv).then(() => {
             Swal.fire({
                 icon: 'success',
                 title: 'Tercopy!',
-                text: 'Nilai dan Rata-rata berhasil disalin.',
-                timer: 1500,
+                text: 'Data nilai berhasil disalin (Rata-rata tidak diikutkan).',
+                timer: 2000,
                 showConfirmButton: false
             });
         });
