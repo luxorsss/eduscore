@@ -230,9 +230,7 @@ require_once '../components/header.php';
             
             // Kolom Mapel dilimit lebarnya (w-24/min-w-[80px]) dan text boleh turun (whitespace-normal)
             currentSubjects.forEach(sub => {
-                html += `<th class="font-bold border border-outline-variant/30 text-center" style="width:52px;min-width:52px;max-width:60px;height:140px;vertical-align:bottom;padding:0;" title="${sub.nama_mapel}">
-                    <div style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;padding:8px 6px;font-size:11px;line-height:1.2;">${sub.nama_mapel}</div>
-                </th>`;
+                html += `<th class="p-2 font-bold border border-outline-variant/30 text-center min-w-[80px] w-24 max-w-[100px] whitespace-normal leading-tight" title="${sub.nama_mapel}">${sub.nama_mapel}</th>`;
             });
             html += `<th class="p-2 font-black border border-outline-variant/30 text-center bg-primary/10 text-primary min-w-[90px]">RATA-RATA</th>`;
             html += `</tr></thead><tbody class="text-on-surface">`;
@@ -276,9 +274,7 @@ require_once '../components/header.php';
             
             // Kolom Siswa dilimit lebarnya
             currentStudents.forEach(stu => {
-                html += `<th class="font-bold border border-outline-variant/30 text-center" style="width:52px;min-width:52px;max-width:60px;height:140px;vertical-align:bottom;padding:0;" title="${stu.nama}">
-                    <div style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;padding:8px 6px;font-size:11px;line-height:1.2;">${stu.nama}</div>
-                </th>`;
+                html += `<th class="p-2 font-bold border border-outline-variant/30 text-center min-w-[90px] w-24 max-w-[110px] whitespace-normal leading-tight" title="${stu.nama}">${stu.nama}</th>`;
             });
             html += `</tr></thead><tbody class="text-on-surface">`;
             
