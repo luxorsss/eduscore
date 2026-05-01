@@ -220,23 +220,25 @@ require_once '../components/header.php';
 
     function renderTable() {
         const container = document.getElementById('tableContainer');
-        let html = '<table class="w-full text-left border-collapse whitespace-nowrap text-sm" id="rekapTable">';
+        // Hapus 'whitespace-nowrap' dari tag table agar text header bisa turun ke bawah (wrap)
+        let html = '<table class="w-full text-left border-collapse text-sm" id="rekapTable">';
         
         if (currentMode === 'siswa') {
             // --- MODE SISWA DI SAMPING (BARIS) ---
             html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
-                        <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[200px]">Nama Siswa</th>`;
+                        <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[180px] max-w-[220px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Nama Siswa</th>`;
+            
+            // Kolom Mapel dilimit lebarnya (w-24/min-w-[80px]) dan text boleh turun (whitespace-normal)
             currentSubjects.forEach(sub => {
-                html += `<th class="p-2 font-bold border border-outline-variant/30 text-center">${sub.nama_mapel}</th>`;
+                html += `<th class="p-2 font-bold border border-outline-variant/30 text-center min-w-[80px] w-24 max-w-[100px] whitespace-normal leading-tight" title="${sub.nama_mapel}">${sub.nama_mapel}</th>`;
             });
-            html += `<th class="p-2 font-black border border-outline-variant/30 text-center bg-primary/10 text-primary">RATA-RATA</th>`;
+            html += `<th class="p-2 font-black border border-outline-variant/30 text-center bg-primary/10 text-primary min-w-[90px]">RATA-RATA</th>`;
             html += `</tr></thead><tbody class="text-on-surface">`;
             
-            // Baris KKM (Ditambah class kkm-row agar diabaikan saat copy)
+            // Baris KKM
             html += `<tr class="bg-primary/5 text-primary kkm-row">
-                        <td class="p-3 border border-outline-variant/30 font-black text-xs md:text-sm sticky left-0 z-10 bg-primary/10">NILAI KKM</td>`;
+                        <td class="p-3 border border-outline-variant/30 font-black text-xs md:text-sm sticky left-0 z-10 bg-primary/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">NILAI KKM</td>`;
             currentSubjects.forEach(sub => {
-                // Hapus data-cell
                 html += `<td class="p-2 border border-outline-variant/30 text-center font-bold">${kkmValue}</td>`;
             });
             html += `<td class="p-2 border border-outline-variant/30 text-center font-black">${kkmValue}</td>`;
@@ -248,7 +250,7 @@ require_once '../components/header.php';
                 let count = 0;
                 
                 html += `<tr class="hover:bg-surface-container-highest transition-colors">
-                            <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${stu.nama}</td>`;
+                            <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest whitespace-nowrap truncate max-w-[220px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]" title="${stu.nama}">${stu.nama}</td>`;
                 
                 currentSubjects.forEach(sub => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
@@ -256,30 +258,34 @@ require_once '../components/header.php';
                         totalScore += parseFloat(score);
                         count++;
                     }
-                    html += `<td class="p-2 border border-outline-variant/30 text-center data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
+                    // Teks sel nilai agar sejajar dan tidak turun ke bawah
+                    html += `<td class="p-2 border border-outline-variant/30 text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
 
                 let avg = count > 0 ? (totalScore / count) : null;
-                html += `<td class="p-2 border border-outline-variant/30 text-center font-black ${getColorClass(avg)} bg-primary/5">${fNum(avg)}</td>`;
+                html += `<td class="p-2 border border-outline-variant/30 text-center font-black whitespace-nowrap ${getColorClass(avg)} bg-primary/5">${fNum(avg)}</td>`;
                 html += `</tr>`;
             });
         } else {
             // --- MODE MAPEL DI SAMPING (BARIS) ---
             html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
-                        <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[150px]">Mata Pelajaran</th>
-                        <th class="p-3 font-bold border border-outline-variant/30 bg-primary/10 text-primary text-center">KKM</th>`;
+                        <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[150px] max-w-[200px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Mata Pelajaran</th>
+                        <th class="p-2 font-bold border border-outline-variant/30 bg-primary/10 text-primary text-center min-w-[60px]">KKM</th>`;
+            
+            // Kolom Siswa dilimit lebarnya
             currentStudents.forEach(stu => {
-                html += `<th class="p-2 font-bold border border-outline-variant/30 text-center truncate max-w-[120px]" title="${stu.nama}">${stu.nama}</th>`;
+                html += `<th class="p-2 font-bold border border-outline-variant/30 text-center min-w-[90px] w-24 max-w-[110px] whitespace-normal leading-tight" title="${stu.nama}">${stu.nama}</th>`;
             });
             html += `</tr></thead><tbody class="text-on-surface">`;
             
             let colTotals = {};
             let colCounts = {};
 
+            // Baris Data Mapel
             currentSubjects.forEach(sub => {
                 html += `<tr class="hover:bg-surface-container-highest transition-colors">
-                            <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest">${sub.nama_mapel}</td>
-                            <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5">${kkmValue}</td>`; // Hapus data-cell di sini
+                            <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest whitespace-normal leading-tight shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${sub.nama_mapel}</td>
+                            <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5">${kkmValue}</td>`; 
                 
                 currentStudents.forEach(stu => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
@@ -287,18 +293,18 @@ require_once '../components/header.php';
                         colTotals[stu.id] = (colTotals[stu.id] || 0) + parseFloat(score);
                         colCounts[stu.id] = (colCounts[stu.id] || 0) + 1;
                     }
-                    html += `<td class="p-2 border border-outline-variant/30 text-center data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
+                    html += `<td class="p-2 border border-outline-variant/30 text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
                 html += `</tr>`;
             });
 
             // Baris Rata-rata
             html += `<tr class="bg-primary/5 avg-row">
-                        <td class="p-3 border border-outline-variant/30 font-black text-primary sticky left-0 z-10 bg-primary/10">RATA-RATA SISWA</td>
+                        <td class="p-3 border border-outline-variant/30 font-black text-primary sticky left-0 z-10 bg-primary/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">RATA-RATA SISWA</td>
                         <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary">${kkmValue}</td>`;
             currentStudents.forEach(stu => {
                 let avg = colCounts[stu.id] > 0 ? (colTotals[stu.id] / colCounts[stu.id]) : null;
-                html += `<td class="p-2 border border-outline-variant/30 text-center font-black ${getColorClass(avg)}">${fNum(avg)}</td>`;
+                html += `<td class="p-2 border border-outline-variant/30 text-center font-black whitespace-nowrap ${getColorClass(avg)}">${fNum(avg)}</td>`;
             });
             html += `</tr>`;
         }
@@ -337,19 +343,17 @@ require_once '../components/header.php';
         renderTable();
     }
 
-    // --- LOGIKA COPY HANYA ANGKA MURNI (TANPA RATA-RATA & KKM) ---
+    // --- LOGIKA COPY HANYA ANGKA MURNI ---
     function copyHanyaNilai() {
         const table = document.getElementById('rekapTable');
         if(!table) return;
         
         let tsv = "";
-        // Abaikan baris rata-rata DAN baris KKM
         const rows = table.querySelectorAll('tbody tr:not(.avg-row):not(.kkm-row)');
         
         rows.forEach(row => {
-            // Hanya ambil yang punya class data-cell
             const cells = row.querySelectorAll('.data-cell');
-            if (cells.length === 0) return; // Mencegah baris kosong
+            if (cells.length === 0) return; 
 
             let rowData = [];
             cells.forEach(cell => {
