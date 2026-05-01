@@ -228,11 +228,12 @@ require_once '../components/header.php';
             html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
                         <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[180px] max-w-[220px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Nama Siswa</th>`;
             
-            // Kolom Mapel — teks dirotasi vertikal agar tidak terpotong
+            // Kolom Mapel dilimit lebarnya (w-24/min-w-[80px]) dan text boleh turun (whitespace-normal)
             currentSubjects.forEach(sub => {
                 html += `<th class="font-bold border border-outline-variant/30 text-center" style="width:52px;min-width:52px;max-width:60px;height:140px;vertical-align:bottom;padding:0;" title="${sub.nama_mapel}">
                     <div style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;padding:8px 6px;font-size:11px;line-height:1.2;">${sub.nama_mapel}</div>
                 </th>`;
+            });
             html += `<th class="p-2 font-black border border-outline-variant/30 text-center bg-primary/10 text-primary min-w-[90px]">RATA-RATA</th>`;
             html += `</tr></thead><tbody class="text-on-surface">`;
             
@@ -273,11 +274,12 @@ require_once '../components/header.php';
                         <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[150px] max-w-[200px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Mata Pelajaran</th>
                         <th class="p-2 font-bold border border-outline-variant/30 bg-primary/10 text-primary text-center min-w-[60px]">KKM</th>`;
             
-            // Kolom Siswa — teks dirotasi vertikal agar tidak terpotong
+            // Kolom Siswa dilimit lebarnya
             currentStudents.forEach(stu => {
                 html += `<th class="font-bold border border-outline-variant/30 text-center" style="width:52px;min-width:52px;max-width:60px;height:140px;vertical-align:bottom;padding:0;" title="${stu.nama}">
                     <div style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;padding:8px 6px;font-size:11px;line-height:1.2;">${stu.nama}</div>
                 </th>`;
+            });
             html += `</tr></thead><tbody class="text-on-surface">`;
             
             let colTotals = {};
