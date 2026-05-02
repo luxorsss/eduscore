@@ -8,37 +8,58 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// 1. PROSES TAMBAH MAPEL (Metode POST)
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['nama_mapel'])) {
+// 1. PROSES TAMBAH & EDIT MAPEL (Metode POST)
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
+    $action = $_POST['action'];
     $nama_mapel = trim($_POST['nama_mapel']);
 
     if (!empty($nama_mapel)) {
         try {
-            // --- FITUR BARU: Cek Validasi Duplikat ---
-            // Gunakan LOWER agar "Bahasa Indonesia" dan "bahasa indonesia" dianggap sama
-            $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM subjects WHERE LOWER(nama_mapel) = LOWER(?)");
-            $stmt_check->execute([$nama_mapel]);
-            $is_exists = $stmt_check->fetchColumn();
+            if ($action === 'tambah') {
+                // --- PROSES TAMBAH ---
+                $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM subjects WHERE LOWER(nama_mapel) = LOWER(?)");
+                $stmt_check->execute([$nama_mapel]);
+                $is_exists = $stmt_check->fetchColumn();
 
-            if ($is_exists > 0) {
-                // Jika mapel sudah ada, hentikan dan beri notifikasi
-                echo "<script>
-                        alert('Gagal! Mata pelajaran \"$nama_mapel\" sudah ada di dalam sistem.');
-                        window.location.href = 'mapel.php';
-                      </script>";
-                exit();
+                if ($is_exists > 0) {
+                    echo "<script>
+                            alert('Gagal! Mata pelajaran \"$nama_mapel\" sudah ada di dalam sistem.');
+                            window.location.href = 'mapel.php';
+                          </script>";
+                    exit();
+                }
+
+                $sql = "INSERT INTO subjects (nama_mapel) VALUES (?)";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$nama_mapel]);
+
+            } elseif ($action === 'edit' && isset($_POST['id_mapel'])) {
+                // --- PROSES EDIT ---
+                $id_mapel = $_POST['id_mapel'];
+
+                // Cek duplikat, tapi kecualikan ID mapel yang sedang diedit ini
+                $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM subjects WHERE LOWER(nama_mapel) = LOWER(?) AND id != ?");
+                $stmt_check->execute([$nama_mapel, $id_mapel]);
+                $is_exists = $stmt_check->fetchColumn();
+
+                if ($is_exists > 0) {
+                    echo "<script>
+                            alert('Gagal Edit! Nama mata pelajaran \"$nama_mapel\" sudah digunakan oleh mapel lain.');
+                            window.location.href = 'mapel.php';
+                          </script>";
+                    exit();
+                }
+
+                $sql = "UPDATE subjects SET nama_mapel = ? WHERE id = ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$nama_mapel, $id_mapel]);
             }
 
-            // Jika belum ada, eksekusi penyimpanan ke database
-            $sql = "INSERT INTO subjects (nama_mapel) VALUES (?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$nama_mapel]);
-            
             header("Location: mapel.php");
             exit();
-            
+
         } catch (PDOException $e) {
-            die("Gagal menambah data: " . $e->getMessage());
+            die("Gagal memproses data: " . $e->getMessage());
         }
     }
 }

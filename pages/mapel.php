@@ -54,8 +54,34 @@ require_once '../components/header.php';
                 <?php $no = 1; foreach ($daftar_mapel as $m): ?>
                 <tr class="hover:bg-surface-container-low/50 group">
                     <td class="px-6 py-4 text-center text-on-surface-variant"><?= $no++; ?></td>
-                    <td class="px-6 py-4 font-bold"><?= htmlspecialchars($m['nama_mapel']); ?></td>
-                    <td class="px-6 py-4 text-center">
+                    
+                    <td class="px-6 py-4">
+                        <!-- Mode Teks Normal -->
+                        <div id="text_<?= $m['id']; ?>" class="font-bold">
+                            <?= htmlspecialchars($m['nama_mapel']); ?>
+                        </div>
+                        
+                        <!-- Mode Form Edit (Disembunyikan secara default) -->
+                        <form id="form_<?= $m['id']; ?>" action="proses_mapel.php" method="POST" class="hidden items-center gap-2 w-full">
+                            <input type="hidden" name="action" value="edit">
+                            <input type="hidden" name="id_mapel" value="<?= $m['id']; ?>">
+                            <input type="text" name="nama_mapel" value="<?= htmlspecialchars($m['nama_mapel']); ?>" required 
+                                   class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 px-2 py-1 text-sm font-bold text-primary">
+                            <button type="submit" class="text-primary hover:text-primary-container transition-colors" title="Simpan">
+                                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                            </button>
+                            <button type="button" onclick="toggleEdit(<?= $m['id']; ?>)" class="text-error hover:opacity-80 transition-opacity" title="Batal">
+                                <span class="material-symbols-outlined text-[20px]">cancel</span>
+                            </button>
+                        </form>
+                    </td>
+
+                    <td class="px-6 py-4 text-center space-x-1 whitespace-nowrap">
+                        <!-- Tombol Edit -->
+                        <button onclick="toggleEdit(<?= $m['id']; ?>)" class="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                        </button>
+                        <!-- Tombol Hapus -->
                         <a href="proses_mapel.php?hapus=<?= $m['id']; ?>" onclick="return confirm('Hapus mapel?')" class="text-error opacity-0 group-hover:opacity-100 transition-opacity">
                             <span class="material-symbols-outlined text-[20px]">delete</span>
                         </a>
@@ -65,6 +91,8 @@ require_once '../components/header.php';
 
                 <tr class="bg-primary/5 border-t-2 border-primary/20">
                     <form action="proses_mapel.php" method="POST">
+                        <!-- Tambahkan identifier action -->
+                        <input type="hidden" name="action" value="tambah"> 
                         <td class="px-6 py-4 text-center text-primary"><span class="material-symbols-outlined">add</span></td>
                         <td class="px-6 py-3">
                             <input type="text" name="nama_mapel" required class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 px-2 py-2 text-sm font-bold text-primary placeholder-primary/30" placeholder="Ketik Nama Mapel Baru...">
@@ -78,5 +106,25 @@ require_once '../components/header.php';
         </table>
     </div>
 </main>
+
+<!-- Script untuk toggle tampilan Text vs Form -->
+<script>
+function toggleEdit(id) {
+    const textDiv = document.getElementById('text_' + id);
+    const formDiv = document.getElementById('form_' + id);
+    
+    if (textDiv.classList.contains('hidden')) {
+        // Batal Edit: Tampilkan teks, sembunyikan form
+        textDiv.classList.remove('hidden');
+        formDiv.classList.add('hidden');
+        formDiv.classList.remove('flex');
+    } else {
+        // Mulai Edit: Sembunyikan teks, tampilkan form
+        textDiv.classList.add('hidden');
+        formDiv.classList.remove('hidden');
+        formDiv.classList.add('flex');
+    }
+}
+</script>
 
 <?php require_once '../components/footer.php'; ?>
