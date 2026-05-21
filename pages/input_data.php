@@ -119,7 +119,7 @@ require_once '../components/header.php';
                 <tbody id="tabelNilai" class="text-on-surface text-sm">
                     <?php foreach ($students as $s): ?>
                     <tr class="hover:bg-surface-container-highest transition-colors data-row" data-nama="<?= htmlspecialchars(strtolower(trim($s['nama']))) ?>">
-                        <td class="p-1 md:p-3 border border-outline-variant/30 font-bold text-[10px] md:text-sm sticky left-0 z-10 bg-surface-container-lowest shadow-[2px_0_5px_rgba(0,0,0,0.05)] truncate max-w-[90px] md:max-w-[150px] student-name" title="<?= htmlspecialchars($s['nama']) ?>">
+                        <td class="p-1 md:p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest shadow-[2px_0_5px_rgba(0,0,0,0.05)] truncate max-w-[90px] md:max-w-[150px] student-name" title="<?= htmlspecialchars($s['nama']) ?>">
                             <?= htmlspecialchars($s['nama']) ?>
                         </td>
                         
