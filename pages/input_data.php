@@ -106,39 +106,40 @@ require_once '../components/header.php';
             <table class="w-full text-left border-collapse min-w-[700px] text-sm">
                 <thead>
                     <tr class="bg-surface-container-low text-on-surface-variant text-[10px] md:text-xs uppercase tracking-wider">
-                        <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[150px] shadow-[2px_0_5px_rgba(0,0,0,0.05)]">Nama Siswa</th>
-                        <th class="p-2 font-bold border border-outline-variant/30 text-center w-[80px]">H.UTS</th>
-                        <th class="p-2 font-bold border border-outline-variant/30 text-center w-[80px]">UTS</th>
-                        <th class="p-2 font-bold border border-outline-variant/30 text-center w-[80px] bg-primary/5 text-primary">T.UTS</th>
-                        <th class="p-2 font-bold border border-outline-variant/30 text-center w-[80px]">H.UAS</th>
-                        <th class="p-2 font-bold border border-outline-variant/30 text-center w-[80px]">UAS</th>
-                        <th class="p-2 font-bold border border-outline-variant/30 text-center w-[80px] bg-primary/5 text-primary">T.UAS</th>
+                        <th class="p-2 md:p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[110px] max-w-[110px] md:min-w-[150px] md:max-w-none shadow-[2px_0_5px_rgba(0,0,0,0.05)]">Nama Siswa</th>
+                        
+                        <th class="kolom-dinamis kolom-h_uts p-2 font-bold border border-outline-variant/30 text-center w-[80px]">H.UTS</th>
+                        <th class="kolom-dinamis kolom-uts p-2 font-bold border border-outline-variant/30 text-center w-[80px]">UTS</th>
+                        <th class="kolom-dinamis kolom-t_uts p-2 font-bold border border-outline-variant/30 text-center w-[80px] bg-primary/5 text-primary">T.UTS</th>
+                        <th class="kolom-dinamis kolom-h_uas p-2 font-bold border border-outline-variant/30 text-center w-[80px]">H.UAS</th>
+                        <th class="kolom-dinamis kolom-uas p-2 font-bold border border-outline-variant/30 text-center w-[80px]">UAS</th>
+                        <th class="kolom-dinamis kolom-t_uas p-2 font-bold border border-outline-variant/30 text-center w-[80px] bg-primary/5 text-primary">T.UAS</th>
                     </tr>
                 </thead>
                 <tbody id="tabelNilai" class="text-on-surface text-sm">
                     <?php foreach ($students as $s): ?>
                     <tr class="hover:bg-surface-container-highest transition-colors data-row" data-nama="<?= htmlspecialchars(strtolower(trim($s['nama']))) ?>">
-                        <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest shadow-[2px_0_5px_rgba(0,0,0,0.05)] truncate student-name">
+                        <td class="p-2 md:p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest shadow-[2px_0_5px_rgba(0,0,0,0.05)] truncate max-w-[110px] md:max-w-[150px] student-name" title="<?= htmlspecialchars($s['nama']) ?>">
                             <?= htmlspecialchars($s['nama']) ?>
                         </td>
                         
-                        <td class="p-1 border border-outline-variant/30">
+                        <td class="kolom-dinamis kolom-h_uts p-1 border border-outline-variant/30">
                             <input type="number" step="any" name="n_h_uts[<?= $s['id'] ?>]" value="<?= $s['h_uts'] ?>" class="nilai-input input-h_uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
                         </td>
-                        <td class="p-1 border border-outline-variant/30">
-                            <input type="number" step="any" step="any" name="n_uts[<?= $s['id'] ?>]" value="<?= $s['uts'] ?>" class="nilai-input input-uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
+                        <td class="kolom-dinamis kolom-uts p-1 border border-outline-variant/30">
+                            <input type="number" step="any" name="n_uts[<?= $s['id'] ?>]" value="<?= $s['uts'] ?>" class="nilai-input input-uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
                         </td>
-                        <td class="p-1 border border-outline-variant/30 bg-primary/5">
+                        <td class="kolom-dinamis kolom-t_uts p-1 border border-outline-variant/30 bg-primary/5">
                             <input type="number" step="any" name="n_t_uts[<?= $s['id'] ?>]" value="<?= $s['tambahan_uts'] ?>" class="nilai-input input-t_uts w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold text-primary" placeholder="-">
                         </td>
                         
-                        <td class="p-1 border border-outline-variant/30">
+                        <td class="kolom-dinamis kolom-h_uas p-1 border border-outline-variant/30">
                             <input type="number" step="any" name="n_h_uas[<?= $s['id'] ?>]" value="<?= $s['h_uas'] ?>" class="nilai-input input-h_uas w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
                         </td>
-                        <td class="p-1 border border-outline-variant/30">
+                        <td class="kolom-dinamis kolom-uas p-1 border border-outline-variant/30">
                             <input type="number" step="any" name="n_uas[<?= $s['id'] ?>]" value="<?= $s['uas'] ?>" class="nilai-input input-uas w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold" placeholder="-">
                         </td>
-                        <td class="p-1 border border-outline-variant/30 bg-primary/5">
+                        <td class="kolom-dinamis kolom-t_uas p-1 border border-outline-variant/30 bg-primary/5">
                             <input type="number" step="any" name="n_t_uas[<?= $s['id'] ?>]" value="<?= $s['tambahan_uas'] ?>" class="nilai-input input-t_uas w-full h-full p-2 bg-transparent border-0 focus:ring-2 focus:ring-primary text-center font-bold text-primary" placeholder="-">
                         </td>
                     </tr>
@@ -293,6 +294,36 @@ require_once '../components/header.php';
             warningBox.classList.add('hidden');
         }
     }
+
+    // 5. FITUR MOBILE: TAMPILKAN HANYA KOLOM TARGET
+    function sesuaikanKolomMobile() {
+        const isMobile = window.innerWidth < 768; // Deteksi apakah layar seukuran HP (Tailwind breakpoint 'md')
+        const targetClass = document.getElementById('targetKolom').value; // Ambil nilai dropdown saat ini
+        const semuaKolom = document.querySelectorAll('.kolom-dinamis'); // Ambil semua TH dan TD nilai
+
+        semuaKolom.forEach(kolom => {
+            if (isMobile) {
+                // Jika di HP: Sembunyikan semua kolom KECUALI kolom yang ditarget
+                if (kolom.classList.contains('kolom-' + targetClass)) {
+                    kolom.style.display = ''; // Tampilkan
+                } else {
+                    kolom.style.display = 'none'; // Sembunyikan
+                }
+            } else {
+                // Jika di Tablet/Laptop: Pastikan semua kolom tampil (kembali normal)
+                kolom.style.display = ''; 
+            }
+        });
+    }
+
+    // Jalankan fungsi saat guru mengganti pilihan target di Dropdown
+    document.getElementById('targetKolom').addEventListener('change', sesuaikanKolomMobile);
+
+    // Jalankan fungsi saat halaman baru selesai dimuat
+    document.addEventListener('DOMContentLoaded', sesuaikanKolomMobile);
+
+    // Jalankan fungsi jika orientasi HP diputar atau jendela browser diubah ukurannya
+    window.addEventListener('resize', sesuaikanKolomMobile);
 </script>
 
 <?php require_once '../components/footer.php'; ?>
