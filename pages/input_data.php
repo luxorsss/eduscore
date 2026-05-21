@@ -103,10 +103,10 @@ require_once '../components/header.php';
         <input type="hidden" name="class_id" value="<?= $class_id ?>">
         
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[700px] text-sm">
+            <table class="w-full text-left border-collapse md:min-w-[700px] text-sm">
                 <thead>
                     <tr class="bg-surface-container-low text-on-surface-variant text-[10px] md:text-xs uppercase tracking-wider">
-                        <th class="p-2 md:p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[110px] max-w-[110px] md:min-w-[150px] md:max-w-none shadow-[2px_0_5px_rgba(0,0,0,0.05)]">Nama Siswa</th>
+                        <th class="p-1 md:p-3 text-[10px] md:text-xs font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[90px] max-w-[90px] md:min-w-[150px] md:max-w-none shadow-[2px_0_5px_rgba(0,0,0,0.05)]">Nama Siswa</th>
                         
                         <th class="kolom-dinamis kolom-h_uts p-2 font-bold border border-outline-variant/30 text-center w-[80px]">H.UTS</th>
                         <th class="kolom-dinamis kolom-uts p-2 font-bold border border-outline-variant/30 text-center w-[80px]">UTS</th>
@@ -119,7 +119,7 @@ require_once '../components/header.php';
                 <tbody id="tabelNilai" class="text-on-surface text-sm">
                     <?php foreach ($students as $s): ?>
                     <tr class="hover:bg-surface-container-highest transition-colors data-row" data-nama="<?= htmlspecialchars(strtolower(trim($s['nama']))) ?>">
-                        <td class="p-2 md:p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest shadow-[2px_0_5px_rgba(0,0,0,0.05)] truncate max-w-[110px] md:max-w-[150px] student-name" title="<?= htmlspecialchars($s['nama']) ?>">
+                        <td class="p-1 md:p-3 border border-outline-variant/30 font-bold text-[10px] md:text-sm sticky left-0 z-10 bg-surface-container-lowest shadow-[2px_0_5px_rgba(0,0,0,0.05)] truncate max-w-[90px] md:max-w-[150px] student-name" title="<?= htmlspecialchars($s['nama']) ?>">
                             <?= htmlspecialchars($s['nama']) ?>
                         </td>
                         
