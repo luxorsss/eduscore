@@ -31,13 +31,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // A. FITUR BULK DELETE (Hapus Massal)
     if ($aksi === 'hapus_massal') {
-        $ids = $_POST['id_hapus'] ?? []; // Mengambil array ID yang dicentang
+        $raw_ids = $_POST['id_hapus'] ?? [];
+
+        // Pastikan input berupa array dan bersihkan hanya ID angka
+        if (!is_array($raw_ids)) {
+            $raw_ids = [$raw_ids];
+        }
+        $ids = array_values(array_filter(array_map('intval', $raw_ids)));
+
         if (!empty($ids)) {
             try {
-                // Gunakan Transaction agar jika salah satu gagal, semuanya dibatalkan
                 $pdo->beginTransaction(); 
                 
-                $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+                // Buat placeholder ?,?,? sesuai jumlah array
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
                 
                 // 1. HAPUS ANAK (Data Nilai di tabel grades) TERLEBIH DAHULU
                 $sql_nilai = "DELETE FROM grades WHERE student_id IN ($placeholders)";
@@ -49,13 +56,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt_siswa = $pdo->prepare($sql_siswa);
                 $stmt_siswa->execute($ids);
                 
-                $pdo->commit(); // Simpan perubahan
+                $pdo->commit();
                 header("Location: siswa.php?pesan=berhasil_hapus");
                 exit();
             } catch (PDOException $e) {
-                $pdo->rollBack(); // Batalkan semua jika error
+                $pdo->rollBack();
                 die("Gagal hapus massal: " . $e->getMessage());
             }
+        } else {
+            echo "<script>alert('Pilih minimal satu siswa untuk dihapus!'); window.history.back();</script>";
+            exit();
         }
     }
 
