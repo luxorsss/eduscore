@@ -42,6 +42,36 @@ require_once '../components/header.php';
         <p class="text-on-surface-variant text-sm">Kelola jenjang dan nama kelas yang tersedia di sistem.</p>
     </div>
 
+    <!-- Alert Notifikasi Status Aksi -->
+    <?php if (isset($_GET['pesan'])): ?>
+        <?php if ($_GET['pesan'] == 'ada_siswa'): ?>
+            <div class="flex items-center gap-3 p-4 text-sm rounded-xl border border-amber-500/20 bg-amber-50 text-amber-900">
+                <span class="material-symbols-outlined text-amber-600">warning</span>
+                <span><strong>Gagal menghapus:</strong> Masih ada data siswa yang terdaftar di kelas ini. Pindahkan atau hapus siswanya terlebih dahulu.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] == 'ada_jadwal'): ?>
+            <div class="flex items-center gap-3 p-4 text-sm rounded-xl border border-amber-500/20 bg-amber-50 text-amber-900">
+                <span class="material-symbols-outlined text-amber-600">schedule</span>
+                <span><strong>Gagal menghapus:</strong> Kelas ini masih digunakan dalam <strong>Jadwal Pelajaran</strong>. Hapus jadwal terkait terlebih dahulu.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] == 'gagal_terkait'): ?>
+            <div class="flex items-center gap-3 p-4 text-sm rounded-xl border border-amber-500/20 bg-amber-50 text-amber-900">
+                <span class="material-symbols-outlined text-amber-600">error</span>
+                <span><strong>Gagal menghapus:</strong> Data kelas ini masih terikat dengan data nilai atau catatan akademik lainnya.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] == 'sukses_hapus'): ?>
+            <div class="flex items-center gap-3 p-4 text-sm rounded-xl border border-emerald-500/20 bg-emerald-50 text-emerald-900">
+                <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+                <span>Kelas berhasil dihapus.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] == 'error_server'): ?>
+            <div class="flex items-center gap-3 p-4 text-sm rounded-xl border border-red-500/20 bg-red-50 text-red-900">
+                <span class="material-symbols-outlined text-red-600">report</span>
+                <span>Terjadi kendala pada database saat memproses penghapusan.</span>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
     <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -50,12 +80,12 @@ require_once '../components/header.php';
                         <th class="px-6 py-4 w-16 text-center">No</th>
                         <th class="px-6 py-4 w-32">Jenjang</th>
                         <th class="px-6 py-4">Nama Kelas</th>
-                        <th class="px-6 py-4 w-20 text-center">Aksi</th>
+                        <th class="px-6 py-4 w-24 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm text-on-surface divide-y divide-outline-variant/10">
                     <?php $no = 1; foreach ($daftar_kelas as $kelas): ?>
-                    <tr class="hover:bg-surface-container-low/50 transition-colors group">
+                    <tr class="hover:bg-surface-container-low/50 transition-colors">
                         <td class="px-6 py-4 text-center font-medium text-on-surface-variant"><?= $no++; ?></td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 rounded text-[10px] font-bold <?= $kelas['jenjang'] == 'SMA' ? 'bg-primary/10 text-primary' : 'bg-orange-100 text-orange-700' ?>">
@@ -64,7 +94,10 @@ require_once '../components/header.php';
                         </td>
                         <td class="px-6 py-4 font-bold text-base"><?= htmlspecialchars($kelas['nama_kelas']); ?></td>
                         <td class="px-6 py-4 text-center">
-                            <a href="proses_kelas.php?hapus=<?= $kelas['id']; ?>" onclick="return confirm('Hapus kelas ini?')" class="text-on-surface-variant hover:text-error transition-opacity opacity-0 group-hover:opacity-100">
+                            <a href="proses_kelas.php?hapus=<?= $kelas['id']; ?>" 
+                               onclick="return confirm('Hapus kelas <?= htmlspecialchars($kelas['nama_kelas']); ?>?')" 
+                               class="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" 
+                               title="Hapus Kelas">
                                 <span class="material-symbols-outlined text-[20px]">delete</span>
                             </a>
                         </td>
