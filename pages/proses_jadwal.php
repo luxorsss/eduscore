@@ -25,30 +25,67 @@ function getRedirectUrl($filter = null, $pesan = null) {
     return $url;
 }
 
-// 1. TAMBAH JADWAL
+// 1. TAMBAH JADWAL (Single, Bulk Mapel per Kelas, & Bulk Kelas per Mapel)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'tambah') {
-    $class_id = $_POST['class_id'];
-    $subject_id = $_POST['subject_id'];
+    $mode = $_POST['mode'] ?? 'kelas_to_mapel';
+    $pairs = []; // Array kumpulan [class_id, subject_id]
 
-    if (!empty($class_id) && !empty($subject_id)) {
-        $cek_duplikat = $pdo->prepare("SELECT id FROM teaching_schedules WHERE user_id = ? AND class_id = ? AND subject_id = ?");
-        $cek_duplikat->execute([$user_id, $class_id, $subject_id]);
+    if ($mode === 'kelas_to_mapel') {
+        $class_id = (int)($_POST['class_id'] ?? 0);
+        $subject_ids = isset($_POST['subject_ids']) && is_array($_POST['subject_ids']) ? array_map('intval', $_POST['subject_ids']) : [];
         
-        if ($cek_duplikat->rowCount() > 0) {
-            echo "<script>alert('Jadwal ini sudah ada!'); window.location.href='jadwal.php';</script>";
-            exit();
+        if ($class_id > 0 && !empty($subject_ids)) {
+            foreach ($subject_ids as $sid) {
+                if ($sid > 0) $pairs[] = [$class_id, $sid];
+            }
+        }
+    } elseif ($mode === 'mapel_to_kelas') {
+        $subject_id = (int)($_POST['subject_id'] ?? 0);
+        $class_ids = isset($_POST['class_ids']) && is_array($_POST['class_ids']) ? array_map('intval', $_POST['class_ids']) : [];
+
+        if ($subject_id > 0 && !empty($class_ids)) {
+            foreach ($class_ids as $cid) {
+                if ($cid > 0) $pairs[] = [$cid, $subject_id];
+            }
+        }
+    }
+
+    if (empty($pairs)) {
+        echo "<script>alert('Harap pilih data dan centang minimal satu pilihan!'); window.history.back();</script>";
+        exit();
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM teaching_schedules WHERE user_id = ? AND class_id = ? AND subject_id = ?");
+        $stmt_insert = $pdo->prepare("INSERT INTO teaching_schedules (user_id, class_id, subject_id) VALUES (?, ?, ?)");
+
+        $berhasil = 0;
+        $dilewati = 0;
+
+        foreach ($pairs as $p) {
+            $cid = $p[0];
+            $sid = $p[1];
+
+            $stmt_check->execute([$user_id, $cid, $sid]);
+            if ($stmt_check->fetchColumn() == 0) {
+                $stmt_insert->execute([$user_id, $cid, $sid]);
+                $berhasil++;
+            } else {
+                $dilewati++;
+            }
         }
 
-        try {
-            $sql = "INSERT INTO teaching_schedules (user_id, class_id, subject_id) VALUES (?, ?, ?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$user_id, $class_id, $subject_id]);
-            
-            header("Location: jadwal.php");
-            exit();
-        } catch (PDOException $e) {
-            die("Error menyimpan jadwal: " . $e->getMessage());
-        }
+        $pdo->commit();
+
+        $pesan = "sukses_tambah&added=" . $berhasil . "&skipped=" . $dilewati;
+        header("Location: jadwal.php?pesan=" . $pesan);
+        exit();
+
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        die("Error menyimpan jadwal: " . $e->getMessage());
     }
 }
 

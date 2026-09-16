@@ -88,6 +88,20 @@ require_once '../components/header.php';
                 <span class="material-symbols-outlined text-amber-600">warning</span>
                 <span>Jadwal tidak dapat dihapus karena sudah memiliki data nilai siswa terkait.</span>
             </div>
+        <?php elseif ($_GET['pesan'] == 'sukses_tambah'): ?>
+            <?php 
+                $added = (int)($_GET['added'] ?? 0);
+                $skipped = (int)($_GET['skipped'] ?? 0);
+            ?>
+            <div class="mb-6 flex items-center gap-3 p-4 text-sm rounded-xl border border-emerald-500/20 bg-emerald-50 text-emerald-900">
+                <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+                <span>
+                    <strong><?= $added ?></strong> jadwal berhasil disimpan!
+                    <?php if ($skipped > 0): ?>
+                        (<?= $skipped ?> jadwal dilewati karena sudah ada sebelumnya).
+                    <?php endif; ?>
+                </span>
+            </div>
         <?php elseif ($_GET['pesan'] == 'kosong'): ?>
             <div class="mb-6 flex items-center gap-3 p-4 text-sm rounded-xl border border-slate-500/20 bg-slate-50 text-slate-900">
                 <span class="material-symbols-outlined text-slate-600">info</span>
@@ -98,39 +112,91 @@ require_once '../components/header.php';
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- Form Tambah Jadwal -->
+        <!-- Form Tambah Jadwal (Bulk Support) -->
         <div class="lg:col-span-1">
-            <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm p-6 sticky top-24">
-                <h2 class="font-bold text-lg text-on-surface mb-4 flex items-center gap-2">
+            <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm p-5 sticky top-24">
+                <h2 class="font-bold text-lg text-on-surface mb-3 flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary">add_circle</span>
-                    Tambah Kelas & Mapel
+                    Tambah Jadwal
                 </h2>
+
+                <!-- Tab Pemilih Mode -->
+                <div class="flex rounded-lg bg-surface-container-highest p-1 mb-4 text-xs font-bold">
+                    <button type="button" id="tabBtnKelas" onclick="switchTab('kelas')" class="flex-1 py-1.5 rounded-md bg-surface text-primary shadow-sm transition-all text-center">
+                        Per Kelas
+                    </button>
+                    <button type="button" id="tabBtnMapel" onclick="switchTab('mapel')" class="flex-1 py-1.5 rounded-md text-on-surface-variant hover:text-primary transition-all text-center">
+                        Per Mapel
+                    </button>
+                </div>
                 
-                <form action="proses_jadwal.php" method="POST" class="flex flex-col gap-4">
+                <!-- TAB 1: 1 KELAS -> BANYAK MAPEL -->
+                <form id="formPerKelas" action="proses_jadwal.php" method="POST" class="flex flex-col gap-4">
                     <input type="hidden" name="aksi" value="tambah">
+                    <input type="hidden" name="mode" value="kelas_to_mapel">
                     
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Pilih Kelas</label>
-                        <select name="class_id" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-lg border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3 transition-colors cursor-pointer" required>
-                            <option value="" disabled selected>-- Daftar Kelas --</option>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Pilih Kelas</label>
+                        <select name="class_id" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-lg px-3 py-2.5 border-0 focus:ring-2 focus:ring-primary cursor-pointer" required>
+                            <option value="" disabled selected>-- Pilih Kelas --</option>
                             <?php foreach($semua_kelas as $k): ?>
                                 <option value="<?= $k['id'] ?>"><?= $k['jenjang'] ?> - <?= $k['nama_kelas'] ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
 
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Pilih Mata Pelajaran</label>
-                        <select name="subject_id" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-lg border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface-container-lowest focus:ring-0 px-4 py-3 transition-colors cursor-pointer" required>
-                            <option value="" disabled selected>-- Daftar Mata Pelajaran --</option>
+                    <div class="flex flex-col gap-1.5">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Centang Mapel</label>
+                            <button type="button" onclick="toggleCheckAllGroup('cb-mapel')" class="text-[11px] text-primary font-bold hover:underline">Pilih Semua</button>
+                        </div>
+                        <div class="max-h-52 overflow-y-auto rounded-lg border border-outline-variant/30 bg-surface divide-y divide-outline-variant/10 p-2">
                             <?php foreach($semua_mapel as $m): ?>
-                                <option value="<?= $m['id'] ?>"><?= $m['nama_mapel'] ?></option>
+                                <label class="flex items-center gap-2.5 p-1.5 hover:bg-surface-container-low rounded cursor-pointer text-xs font-medium text-on-surface select-none">
+                                    <input type="checkbox" name="subject_ids[]" value="<?= $m['id'] ?>" class="cb-mapel rounded text-primary focus:ring-primary w-4 h-4">
+                                    <span><?= htmlspecialchars($m['nama_mapel']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary text-on-primary py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-primary-container transition-all mt-1">
+                        Simpan Mapel Terpilih
+                    </button>
+                </form>
+
+                <!-- TAB 2: 1 MAPEL -> BANYAK KELAS -->
+                <form id="formPerMapel" action="proses_jadwal.php" method="POST" class="flex flex-col gap-4 hidden">
+                    <input type="hidden" name="aksi" value="tambah">
+                    <input type="hidden" name="mode" value="mapel_to_kelas">
+                    
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Pilih Mapel</label>
+                        <select name="subject_id" class="w-full bg-surface-container-highest text-on-surface text-sm rounded-lg px-3 py-2.5 border-0 focus:ring-2 focus:ring-primary cursor-pointer" required>
+                            <option value="" disabled selected>-- Pilih Mapel --</option>
+                            <?php foreach($semua_mapel as $m): ?>
+                                <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
 
-                    <button type="submit" class="w-full bg-primary text-on-primary py-3.5 rounded-lg text-sm font-bold shadow-sm hover:bg-primary-container transition-all mt-2">
-                        Simpan Jadwal
+                    <div class="flex flex-col gap-1.5">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Centang Kelas</label>
+                            <button type="button" onclick="toggleCheckAllGroup('cb-kelas')" class="text-[11px] text-primary font-bold hover:underline">Pilih Semua</button>
+                        </div>
+                        <div class="max-h-52 overflow-y-auto rounded-lg border border-outline-variant/30 bg-surface divide-y divide-outline-variant/10 p-2">
+                            <?php foreach($semua_kelas as $k): ?>
+                                <label class="flex items-center gap-2.5 p-1.5 hover:bg-surface-container-low rounded cursor-pointer text-xs font-medium text-on-surface select-none">
+                                    <input type="checkbox" name="class_ids[]" value="<?= $k['id'] ?>" class="cb-kelas rounded text-primary focus:ring-primary w-4 h-4">
+                                    <span><?= $k['jenjang'] ?> - <?= htmlspecialchars($k['nama_kelas']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary text-on-primary py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-primary-container transition-all mt-1">
+                        Simpan Kelas Terpilih
                     </button>
                 </form>
             </div>
@@ -255,6 +321,33 @@ document.addEventListener('DOMContentLoaded', function() {
         cb.addEventListener('change', updateBulkButton);
     });
 });
+
+// Switch Tab Mode Bulk Add
+    function switchTab(mode) {
+        const formKelas = document.getElementById('formPerKelas');
+        const formMapel = document.getElementById('formPerMapel');
+        const btnKelas = document.getElementById('tabBtnKelas');
+        const btnMapel = document.getElementById('tabBtnMapel');
+
+        if (mode === 'kelas') {
+            formKelas.classList.remove('hidden');
+            formMapel.classList.add('hidden');
+            btnKelas.className = "flex-1 py-1.5 rounded-md bg-surface text-primary shadow-sm transition-all text-center";
+            btnMapel.className = "flex-1 py-1.5 rounded-md text-on-surface-variant hover:text-primary transition-all text-center";
+        } else {
+            formMapel.classList.remove('hidden');
+            formKelas.classList.add('hidden');
+            btnMapel.className = "flex-1 py-1.5 rounded-md bg-surface text-primary shadow-sm transition-all text-center";
+            btnKelas.className = "flex-1 py-1.5 rounded-md text-on-surface-variant hover:text-primary transition-all text-center";
+        }
+    }
+
+    // Toggle Select All Checkbox Group
+    function toggleCheckAllGroup(className) {
+        const cbs = document.querySelectorAll('.' + className);
+        const allChecked = Array.from(cbs).every(cb => cb.checked);
+        cbs.forEach(cb => cb.checked = !allChecked);
+    }
 </script>
 
 <?php require_once '../components/footer.php'; ?>
