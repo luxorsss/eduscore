@@ -17,34 +17,61 @@
     <div class="flex-1 px-4 space-y-1">
         <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
         
+        <!-- Dashboard -->
         <a href="dashboard.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'dashboard.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">dashboard</span>
             <span class="font-medium text-sm">Dashboard</span>
         </a>
+
+        <!-- Data Siswa -->
         <a href="siswa.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'siswa.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">group</span>
             <span class="font-medium text-sm">Data Siswa</span>
         </a>
-        <a href="input_data.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'input_nilai.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+
+        <!-- Catatan Siswa -->
+        <a href="catatan.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'catatan.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+            <span class="material-symbols-outlined text-[20px]">edit_note</span>
+            <span class="font-medium text-sm">Catatan Siswa</span>
+        </a>
+
+        <!-- Summary Catatan -->
+        <a href="summary_catatan.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'summary_catatan.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+            <span class="material-symbols-outlined text-[20px]">summarize</span>
+            <span class="font-medium text-sm">Summary Catatan</span>
+        </a>
+
+        <!-- Input Nilai -->
+        <a href="input_data.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'input_data.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">edit_square</span>
             <span class="font-medium text-sm">Input Nilai</span>
         </a>
+
+        <!-- Analisa Nilai -->
         <a href="analisa.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'analisa.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">analytics</span>
             <span class="font-medium text-sm">Analisa Nilai</span>
         </a>
+
+        <!-- Jadwal & Mapel -->
         <a href="jadwal.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'jadwal.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">calendar_month</span>
             <span class="font-medium text-sm">Jadwal & Mapel</span>
         </a>
+
+        <!-- Mata Pelajaran -->
         <a href="mapel.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'mapel.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">book</span>
             <span class="font-medium text-sm">Mata Pelajaran</span>
         </a>
+
+        <!-- Kelas -->
         <a href="kelas.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'kelas.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">folder_open</span>
             <span class="font-medium text-sm">Kelas</span>
         </a>
+
+        <!-- Wali Kelas -->
         <a href="walikelas.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'walikelas.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">assignment_ind</span>
             <span class="font-medium text-sm">Wali Kelas</span>
@@ -68,18 +95,28 @@
             // Animasi Buka
             sidebar.classList.remove('-translate-x-full');
             overlay.classList.remove('hidden');
-            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-            document.body.style.overflow = 'hidden'; // Kunci scroll layar belakang
+
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+            }, 10);
+
+            document.body.style.overflow = 'hidden';
         } else {
             // Animasi Tutup
             sidebar.classList.add('-translate-x-full');
             overlay.classList.add('opacity-0');
-            setTimeout(() => overlay.classList.add('hidden'), 300);
-            document.body.style.overflow = 'auto'; // Buka scroll
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+
+            document.body.style.overflow = 'auto';
         }
     }
 
-    // Tutup saat area gelap diklik atau tombol silang diklik
+    // Tutup saat area gelap diklik
     document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+
+    // Tutup saat tombol silang diklik
     document.getElementById('closeSidebarBtn').addEventListener('click', toggleSidebar);
 </script>
