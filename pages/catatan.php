@@ -110,7 +110,7 @@ kelas.addEventListener('change', async function () {
     }
 
     try {
-        const response = await fetch('api_siswa_catatan.php?class_id=' + encodeURIComponent(this.value), {
+        const response = await fetch('siswa_catatan_api.php?class_id=' + encodeURIComponent(this.value), {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const data = await response.json();
