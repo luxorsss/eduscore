@@ -1,146 +1,382 @@
 <?php
-// Halaman input catatan sengaja TIDAK membutuhkan login.
 session_start();
+
 require_once '../config/koneksi.php';
 
-$kelas_stmt = $pdo->query("SELECT id, jenjang, nama_kelas FROM classes ORDER BY jenjang, nama_kelas");
+// Ambil daftar kelas
+$kelas_stmt = $pdo->query("
+    SELECT id, jenjang, nama_kelas
+    FROM classes
+    ORDER BY jenjang, nama_kelas
+");
+
 $kelas_list = $kelas_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$page_title = "EduScore - Catatan Siswa";
-require_once '../components/header.php';
+// Status dari proses_catatan.php
+$status = $_GET['status'] ?? '';
 ?>
 
-<nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-30">
-    <div class="max-w-3xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-on-primary">
-                <span class="material-symbols-outlined text-[20px]">edit_note</span>
-            </div>
-            <div>
-                <div class="font-bold text-primary tracking-tight">Catatan Siswa</div>
-                <div class="text-xs text-on-surface-variant">Input cepat tanpa login</div>
-            </div>
-        </div>
-        <?php if (isset($_SESSION['user_id'])): ?>
-            <a href="summary_catatan.php" class="text-primary hover:bg-surface-container-highest p-2 rounded-full" title="Summary">
-                <span class="material-symbols-outlined">analytics</span>
-            </a>
-        <?php else: ?>
-            <a href="login.php" class="text-primary hover:bg-surface-container-highest p-2 rounded-full" title="Login untuk melihat summary">
-                <span class="material-symbols-outlined">lock</span>
-            </a>
-        <?php endif; ?>
-    </div>
-</nav>
+<?php require_once '../components/header.php'; ?>
 
-<main class="flex-grow flex items-start justify-center py-8 px-4 md:py-12">
-    <div class="w-full max-w-2xl">
-        <div class="mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary">Catat Kejadian Siswa</h1>
-            <p class="text-sm text-on-surface-variant mt-1">Pilih kelas, siswa, tanggal, lalu tuliskan apa yang terjadi.</p>
-        </div>
+<div class="min-h-screen bg-surface">
 
-        <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm p-5 md:p-8">
-            <form id="catatanForm" action="proses_catatan.php" method="POST" class="space-y-5">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-11 h-11 rounded-xl bg-primary-container flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary">
+                        edit_note
+                    </span>
+                </div>
+
                 <div>
-                    <label for="kelas" class="block text-sm font-semibold mb-2">Kelas</label>
-                    <select id="kelas" name="kelas_id" required
-                        class="w-full bg-surface-container-highest rounded-lg border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface focus:ring-0 px-4 py-3.5">
-                        <option value="">-- Pilih Kelas --</option>
+                    <h1 class="text-2xl font-black text-on-surface">
+                        Catatan Siswa
+                    </h1>
+
+                    <p class="text-sm text-on-surface-variant">
+                        Catat kejadian atau perilaku siswa saat kegiatan belajar.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-surface-container-low rounded-2xl border border-outline-variant/20 p-6 sm:p-8">
+
+            <form action="proses_catatan.php" method="POST" id="catatanForm">
+
+                <!-- Kelas -->
+                <div class="mb-5">
+                    <label for="kelas_id" class="block text-sm font-bold text-on-surface mb-2">
+                        Kelas
+                    </label>
+
+                    <select
+                        name="kelas_id"
+                        id="kelas_id"
+                        required
+                        class="w-full px-4 py-3 rounded-xl bg-surface-container-highest border border-outline-variant/30 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                    >
+                        <option value="">Pilih kelas</option>
+
                         <?php foreach ($kelas_list as $kelas): ?>
-                            <option value="<?= (int)$kelas['id'] ?>">
-                                <?= htmlspecialchars($kelas['nama_kelas']) ?> (<?= htmlspecialchars($kelas['jenjang']) ?>)
+                            <option value="<?= (int) $kelas['id'] ?>">
+                                <?= htmlspecialchars($kelas['jenjang'] . ' - ' . $kelas['nama_kelas']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
-                <div>
-                    <label for="siswa" class="block text-sm font-semibold mb-2">Siswa</label>
-                    <select id="siswa" name="student_id" required disabled
-                        class="w-full bg-surface-container-highest rounded-lg border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface focus:ring-0 px-4 py-3.5 disabled:opacity-60">
-                        <option value="">-- Pilih kelas terlebih dahulu --</option>
+                <!-- Siswa -->
+                <div class="mb-5">
+                    <label for="student_id" class="block text-sm font-bold text-on-surface mb-2">
+                        Siswa
+                    </label>
+
+                    <select
+                        name="student_id"
+                        id="student_id"
+                        required
+                        disabled
+                        class="w-full px-4 py-3 rounded-xl bg-surface-container-highest border border-outline-variant/30 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        <option value="">Pilih kelas terlebih dahulu</option>
                     </select>
+
+                    <p id="studentLoading" class="hidden mt-2 text-xs text-on-surface-variant">
+                        Memuat daftar siswa...
+                    </p>
                 </div>
 
-                <div>
-                    <label for="tanggal" class="block text-sm font-semibold mb-2">Tanggal</label>
-                    <input id="tanggal" name="tanggal" type="date" value="<?= date('Y-m-d') ?>" required
-                        class="w-full bg-surface-container-highest rounded-lg border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface focus:ring-0 px-4 py-3.5">
+                <!-- Tanggal -->
+                <div class="mb-5">
+                    <label for="tanggal" class="block text-sm font-bold text-on-surface mb-2">
+                        Tanggal
+                    </label>
+
+                    <input
+                        type="date"
+                        name="tanggal"
+                        id="tanggal"
+                        value="<?= htmlspecialchars($_GET['tanggal'] ?? date('Y-m-d')) ?>"
+                        required
+                        class="w-full px-4 py-3 rounded-xl bg-surface-container-highest border border-outline-variant/30 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                    >
                 </div>
 
-                <div>
-                    <label for="catatan" class="block text-sm font-semibold mb-2">Catatan</label>
-                    <textarea id="catatan" name="catatan" rows="5" maxlength="2000" required
+                <!-- Catatan -->
+                <div class="mb-6">
+                    <label for="catatan" class="block text-sm font-bold text-on-surface mb-2">
+                        Catatan
+                    </label>
+
+                    <textarea
+                        name="catatan"
+                        id="catatan"
+                        rows="6"
+                        maxlength="2000"
+                        required
                         placeholder="Contoh: Tidur saat pelajaran berlangsung..."
-                        class="w-full bg-surface-container-highest rounded-lg border-0 border-b-2 border-transparent focus:border-primary focus:bg-surface focus:ring-0 px-4 py-3.5 resize-y"></textarea>
-                    <div class="text-right text-xs text-on-surface-variant mt-1"><span id="counter">0</span>/2000</div>
+                        class="w-full px-4 py-3 rounded-xl bg-surface-container-highest border border-outline-variant/30 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-y"
+                    ></textarea>
+
+                    <div class="flex justify-between mt-2">
+                        <p class="text-xs text-on-surface-variant">
+                            Tulis kejadian secara singkat dan jelas.
+                        </p>
+
+                        <span id="charCount" class="text-xs text-on-surface-variant">
+                            0 / 2000
+                        </span>
+                    </div>
                 </div>
 
-                <button id="submitBtn" type="submit"
-                    class="w-full bg-primary text-on-primary px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary-container active:scale-[0.99] transition-all">
-                    <span class="material-symbols-outlined">save</span>
-                    Simpan Catatan
-                </button>
+                <!-- Tombol -->
+                <div class="flex flex-col sm:flex-row gap-3">
+
+                    <button
+                        type="submit"
+                        id="saveButton"
+                        class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-primary text-on-primary font-bold shadow-sm hover:opacity-90 active:scale-[0.99] transition"
+                    >
+                        <span class="material-symbols-outlined text-[20px]">
+                            save
+                        </span>
+
+                        <span>Simpan Catatan</span>
+                    </button>
+
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <a
+                            href="summary_catatan.php"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-surface-container-highest text-on-surface font-bold hover:bg-surface-container-high transition"
+                        >
+                            <span class="material-symbols-outlined text-[20px]">
+                                summarize
+                            </span>
+
+                            Lihat Summary
+                        </a>
+                    <?php endif; ?>
+
+                </div>
+
             </form>
         </div>
 
-        <div class="mt-4 text-center text-xs text-on-surface-variant">
-            <span class="material-symbols-outlined align-middle text-[16px]">info</span>
-            Summary dan riwayat catatan memerlukan login.
+        <!-- Info -->
+        <div class="mt-5 flex items-start gap-3 px-4 py-3 rounded-xl bg-primary-container/40">
+            <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">
+                info
+            </span>
+
+            <p class="text-sm text-on-surface-variant">
+                Catatan dapat diisi tanpa login. Untuk melihat dan memfilter seluruh catatan,
+                gunakan halaman <strong>Summary Catatan</strong> setelah login.
+            </p>
         </div>
+
     </div>
-</main>
+</div>
 
 <script>
-const kelas = document.getElementById('kelas');
-const siswa = document.getElementById('siswa');
-const catatan = document.getElementById('catatan');
-const counter = document.getElementById('counter');
-const form = document.getElementById('catatanForm');
-const submitBtn = document.getElementById('submitBtn');
+document.addEventListener('DOMContentLoaded', function () {
 
-kelas.addEventListener('change', async function () {
-    siswa.innerHTML = '<option value="">Memuat siswa...</option>';
-    siswa.disabled = true;
+    const kelasSelect = document.getElementById('kelas_id');
+    const studentSelect = document.getElementById('student_id');
+    const studentLoading = document.getElementById('studentLoading');
+    const catatanInput = document.getElementById('catatan');
+    const charCount = document.getElementById('charCount');
+    const form = document.getElementById('catatanForm');
+    const saveButton = document.getElementById('saveButton');
 
-    if (!this.value) {
-        siswa.innerHTML = '<option value="">-- Pilih kelas terlebih dahulu --</option>';
-        return;
-    }
+    // ==========================================
+    // Load siswa berdasarkan kelas
+    // ==========================================
+    kelasSelect.addEventListener('change', function () {
 
-    try {
-        const response = await fetch('siswa_catatan_api.php?class_id=' + encodeURIComponent(this.value), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        const data = await response.json();
+        const classId = this.value;
 
-        if (!response.ok || !data.success) throw new Error(data.message || 'Gagal mengambil siswa.');
+        studentSelect.innerHTML = '';
 
-        siswa.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-        data.students.forEach(student => {
+        if (!classId) {
+            studentSelect.disabled = true;
+
             const option = document.createElement('option');
-            option.value = student.id;
-            option.textContent = student.nama;
-            siswa.appendChild(option);
-        });
-        siswa.disabled = data.students.length === 0;
+            option.value = '';
+            option.textContent = 'Pilih kelas terlebih dahulu';
 
-        if (data.students.length === 0) {
-            siswa.innerHTML = '<option value="">Belum ada siswa di kelas ini</option>';
+            studentSelect.appendChild(option);
+
+            return;
         }
-    } catch (error) {
-        siswa.innerHTML = '<option value="">Gagal memuat siswa</option>';
-        Swal.fire({ icon: 'error', title: 'Gagal', text: error.message });
+
+        studentSelect.disabled = true;
+
+        const loadingOption = document.createElement('option');
+        loadingOption.value = '';
+        loadingOption.textContent = 'Memuat siswa...';
+
+        studentSelect.appendChild(loadingOption);
+
+        studentLoading.classList.remove('hidden');
+
+        fetch('siswa_catatan_api.php?class_id=' + encodeURIComponent(classId), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Gagal mengambil data siswa.');
+            }
+
+            return response.json();
+        })
+        .then(data => {
+
+            studentSelect.innerHTML = '';
+
+            if (!data.success || !Array.isArray(data.students) || data.students.length === 0) {
+
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Tidak ada siswa di kelas ini';
+
+                studentSelect.appendChild(option);
+                studentSelect.disabled = true;
+
+                return;
+            }
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Pilih siswa';
+
+            studentSelect.appendChild(defaultOption);
+
+            data.students.forEach(student => {
+
+                const option = document.createElement('option');
+
+                option.value = student.id;
+
+                // Hanya nama siswa, tanpa NIS
+                option.textContent = student.nama;
+
+                studentSelect.appendChild(option);
+            });
+
+            studentSelect.disabled = false;
+        })
+        .catch(error => {
+
+            console.error('Gagal memuat siswa:', error);
+
+            studentSelect.innerHTML = '';
+
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Gagal memuat siswa';
+
+            studentSelect.appendChild(option);
+
+            studentSelect.disabled = true;
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Daftar siswa tidak dapat dimuat.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        })
+        .finally(() => {
+            studentLoading.classList.add('hidden');
+        });
+    });
+
+    // ==========================================
+    // Character counter
+    // ==========================================
+    function updateCharCount() {
+        const length = catatanInput.value.length;
+        charCount.textContent = length + ' / 2000';
     }
-});
 
-catatan.addEventListener('input', () => counter.textContent = catatan.value.length);
+    catatanInput.addEventListener('input', updateCharCount);
 
-form.addEventListener('submit', function () {
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Menyimpan...';
+    updateCharCount();
+
+    // ==========================================
+    // Cegah double submit
+    // ==========================================
+    form.addEventListener('submit', function () {
+
+        saveButton.disabled = true;
+
+        saveButton.innerHTML = `
+            <span class="material-symbols-outlined animate-spin text-[20px]">
+                progress_activity
+            </span>
+            <span>Menyimpan...</span>
+        `;
+    });
+
+    // ==========================================
+    // SweetAlert status
+    // ==========================================
+    const status = <?= json_encode($status) ?>;
+
+    if (typeof Swal !== 'undefined') {
+
+        if (status === 'success') {
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Catatan siswa berhasil disimpan.',
+                confirmButtonText: 'OK',
+                timer: 1800,
+                timerProgressBar: true
+            });
+
+        } else if (status === 'invalid') {
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Data belum lengkap',
+                text: 'Silakan periksa kembali data yang diisi.',
+                confirmButtonText: 'OK'
+            });
+
+        } else if (status === 'invalid_student') {
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Siswa tidak valid',
+                text: 'Siswa yang dipilih tidak sesuai dengan kelas.',
+                confirmButtonText: 'OK'
+            });
+
+        }
+    }
+
+    // ==========================================
+    // Bersihkan parameter status dari URL
+    // ==========================================
+    if (window.history.replaceState && status) {
+
+        const url = new URL(window.location.href);
+
+        url.searchParams.delete('status');
+
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+    }
+
 });
 </script>
-
-<?php require_once '../components/footer.php'; ?>
