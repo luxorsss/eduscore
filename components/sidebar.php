@@ -35,6 +35,16 @@
             <span class="font-medium text-sm">Catatan Siswa</span>
         </a>
 
+        <!-- Bulk Catatan -->
+        <a href="bulk_catatan.php"
+        class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+        <?= basename($_SERVER['PHP_SELF']) === 'bulk_catatan.php'
+            ? 'bg-primary text-white'
+            : 'text-on-surface-variant hover:bg-surface-container-low' ?>">
+            <span class="material-symbols-outlined">playlist_add</span>
+            <span>Bulk Catatan</span>
+        </a>
+
         <!-- Summary Catatan -->
         <a href="summary_catatan.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'summary_catatan.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
             <span class="material-symbols-outlined text-[20px]">summarize</span>
