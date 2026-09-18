@@ -121,7 +121,7 @@ kelas.addEventListener('change', async function () {
         data.students.forEach(student => {
             const option = document.createElement('option');
             option.value = student.id;
-            option.textContent = student.nama + (student.nis ? ' — ' + student.nis : '');
+            option.textContent = student.nama;
             siswa.appendChild(option);
         });
         siswa.disabled = data.students.length === 0;

@@ -36,9 +36,15 @@ if ($sampai !== '') {
     $params[] = $sampai;
 }
 
-$sql = "SELECT sn.id, sn.student_id, sn.tanggal, sn.catatan,
-               s.nama AS nama_siswa, s.nis,
-               c.id AS class_id, c.nama_kelas, c.jenjang
+$sql = "SELECT
+            sn.id,
+            sn.student_id,
+            sn.tanggal,
+            sn.catatan,
+            s.nama AS nama_siswa,
+            c.id AS class_id,
+            c.nama_kelas,
+            c.jenjang
         FROM student_notes sn
         JOIN students s ON s.id = sn.student_id
         JOIN classes c ON c.id = s.class_id";
@@ -199,15 +205,20 @@ async function loadFilterStudents() {
     if (!filterKelas.value) return;
 
     try {
-        const response = await fetch('api_siswa_catatan.php?class_id=' + encodeURIComponent(filterKelas.value));
+        const response = await fetch('siswa_catatan_api.php?class_id=' + encodeURIComponent(filterKelas.value));
         const data = await response.json();
         if (!data.success) return;
 
         data.students.forEach(student => {
             const option = document.createElement('option');
+
             option.value = student.id;
             option.textContent = student.nama;
-            if (String(student.id) === selectedStudent) option.selected = true;
+
+            if (String(student.id) === selectedStudent) {
+                option.selected = true;
+            }
+
             filterSiswa.appendChild(option);
         });
     } catch (e) {
