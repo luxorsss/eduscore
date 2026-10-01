@@ -20,43 +20,29 @@ $daftar_siswa = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt_kelas = $pdo->query("SELECT * FROM classes ORDER BY nama_kelas ASC");
 $list_kelas = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
 
-$page_title = "EduScore - Data Induk Siswa";
+$page_title = "Data Induk Siswa - EduScore";
+$page_heading = "Data Induk Siswa";
 require_once '../components/header.php'; 
 ?>
 
-<nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-colors mr-1">
-                <span class="material-symbols-outlined">menu</span>
-            </button>
-            <span class="font-headline font-bold text-primary tracking-tight text-lg">EduScore</span>
-        </div>
-        <div class="flex items-center gap-4">
-            <div class="w-8 h-8 rounded-full bg-[#d6e3ff] text-primary flex items-center justify-center font-bold text-sm">
-                <?= strtoupper(substr($_SESSION['nama_lengkap'], 0, 2)); ?>
-            </div>
-        </div>
-    </div>
-</nav>
-
-<main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6 relative">
+<main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-8 flex flex-col gap-6 relative">
     
-    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
+    <!-- Header Bagian & Filter Pencarian -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-surface-card p-5 rounded-xl border border-border-main shadow-xs">
         <div>
-            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary mb-1">Manajemen Siswa</h1>
-            <p class="text-on-surface-variant text-sm">Kelola data induk dan penempatan kelas siswa.</p>
+            <h2 class="text-lg font-bold text-text-main">Daftar Siswa & Penempatan Kelas</h2>
+            <p class="text-xs text-text-muted mt-0.5">Kelola data murid, penempatan rombongan belajar, dan tindakan massal.</p>
         </div>
         
-        <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
             <div class="relative w-full sm:w-64">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
-                <input type="text" id="searchInput" class="w-full bg-surface-container-lowest border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg pl-10 pr-4 py-2 text-sm font-medium shadow-sm transition-all" placeholder="Cari nama siswa...">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-base">search</span>
+                <input type="text" id="searchInput" class="w-full bg-white border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg pl-9 pr-3.5 py-2 text-xs font-medium placeholder:text-slate-400 min-h-[40px]" placeholder="Cari nama siswa...">
             </div>
             
-            <select id="filterKelas" class="w-full sm:w-auto bg-surface-container-lowest text-on-surface text-sm rounded-lg border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary px-3 py-2 font-medium shadow-sm cursor-pointer">
-                <option value="">Semua Kelas</option>
-                <option value="Tanpa Kelas">⚠️ Tanpa Kelas</option>
+            <select id="filterKelas" class="w-full sm:w-auto bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2 font-medium cursor-pointer min-h-[40px]">
+                <option value="">Semua Rombel / Kelas</option>
+                <option value="Tanpa Kelas">Belum Ada Kelas</option>
                 <?php foreach($list_kelas as $lk): ?>
                     <option value="<?= htmlspecialchars($lk['nama_kelas']) ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>
                 <?php endforeach; ?>
@@ -65,151 +51,177 @@ require_once '../components/header.php';
     </div>
 
     <form action="proses_bulk_siswa.php" method="POST">
-        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden relative pb-16 md:pb-0">
-            <div class="overflow-auto max-h-[60vh] relative">
+        <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden relative">
+            <div class="overflow-x-auto max-h-[60vh] custom-scroll">
                 <table class="w-full text-left border-collapse">
-                    <thead class="bg-surface-container-low text-[10px] md:text-xs uppercase font-semibold text-on-surface-variant border-b border-outline-variant/30 sticky top-0 z-10 shadow-sm">
+                    <thead class="bg-slate-50 text-[11px] uppercase font-semibold text-text-muted border-b border-border-main sticky top-0 z-10 shadow-xs">
                         <tr>
-                            <th class="px-2 md:px-4 py-3 w-10 md:w-12 text-center">
-                                <input type="checkbox" id="checkAll" class="rounded text-primary focus:ring-primary border-outline-variant/50 bg-surface w-4 h-4 cursor-pointer">
+                            <th class="px-3 md:px-4 py-3 w-12 text-center">
+                                <input type="checkbox" id="checkAll" aria-label="Pilih semua siswa" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
                             </th>
-                            <th class="px-2 md:px-4 py-3">Profil Siswa</th>
-                            <th class="px-2 md:px-4 py-3 w-24 md:w-40">Kelas</th>
-                            <th class="px-2 md:px-4 py-3 w-20 md:w-24 text-center">Aksi</th>
+                            <th class="px-3 md:px-4 py-3">Nama Lengkap Siswa</th>
+                            <th class="px-3 md:px-4 py-3 w-36 md:w-48">Rombel / Kelas</th>
+                            <th class="px-3 md:px-4 py-3 w-28 text-center">Aksi</th>
                         </tr>
                     </thead>
                     
-                    <tbody id="tabelDataSiswa" class="text-sm divide-y divide-outline-variant/10">
-                        <?php foreach ($daftar_siswa as $s): ?>
-                        <?php $nama_kelas_label = !empty($s['nama_kelas']) ? htmlspecialchars($s['nama_kelas']) : "Tanpa Kelas"; ?>
-                        
-                        <tr class="student-row hover:bg-surface-container-low/50 group transition-colors" data-nama="<?= strtolower(htmlspecialchars($s['nama'])) ?>" data-kelas="<?= strtolower($nama_kelas_label) ?>">
-                            <td class="px-2 md:px-4 py-2 md:py-3 text-center">
-                                <input type="checkbox" name="id_hapus[]" value="<?= $s['id'] ?>" class="cb-siswa rounded text-primary border-outline-variant/50 w-4 h-4 cursor-pointer">
-                            </td>
-                            <td class="px-2 md:px-4 py-2 md:py-3">
-                                <div class="flex items-center gap-2 md:gap-3">
-                                    <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px] md:text-xs shrink-0">
-                                        <?= strtoupper(substr($s['nama'], 0, 2)); ?>
+                    <tbody id="tabelDataSiswa" class="text-xs divide-y divide-border-main">
+                        <?php if (empty($daftar_siswa)): ?>
+                            <tr id="emptyStateRow">
+                                <td colspan="4" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined text-4xl text-slate-300">group_off</span>
+                                        <p class="text-sm font-semibold text-text-main">Belum Ada Data Siswa</p>
+                                        <p class="text-xs text-text-muted max-w-sm">Tambahkan siswa baru menggunakan tombol di bawah atau gunakan fitur salin-tempel massal.</p>
                                     </div>
-                                    <span class="font-bold text-xs md:text-sm line-clamp-1 leading-tight"><?= htmlspecialchars($s['nama']) ?></span>
-                                </div>
-                            </td>
-                            <td class="px-2 md:px-4 py-2 md:py-3">
-                                <?php if (!empty($s['nama_kelas'])): ?>
-                                    <span class="bg-surface-container-highest px-2 py-1 rounded-md text-[10px] md:text-xs font-bold text-on-surface border border-outline-variant/30 whitespace-nowrap">
-                                        <?= htmlspecialchars($s['nama_kelas']) ?>
-                                    </span>
-                                <?php else: ?>
-                                    <span class="bg-error-container text-error px-1.5 py-1 rounded text-[10px] md:text-xs font-bold flex items-center gap-1 w-fit whitespace-nowrap">
-                                        <span class="material-symbols-outlined text-[12px] md:text-[14px]">warning</span> Tanpa Kelas
-                                    </span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="px-2 md:px-4 py-2 md:py-3 text-center">
-                                <div class="flex items-center justify-center gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity flex-nowrap">
-                                    <button type="button" onclick="bukaModalEdit(<?= $s['id'] ?>, '<?= addslashes($s['nama']) ?>', '<?= $s['class_id'] ?>')" class="text-primary p-1 md:p-2 hover:bg-primary-container rounded-lg transition-colors shrink-0" title="Edit">
-                                        <span class="material-symbols-outlined text-[16px] md:text-[18px]">edit</span>
-                                    </button>
-                                    <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="konfirmasiLink(event, this.href, 'Data siswa dan seluruh riwayat nilainya akan hilang.')" class="text-error p-1 md:p-2 hover:bg-error-container rounded-lg transition-colors shrink-0" title="Hapus">
-                                        <span class="material-symbols-outlined text-[16px] md:text-[18px]">delete</span>
-                                    </a>
-                                </div>
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($daftar_siswa as $s): ?>
+                            <?php $nama_kelas_label = !empty($s['nama_kelas']) ? htmlspecialchars($s['nama_kelas']) : "Tanpa Kelas"; ?>
+                            
+                            <tr class="student-row hover:bg-slate-50/80 transition-colors" data-nama="<?= strtolower(htmlspecialchars($s['nama'])) ?>" data-kelas="<?= strtolower($nama_kelas_label) ?>">
+                                <td class="px-3 md:px-4 py-3 text-center">
+                                    <input type="checkbox" name="id_hapus[]" value="<?= $s['id'] ?>" aria-label="Pilih siswa <?= htmlspecialchars($s['nama']) ?>" class="cb-siswa rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
+                                </td>
+                                <td class="px-3 md:px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-slate-100 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-slate-200">
+                                            <?= strtoupper(substr($s['nama'], 0, 2)); ?>
+                                        </div>
+                                        <span class="font-semibold text-xs md:text-sm text-text-main"><?= htmlspecialchars($s['nama']) ?></span>
+                                    </div>
+                                </td>
+                                <td class="px-3 md:px-4 py-3">
+                                    <?php if (!empty($s['nama_kelas'])): ?>
+                                        <span class="badge-grade-neutral px-2.5 py-1 rounded-md text-[11px] font-semibold inline-block">
+                                            <?= htmlspecialchars($s['nama_kelas']) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge-grade-warning px-2.5 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">warning</span> Belum Diplot
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-3 md:px-4 py-3 text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <button type="button" onclick="bukaModalEdit(<?= $s['id'] ?>, '<?= addslashes($s['nama']) ?>', '<?= $s['class_id'] ?>')" class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-100 transition-colors" title="Ubah Data">
+                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                        </button>
+                                        <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="konfirmasiLink(event, this.href, 'Data siswa <?= addslashes($s['nama']) ?> beserta seluruh riwayat nilainya akan dihapus permanen.')" class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-danger hover:bg-danger-subtle transition-colors" title="Hapus Siswa">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+
+                        <!-- Baris Pesan Pencarian Nihil -->
+                        <tr id="noSearchResultRow" class="hidden">
+                            <td colspan="4" class="px-6 py-8 text-center text-text-muted text-xs">
+                                Tidak ada siswa yang sesuai dengan filter pencarian.
                             </td>
                         </tr>
-                        <?php endforeach; ?>
                     </tbody>
 
-                    <tbody id="containerInputSiswa" class="divide-y divide-outline-variant/10">
+                    <tbody id="containerInputSiswa" class="divide-y divide-border-main bg-slate-50/50">
                     </tbody>
                 </table>
             </div>
 
-            <div class="p-4 bg-primary/5 flex justify-between items-center border-t border-primary/20">
-                <button type="button" onclick="tambahBarisInput()" class="flex items-center gap-2 text-primary font-bold text-sm hover:underline">
-                    <span class="material-symbols-outlined text-[20px]">add_circle</span> Tambah Baris Input
+            <div class="p-4 bg-slate-50 flex flex-wrap justify-between items-center gap-3 border-t border-border-main">
+                <button type="button" onclick="tambahBarisInput()" class="flex items-center gap-2 text-primary font-semibold text-xs hover:underline min-h-[44px] px-2">
+                    <span class="material-symbols-outlined text-lg">add_circle</span> Tambah Baris Siswa Manual
                 </button>
-                <button type="submit" name="aksi" value="simpan_massal" class="bg-primary text-on-primary px-6 py-2 rounded-xl font-bold shadow-md hover:bg-primary-container transition-colors">
-                    Simpan Data Baru
+                <button type="submit" name="aksi" value="simpan_massal" class="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-xs font-semibold transition-colors shadow-xs min-h-[44px]">
+                    Simpan Siswa Baru
                 </button>
             </div>
         </div>
 
-        <div id="bulkActionBar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-surface-container-lowest border border-outline-variant/30 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl px-5 py-3 flex flex-wrap items-center justify-center gap-3 md:gap-5 transition-all duration-300 translate-y-32 opacity-0 z-50 w-[95%] md:w-auto">
+        <!-- Floating Bulk Action Bar -->
+        <div id="bulkActionBar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-surface-card border border-border-main shadow-lg rounded-xl px-5 py-3 flex flex-wrap items-center justify-center gap-4 transition-all duration-200 translate-y-32 opacity-0 z-40 w-[95%] md:w-auto">
             
-            <span class="text-sm font-bold text-on-surface whitespace-nowrap"><span id="selectedCount" class="text-primary font-black text-lg">0</span> Terpilih</span>
+            <span class="text-xs font-semibold text-text-main whitespace-nowrap">
+                <span id="selectedCount" class="text-primary font-bold">0</span> Siswa Terpilih
+            </span>
             
-            <div class="hidden md:block w-px h-6 bg-outline-variant/30"></div>
+            <div class="hidden sm:block w-px h-5 bg-border-main"></div>
 
             <div class="flex items-center gap-2">
-                <select name="target_class_id" class="text-xs font-bold rounded-lg border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary py-2 pl-3 pr-8 bg-surface text-on-surface cursor-pointer">
-                    <option value="" disabled selected>-- Pindah ke Kelas --</option>
+                <select name="target_class_id" class="text-xs font-medium rounded-lg border border-slate-300 py-1.5 pl-3 pr-8 bg-white text-text-main cursor-pointer min-h-[36px]">
+                    <option value="" disabled selected>Pindahkan ke Kelas...</option>
                     <?php foreach($list_kelas as $lk): ?>
                         <option value="<?= $lk['id'] ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <button type="submit" name="aksi" value="pindah_massal" onclick="return confirm('Yakin pindahkan siswa yang dicentang ke kelas tersebut?')" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-primary text-on-primary rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm whitespace-nowrap">
-                    <span class="material-symbols-outlined text-[16px]">move_up</span> Pindah
+                <button type="submit" name="aksi" value="pindah_massal" onclick="konfirmasiForm(event, 'Pindahkan seluruh siswa yang dipilih ke kelas tujuan?')" class="px-3 py-1.5 text-xs font-semibold bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors min-h-[36px]">
+                    Pindahkan
                 </button>
             </div>
 
-            <div class="w-px h-6 bg-outline-variant/30"></div>
+            <div class="w-px h-5 bg-border-main"></div>
 
-            <button type="submit" name="aksi" value="hapus_massal" onclick="return confirm('Yakin ingin menghapus siswa beserta riwayat nilainya?')" class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-error hover:bg-error-container hover:text-error rounded-lg transition-colors whitespace-nowrap">
-                <span class="material-symbols-outlined text-[16px]">delete</span> Hapus
+            <button type="submit" name="aksi" value="hapus_massal" onclick="konfirmasiForm(event, 'Hapus seluruh siswa terpilih beserta seluruh riwayat nilainya?')" class="px-3 py-1.5 text-xs font-semibold text-danger hover:bg-danger-subtle rounded-lg transition-colors min-h-[36px]">
+                Hapus Terpilih
             </button>
         </div>
     </form>
 
-    <div class="mt-2 bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden mb-10">
-        <div class="p-5 border-b border-outline-variant/20 bg-surface-container-low flex justify-between items-center">
-            <div>
-                <h2 class="font-bold text-lg text-primary flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[20px]">content_paste</span>
-                    Opsi Cepat: Copas Massal (Pemisah Koma)
-                </h2>
-                <p class="text-sm text-on-surface-variant mt-1">Gunakan koma untuk memisahkan nama dan kelas. Format: <b>Nama Siswa, Nama Kelas</b>.</p>
-            </div>
+    <!-- Opsi Input Massal via Salin Tempel -->
+    <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden mb-12">
+        <div class="p-5 border-b border-border-main bg-slate-50">
+            <h3 class="font-bold text-sm text-text-main flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg text-primary">content_paste</span>
+                Penambahan Massal (Salin - Tempel Teks)
+            </h3>
+            <p class="text-xs text-text-muted mt-1">
+                Tempel data siswa dalam format: <b>Nama Siswa, Nama Kelas</b> (pisahkan setiap siswa dengan baris baru).
+            </p>
         </div>
         <form action="proses_bulk_siswa.php" method="POST" class="p-5 flex flex-col gap-4">
-            <textarea name="data_copas" rows="4" class="w-full bg-surface-container-highest border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl p-4 text-sm font-mono text-on-surface leading-relaxed" placeholder="Contoh:&#10;Budi-Santoso, 10 IPA 1&#10;Siti Nurhaliza, 10 IPA 1" required></textarea>
+            <textarea name="data_copas" rows="4" class="w-full bg-white border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg p-3 text-xs font-mono text-text-main leading-relaxed" placeholder="Contoh:&#10;Ahmad Dahlan, 10 IPA 1&#10;Siti Fatimah, 10 IPA 1" required></textarea>
             
-            <button type="submit" name="aksi" value="copas_massal" class="bg-tertiary text-on-primary px-6 py-2.5 rounded-xl font-bold shadow-md hover:bg-tertiary/90 w-fit flex items-center gap-2 transition-transform hover:scale-105">
-                <span class="material-symbols-outlined text-[18px]">fact_check</span> Simpan Data Copas
-            </button>
+            <div>
+                <button type="submit" name="aksi" value="copas_massal" class="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg font-semibold text-xs transition-colors shadow-xs min-h-[44px]">
+                    Proses & Simpan Data
+                </button>
+            </div>
         </form>
     </div>
 
-    <div id="modalEditSiswa" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-surface-container-lowest w-full max-w-sm rounded-2xl shadow-xl overflow-hidden transform scale-95 transition-transform duration-300" id="modalEditContent">
-            <div class="p-4 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low">
-                <h3 class="font-bold text-primary flex items-center gap-2"><span class="material-symbols-outlined">edit_square</span> Edit Siswa</h3>
-                <button type="button" onclick="tutupModalEdit()" class="text-on-surface-variant hover:text-error transition-colors">
-                    <span class="material-symbols-outlined">close</span>
+    <!-- Modal Edit Siswa -->
+    <div id="modalEditSiswa" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4 opacity-0 transition-opacity duration-200">
+        <div class="bg-surface-card w-full max-w-sm rounded-xl border border-border-main shadow-lg overflow-hidden transform scale-95 transition-transform duration-200" id="modalEditContent">
+            <div class="p-4 border-b border-border-main flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-sm text-text-main">Perbarui Data Siswa</h3>
+                <button type="button" onclick="tutupModalEdit()" aria-label="Tutup jendela edit" class="text-text-muted hover:text-text-main transition-colors">
+                    <span class="material-symbols-outlined text-lg">close</span>
                 </button>
             </div>
             <form action="proses_bulk_siswa.php" method="POST" class="p-5 flex flex-col gap-4">
                 <input type="hidden" name="aksi" value="edit_single">
                 <input type="hidden" id="edit_id" name="id_siswa" value="">
                 
-                <div>
-                    <label class="text-xs font-bold text-on-surface-variant uppercase mb-1 block">Nama Lengkap</label>
-                    <input type="text" id="edit_nama" name="nama_siswa" class="w-full bg-surface-container-highest rounded-lg px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-primary" required>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-text-main" for="edit_nama">Nama Lengkap</label>
+                    <input type="text" id="edit_nama" name="nama_siswa" class="w-full bg-white rounded-lg px-3 py-2 text-xs border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                 </div>
                 
-                <div>
-                    <label class="text-xs font-bold text-on-surface-variant uppercase mb-1 block">Penempatan Kelas</label>
-                    <select id="edit_kelas" name="class_id" class="w-full bg-surface-container-highest rounded-lg px-4 py-3 text-sm border-0 focus:ring-2 focus:ring-primary cursor-pointer">
-                        <option value="">-- Kosongkan (Tanpa Kelas) --</option>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-text-main" for="edit_kelas">Penempatan Rombel</label>
+                    <select id="edit_kelas" name="class_id" class="w-full bg-white rounded-lg px-3 py-2 text-xs border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer">
+                        <option value="">-- Tanpa Rombel --</option>
                         <?php foreach($list_kelas as $lk): ?>
                             <option value="<?= $lk['id'] ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 
-                <div class="mt-2 flex justify-end gap-3 pt-4 border-t border-outline-variant/20">
-                    <button type="button" onclick="tutupModalEdit()" class="px-5 py-2 rounded-lg font-bold text-sm text-on-surface-variant hover:bg-surface-container-highest transition-colors">Batal</button>
-                    <button type="submit" class="bg-primary text-on-primary px-5 py-2 rounded-lg font-bold text-sm shadow hover:bg-primary-container transition-colors">Simpan</button>
+                <div class="flex justify-end gap-2 pt-3 border-t border-border-main">
+                    <button type="button" onclick="tutupModalEdit()" class="px-4 py-2 rounded-lg text-xs font-semibold text-text-muted hover:bg-slate-100 transition-colors">Batal</button>
+                    <button type="submit" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -221,47 +233,57 @@ require_once '../components/header.php';
     const searchInput = document.getElementById('searchInput');
     const filterKelas = document.getElementById('filterKelas');
     const studentRows = document.querySelectorAll('.student-row');
+    const noSearchResultRow = document.getElementById('noSearchResultRow');
 
     function filterData() {
-        const querySearch = searchInput.value.toLowerCase();
-        const queryKelas = filterKelas.value.toLowerCase();
+        const querySearch = searchInput.value.toLowerCase().trim();
+        const queryKelas = filterKelas.value.toLowerCase().trim();
+        let visibleCount = 0;
 
         studentRows.forEach(row => {
-            const namaSiswa = row.getAttribute('data-nama');
-            const kelasSiswa = row.getAttribute('data-kelas');
+            const namaSiswa = row.getAttribute('data-nama') || '';
+            const kelasSiswa = row.getAttribute('data-kelas') || '';
 
-            const matchesSearch = namaSiswa.includes(querySearch);
-            const matchesKelas = queryKelas === "" || kelasSiswa === queryKelas;
+            const matchesSearch = querySearch === '' || namaSiswa.includes(querySearch);
+            const matchesKelas = queryKelas === '' || kelasSiswa === queryKelas;
 
             if (matchesSearch && matchesKelas) {
                 row.style.display = '';
+                visibleCount++;
             } else {
                 row.style.display = 'none';
             }
         });
+
+        if (noSearchResultRow) {
+            if (studentRows.length > 0 && visibleCount === 0) {
+                noSearchResultRow.classList.remove('hidden');
+            } else {
+                noSearchResultRow.classList.add('hidden');
+            }
+        }
     }
 
-    searchInput.addEventListener('input', filterData);
-    filterKelas.addEventListener('change', filterData);
+    if (searchInput) searchInput.addEventListener('input', filterData);
+    if (filterKelas) filterKelas.addEventListener('change', filterData);
 
-
-    // 2. TAMBAH BARIS MANUAL (Tanpa NIS)
+    // 2. TAMBAH BARIS MANUAL
     function tambahBarisInput() {
         const container = document.getElementById('containerInputSiswa');
         const row = document.createElement('tr');
-        row.className = "bg-primary/5 border-t-2 border-primary/20";
+        row.className = "bg-primary-subtle/30 border-t border-border-main";
         row.innerHTML = `
-            <td class="px-2 md:px-4 py-2 md:py-3 text-center">
-                <button type="button" onclick="this.closest('tr').remove()" class="text-error-variant hover:text-error">
-                    <span class="material-symbols-outlined text-[16px] md:text-[18px]">remove_circle</span>
+            <td class="px-3 md:px-4 py-2.5 text-center">
+                <button type="button" onclick="this.closest('tr').remove()" class="text-danger hover:opacity-80 p-1" title="Batalkan baris">
+                    <span class="material-symbols-outlined text-[18px]">remove_circle</span>
                 </button>
             </td>
-            <td class="px-2 md:px-4 py-2">
-                <input type="text" name="nama_siswa[]" required class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 text-xs md:text-sm font-bold placeholder-primary/50" placeholder="Nama Siswa Baru...">
+            <td class="px-3 md:px-4 py-2.5">
+                <input type="text" name="nama_siswa[]" required class="w-full bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Ketik nama siswa baru...">
                 <input type="hidden" name="nis_siswa[]" value="AUTO"> 
             </td>
-            <td class="px-2 md:px-4 py-2">
-                <select name="class_id_siswa[]" class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 text-[10px] md:text-xs font-bold" required>
+            <td class="px-3 md:px-4 py-2.5">
+                <select name="class_id_siswa[]" class="w-full bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
                     <option value="" disabled selected>Pilih Kelas</option>
                     <?php foreach($list_kelas as $lk): ?>
                         <option value="<?= $lk['id'] ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>
@@ -272,9 +294,8 @@ require_once '../components/header.php';
         `;
         container.appendChild(row);
         
-        // Auto-scroll ke bawah saat tambah baris
-        const tableContainer = document.querySelector('.overflow-auto');
-        tableContainer.scrollTop = tableContainer.scrollHeight;
+        const tableContainer = document.querySelector('.overflow-x-auto');
+        if (tableContainer) tableContainer.scrollTop = tableContainer.scrollHeight;
     }
 
     // 3. LOGIKA FLOATING ACTION BAR 
@@ -284,7 +305,6 @@ require_once '../components/header.php';
     const selectedCountLabel = document.getElementById('selectedCount');
 
     function updateActionBar() {
-        // Hitung checkbox yang dicentang AND yang tidak di-hide oleh filter
         let count = 0;
         checkboxes.forEach(cb => {
             if (cb.checked && cb.closest('tr').style.display !== 'none') {
@@ -292,21 +312,21 @@ require_once '../components/header.php';
             }
         });
 
-        selectedCountLabel.innerText = count;
+        if (selectedCountLabel) selectedCountLabel.innerText = count;
 
-        if (count > 0) {
-            // Tampilkan Bar: hapus class hide (translate-y-32, opacity-0)
-            actionBar.classList.remove('translate-y-32', 'opacity-0');
-        } else {
-            // Sembunyikan Bar
-            actionBar.classList.add('translate-y-32', 'opacity-0');
+        if (actionBar) {
+            if (count > 0) {
+                actionBar.classList.remove('translate-y-32', 'opacity-0');
+            } else {
+                actionBar.classList.add('translate-y-32', 'opacity-0');
+            }
         }
     }
 
-    if(checkAll) {
+    if (checkAll) {
         checkAll.addEventListener('change', function() {
             checkboxes.forEach(cb => {
-                if(cb.closest('tr').style.display !== 'none') {
+                if (cb.closest('tr').style.display !== 'none') {
                     cb.checked = this.checked;
                 }
             });
@@ -316,7 +336,7 @@ require_once '../components/header.php';
 
     checkboxes.forEach(cb => cb.addEventListener('change', updateActionBar));
 
-    // --- Lojik MODAL EDIT ---
+    // 4. MODAL EDIT & ESCAPE KEY (R-32)
     const modalEdit = document.getElementById('modalEditSiswa');
     const modalEditContent = document.getElementById('modalEditContent');
     const inputEditId = document.getElementById('edit_id');
@@ -342,8 +362,15 @@ require_once '../components/header.php';
         setTimeout(() => {
             modalEdit.classList.add('hidden');
             modalEdit.classList.remove('flex');
-        }, 300);
+        }, 200);
     }
+
+    // Keyboard Accessibility: Escape key menutup modal (R-32)
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modalEdit && !modalEdit.classList.contains('hidden')) {
+            tutupModalEdit();
+        }
+    });
 </script>
 
 <?php require_once '../components/footer.php'; ?>

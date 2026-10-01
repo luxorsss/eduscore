@@ -1,1 +1,15 @@
-config/koneksi.php
+# Konfigurasi Database Lokal
+    config/koneksi.php
+  
+    # Log Server & Error PHP
+    *.log
+    error_log
+  
+    # Berkas Audit / Catatan Kerja AI Sementara
+    anti-slop/
+  
+    # Editor & OS Artifacts (Pencegahan)
+    .vscode/
+    .idea/
+    .DS_Store
+    Thumbs.db

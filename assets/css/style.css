@@ -1,0 +1,92 @@
+/* EduScore Design System Stylesheet */
+:root {
+    --color-primary: #0f2942;
+    --color-primary-hover: #1a3d60;
+    --color-surface: #f8fafc;
+    --color-surface-card: #ffffff;
+    --color-border: #e2e8f0;
+    --color-text-main: #0f172a;
+    --color-text-muted: #475569;
+}
+
+/* Tabular figures for academic grade alignment */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+/* Custom accessible focus ring */
+.focus-ring:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Custom scrollbars for data tables */
+.custom-scroll::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Mobile responsive table sticky first column */
+@media (max-width: 768px) {
+    .table-sticky-col {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background-color: #ffffff;
+    }
+}
+
+/* Grade status badges with high contrast (> 4.5:1 WCAG AA) */
+.badge-grade-pass {
+    background-color: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+.badge-grade-warning {
+    background-color: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+.badge-grade-danger {
+    background-color: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+}
+.badge-grade-neutral {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+/* Print optimization for grade reports */
+@media print {
+    aside, nav, .no-print, button, form {
+        display: none !important;
+    }
+    main {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+    th, td {
+        border: 1px solid #334155 !important;
+        color: #000000 !important;
+    }
+}

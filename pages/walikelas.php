@@ -72,110 +72,133 @@ if ($class_id) {
         $calc = ($h * 0.20) + ($u * 0.80) + $t;
         $final_score = min(100, $calc); // Limit max 100
 
-        // Format ke 2 desimal atau buang desimal jika .00
         $matrix[$sid][$subid] = round($final_score, 2);
     }
 }
 
-$page_title = "EduScore - Rekap Wali Kelas";
+$page_title = "Rekap Wali Kelas - EduScore";
+$page_heading = "Rekapitulasi Nilai Wali Kelas";
 require_once '../components/header.php';
 ?>
 
-<nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
-        <button onclick="toggleSidebar()" class="md:hidden p-2 text-on-surface-variant"><span class="material-symbols-outlined">menu</span></button>
-        <span class="font-bold text-primary text-lg">Panel Wali Kelas</span>
-    </div>
-</nav>
+<main class="max-w-7xl mx-auto w-full p-4 md:p-8 flex flex-col gap-6">
 
-<main class="max-w-7xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6">
-
-    <div class="bg-surface-container-lowest rounded-xl p-4 md:p-6 shadow-sm border border-outline-variant/20">
-        <form action="" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
-            <div class="w-full md:w-2/5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase mb-1 block">Pilih Kelas</label>
-                <select name="kelas" class="w-full bg-surface-container-highest rounded-lg px-3 py-2.5 text-sm border-0 focus:ring-2 focus:ring-primary cursor-pointer" required>
-                    <option value="" disabled selected>-- Pilih Kelas --</option>
+    <!-- Form Pemilihan Kelas & Ujian -->
+    <div class="bg-surface-card rounded-xl p-5 md:p-6 shadow-xs border border-border-main">
+        <form action="" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
+            <div class="sm:col-span-5">
+                <label class="text-xs font-semibold text-text-main mb-1.5 block" for="selectKelas">Pilih Kelas Binaan</label>
+                <select id="selectKelas" name="kelas" class="w-full bg-white rounded-lg px-3 py-2.5 text-xs font-medium border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[44px]" required>
+                    <option value="" disabled <?= empty($class_id) ? 'selected' : '' ?>>-- Pilih Kelas --</option>
                     <?php foreach($kelas_list as $k): ?>
                         <option value="<?= $k['id'] ?>" <?= ($class_id == $k['id']) ? 'selected' : '' ?>>
-                            <?= $k['jenjang'] ?> - <?= $k['nama_kelas'] ?>
+                            <?= htmlspecialchars($k['jenjang']) ?> - <?= htmlspecialchars($k['nama_kelas']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="w-full md:w-2/5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase mb-1 block">Periode Ujian</label>
-                <select name="tipe" class="w-full bg-surface-container-highest rounded-lg px-3 py-2.5 text-sm border-0 focus:ring-2 focus:ring-primary cursor-pointer">
+            <div class="sm:col-span-4">
+                <label class="text-xs font-semibold text-text-main mb-1.5 block" for="selectTipe">Periode Ujian</label>
+                <select id="selectTipe" name="tipe" class="w-full bg-white rounded-lg px-3 py-2.5 text-xs font-medium border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[44px]">
                     <option value="UTS" <?= ($tipe_ujian == 'UTS') ? 'selected' : '' ?>>Ujian Tengah Semester (UTS)</option>
                     <option value="UAS" <?= ($tipe_ujian == 'UAS') ? 'selected' : '' ?>>Ujian Akhir Semester (UAS)</option>
                 </select>
             </div>
-            <div class="w-full md:w-1/5">
-                <button type="submit" class="w-full bg-primary text-on-primary font-bold py-2.5 rounded-lg text-sm shadow-sm hover:bg-primary-container transition-all">Generate Rekap</button>
+            <div class="sm:col-span-3">
+                <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-2.5 px-4 rounded-lg text-xs shadow-xs transition-colors min-h-[44px]">
+                    Tampilkan Rekap
+                </button>
             </div>
         </form>
     </div>
 
     <?php if ($class_id && !empty($students) && !empty($subjects)): ?>
     
-    <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface-container-low p-3 rounded-xl border border-outline-variant/20">
-        <div class="flex items-center gap-2 bg-surface-container-highest p-1 rounded-lg">
-            <button onclick="setMode('siswa')" id="btnModeSiswa" class="px-4 py-1.5 text-xs font-bold rounded-md bg-surface text-primary shadow-sm transition-all">Siswa di Samping (Baris)</button>
-            <button onclick="setMode('mapel')" id="btnModeMapel" class="px-4 py-1.5 text-xs font-bold rounded-md text-on-surface-variant hover:text-on-surface transition-all">Mapel di Samping (Baris)</button>
+    <!-- Kontrol Tampilan & KKM -->
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface-card p-4 rounded-xl border border-border-main shadow-xs">
+        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg w-full md:w-auto">
+            <button type="button" onclick="setMode('siswa')" id="btnModeSiswa" class="flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors">
+                Orientasi Baris Siswa
+            </button>
+            <button type="button" onclick="setMode('mapel')" id="btnModeMapel" class="flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors">
+                Orientasi Baris Mapel
+            </button>
         </div>
         
-        <div class="flex items-center gap-3 w-full md:w-auto justify-end">
-            <div class="flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-lg border border-outline-variant/30 shadow-sm">
-                <label class="text-[10px] font-bold text-on-surface-variant uppercase">KKM:</label>
-                <input type="number" id="inputKkm" value="75" oninput="updateKkm()" class="w-12 bg-transparent text-sm font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none">
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-xs">
+                <label for="inputKkm" class="text-xs font-semibold text-text-muted">Batas KKM:</label>
+                <input type="number" id="inputKkm" value="75" min="0" max="100" oninput="updateKkm()" class="w-12 bg-transparent text-xs font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none tabular-nums">
             </div>
 
-            <button onclick="copyHanyaNilai()" class="bg-tertiary text-on-primary px-4 py-2 rounded-lg text-xs font-bold shadow-sm flex items-center gap-2 hover:bg-tertiary/90 transition-all">
-                <span class="material-symbols-outlined text-[16px]">content_copy</span> Copy Angka 
+            <button type="button" onclick="copyHanyaNilai()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors min-h-[38px]">
+                <span class="material-symbols-outlined text-base">content_copy</span> Salin Angka Murni
             </button>
         </div>
     </div>
 
-    <div class="bg-primary/5 rounded-xl border border-primary/20 overflow-hidden">
-        <button onclick="document.getElementById('syncAreaWali').classList.toggle('hidden')" class="w-full bg-primary/10 px-4 py-3 flex justify-between items-center text-primary font-bold text-sm hover:bg-primary/20 transition-colors">
-            <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">tune</span> Custom Urutan Siswa & Mapel</div>
-            <span class="material-symbols-outlined">expand_more</span>
+    <!-- Sinkronisasi Urutan Kustom -->
+    <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden">
+        <button type="button" onclick="document.getElementById('syncAreaWali').classList.toggle('hidden')" class="w-full px-4 py-3 flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors focus-ring">
+            <div class="flex items-center gap-2 text-text-muted">
+                <span class="material-symbols-outlined text-base text-primary">tune</span> 
+                <span>Sesuaikan Urutan Urut Siswa & Mapel (Format Excel)</span>
+            </div>
+            <span class="material-symbols-outlined text-text-muted text-base">expand_more</span>
         </button>
-        <div id="syncAreaWali" class="hidden p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="syncAreaWali" class="hidden p-4 bg-slate-50/50 border-t border-border-main grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="text-[10px] font-bold text-primary uppercase mb-1 block">Urutan Siswa (Paste dari Excel)</label>
-                <textarea id="urutSiswa" rows="4" class="w-full bg-surface-container-lowest text-xs rounded-lg border border-outline-variant/30 p-2 font-mono"></textarea>
+                <label for="urutSiswa" class="text-xs font-semibold text-text-muted mb-1 block">Urutan Siswa (Tempel dari Excel):</label>
+                <textarea id="urutSiswa" rows="4" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
             </div>
             <div>
-                <label class="text-[10px] font-bold text-primary uppercase mb-1 block">Urutan Mapel (Paste dari Excel)</label>
-                <textarea id="urutMapel" rows="4" class="w-full bg-surface-container-lowest text-xs rounded-lg border border-outline-variant/30 p-2 font-mono"></textarea>
+                <label for="urutMapel" class="text-xs font-semibold text-text-muted mb-1 block">Urutan Mapel (Tempel dari Excel):</label>
+                <textarea id="urutMapel" rows="4" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
             </div>
-            <div class="md:col-span-2 flex justify-end gap-2 mt-2">
-                <button onclick="resetUrutan()" class="text-error text-[11px] font-bold hover:underline px-4">Reset Default</button>
-                <button onclick="terapkanUrutan()" class="bg-primary text-on-primary px-5 py-2 rounded-lg text-xs font-bold shadow hover:bg-primary-container">Terapkan Urutan</button>
+            <div class="md:col-span-2 flex justify-end gap-3 mt-1">
+                <button type="button" onclick="resetUrutan()" class="text-danger text-xs font-semibold hover:underline px-3 py-1.5">Reset Urutan Asli</button>
+                <button type="button" onclick="terapkanUrutan()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors">Terapkan Urutan</button>
             </div>
         </div>
     </div>
 
-    <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
-        <div class="p-3 border-b border-outline-variant/30 bg-surface-container-lowest flex justify-between items-center">
-            <h2 class="font-bold text-xs md:text-sm text-on-surface">Rekap Akhir <?= $tipe_ujian ?> - <?= $info_kelas ?></h2>
-            <span class="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded font-bold">Rumus: (Harian x 20%) + (Ujian x 80%) + Tambahan</span>
-        </div>
-        <div class="overflow-x-auto" id="tableContainer">
+    <!-- Tabel Matriks Rekap Nilai -->
+    <div class="bg-surface-card rounded-xl shadow-xs border border-border-main overflow-hidden">
+        <div class="p-4 border-b border-border-main bg-slate-50 flex flex-wrap justify-between items-center gap-2">
+            <div>
+                <h3 class="font-bold text-xs md:text-sm text-text-main">
+                    Rekap Nilai Akhir <?= htmlspecialchars($tipe_ujian) ?> — Kelas <?= htmlspecialchars($info_kelas) ?>
+                </h3>
             </div>
+            <span class="text-[11px] bg-slate-200 text-text-main px-2.5 py-1 rounded-md font-medium tabular-nums">
+                Rumus: (Harian × 20%) + (Ujian × 80%) + Tambahan
+            </span>
+        </div>
+        <div class="overflow-x-auto custom-scroll" id="tableContainer">
+        </div>
     </div>
     
     <?php elseif($class_id): ?>
-        <div class="bg-error-container text-error p-4 rounded-xl text-center font-bold text-sm">
-            Belum ada data siswa atau mata pelajaran di kelas ini.
+        <div class="bg-surface-card border border-slate-200 rounded-xl p-8 text-center shadow-xs">
+            <span class="material-symbols-outlined text-4xl text-slate-300">inventory_2</span>
+            <h4 class="text-sm font-bold text-text-main mt-2">Data Belum Lengkap</h4>
+            <p class="text-xs text-text-muted mt-1 max-w-md mx-auto">
+                Kelas ini belum memiliki daftar siswa terdaftar atau belum ada mata pelajaran yang dihubungkan di jadwal mengajar.
+            </p>
+        </div>
+    <?php else: ?>
+        <div class="bg-surface-card border border-slate-200 rounded-xl p-10 text-center shadow-xs">
+            <span class="material-symbols-outlined text-4xl text-slate-300">school</span>
+            <h4 class="text-sm font-bold text-text-main mt-2">Pilih Kelas untuk Menampilkan Rekap</h4>
+            <p class="text-xs text-text-muted mt-1 max-w-md mx-auto">
+                Silakan tentukan kelas binaan dan periode ujian di atas, lalu klik Tampilkan Rekap.
+            </p>
         </div>
     <?php endif; ?>
 
 </main>
 
 <script>
-    // Inisialisasi Data dari PHP
     const rawStudents = <?= json_encode($students) ?>;
     const rawSubjects = <?= json_encode($subjects) ?>;
     const gradeMatrix = <?= json_encode($matrix) ?>;
@@ -184,7 +207,6 @@ require_once '../components/header.php';
     let currentStudents = [...rawStudents];
     let currentSubjects = [...rawSubjects];
     
-    // Default KKM
     let kkmValue = 75;
 
     function updateKkm() {
@@ -194,8 +216,8 @@ require_once '../components/header.php';
     }
 
     function getColorClass(score) {
-        if (score === null || score === undefined) return 'text-on-surface-variant/40';
-        return score < kkmValue ? 'text-error font-bold' : 'text-success font-bold';
+        if (score === null || score === undefined) return 'text-slate-400';
+        return score < kkmValue ? 'text-danger font-bold' : 'text-success font-semibold';
     }
 
     function fNum(num) {
@@ -209,39 +231,38 @@ require_once '../components/header.php';
         const btnMapel = document.getElementById('btnModeMapel');
         
         if (mode === 'siswa') {
-            btnSiswa.className = 'px-4 py-1.5 text-xs font-bold rounded-md bg-surface text-primary shadow-sm transition-all';
-            btnMapel.className = 'px-4 py-1.5 text-xs font-bold rounded-md text-on-surface-variant hover:text-on-surface transition-all';
+            btnSiswa.className = 'flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
+            btnMapel.className = 'flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
         } else {
-            btnMapel.className = 'px-4 py-1.5 text-xs font-bold rounded-md bg-surface text-primary shadow-sm transition-all';
-            btnSiswa.className = 'px-4 py-1.5 text-xs font-bold rounded-md text-on-surface-variant hover:text-on-surface transition-all';
+            btnMapel.className = 'flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
+            btnSiswa.className = 'flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
         }
         renderTable();
     }
 
     function renderTable() {
         const container = document.getElementById('tableContainer');
-        // Hapus 'whitespace-nowrap' dari tag table agar text header bisa turun ke bawah (wrap)
-        let html = '<table class="w-full text-left border-collapse text-sm" id="rekapTable">';
+        if (!container) return;
+
+        let html = '<table class="w-full text-left border-collapse text-xs tabular-nums" id="rekapTable">';
         
         if (currentMode === 'siswa') {
-            // --- MODE SISWA DI SAMPING (BARIS) ---
-            html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
-                        <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[180px] max-w-[220px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Nama Siswa</th>`;
+            html += `<thead><tr class="bg-slate-50 text-text-muted text-[11px] uppercase tracking-wider font-semibold border-b border-border-main">
+                        <th class="p-3 border-r border-border-main sticky left-0 z-20 bg-slate-50 min-w-[160px] max-w-[220px] shadow-xs">Nama Siswa</th>`;
             
-            // Kolom Mapel dilimit lebarnya (w-24/min-w-[80px]) dan text boleh turun (whitespace-normal)
             currentSubjects.forEach(sub => {
-                html += `<th class="p-2 font-bold border border-outline-variant/30 text-center min-w-[80px] w-24 max-w-[100px] whitespace-normal leading-tight" title="${sub.nama_mapel}">${sub.nama_mapel}</th>`;
+                html += `<th class="p-2.5 border-r border-border-main text-center min-w-[85px] max-w-[120px] whitespace-normal leading-tight" title="${sub.nama_mapel}">${sub.nama_mapel}</th>`;
             });
-            html += `<th class="p-2 font-black border border-outline-variant/30 text-center bg-primary/10 text-primary min-w-[90px]">RATA-RATA</th>`;
-            html += `</tr></thead><tbody class="text-on-surface">`;
+            html += `<th class="p-2.5 font-bold border-border-main text-center bg-primary-subtle text-primary min-w-[90px]">RATA-RATA</th>`;
+            html += `</tr></thead><tbody class="divide-y divide-border-main">`;
             
             // Baris KKM
-            html += `<tr class="bg-primary/5 text-primary kkm-row">
-                        <td class="p-3 border border-outline-variant/30 font-black text-xs md:text-sm sticky left-0 z-10 bg-primary/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">NILAI KKM</td>`;
-            currentSubjects.forEach(sub => {
-                html += `<td class="p-2 border border-outline-variant/30 text-center font-bold">${kkmValue}</td>`;
+            html += `<tr class="bg-slate-50/80 text-text-main kkm-row font-semibold">
+                        <td class="p-3 border-r border-border-main sticky left-0 z-10 bg-slate-100 shadow-xs font-bold text-primary">BATAS KKM</td>`;
+            currentSubjects.forEach(() => {
+                html += `<td class="p-2.5 border-r border-border-main text-center text-text-muted">${kkmValue}</td>`;
             });
-            html += `<td class="p-2 border border-outline-variant/30 text-center font-black">${kkmValue}</td>`;
+            html += `<td class="p-2.5 text-center font-bold text-primary bg-primary-subtle">${kkmValue}</td>`;
             html += `</tr>`;
 
             // Baris Data Siswa
@@ -249,62 +270,58 @@ require_once '../components/header.php';
                 let totalScore = 0;
                 let count = 0;
                 
-                html += `<tr class="hover:bg-surface-container-highest transition-colors">
-                            <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest whitespace-nowrap truncate max-w-[220px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]" title="${stu.nama}">${stu.nama}</td>`;
+                html += `<tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-nowrap truncate max-w-[220px] shadow-xs" title="${stu.nama}">${stu.nama}</td>`;
                 
                 currentSubjects.forEach(sub => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
-                    if(score !== null) {
+                    if (score !== null) {
                         totalScore += parseFloat(score);
                         count++;
                     }
-                    // Teks sel nilai agar sejajar dan tidak turun ke bawah
-                    html += `<td class="p-2 border border-outline-variant/30 text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
+                    html += `<td class="p-2.5 border-r border-border-main text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
 
                 let avg = count > 0 ? (totalScore / count) : null;
-                html += `<td class="p-2 border border-outline-variant/30 text-center font-black whitespace-nowrap ${getColorClass(avg)} bg-primary/5">${fNum(avg)}</td>`;
+                html += `<td class="p-2.5 text-center font-bold whitespace-nowrap ${getColorClass(avg)} bg-slate-50">${fNum(avg)}</td>`;
                 html += `</tr>`;
             });
         } else {
-            // --- MODE MAPEL DI SAMPING (BARIS) ---
-            html += `<thead><tr class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase tracking-wider">
-                        <th class="p-3 font-bold border border-outline-variant/30 sticky left-0 z-20 bg-surface-container-low min-w-[150px] max-w-[200px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Mata Pelajaran</th>
-                        <th class="p-2 font-bold border border-outline-variant/30 bg-primary/10 text-primary text-center min-w-[60px]">KKM</th>`;
+            html += `<thead><tr class="bg-slate-50 text-text-muted text-[11px] uppercase tracking-wider font-semibold border-b border-border-main">
+                        <th class="p-3 border-r border-border-main sticky left-0 z-20 bg-slate-50 min-w-[150px] max-w-[200px] shadow-xs">Mata Pelajaran</th>
+                        <th class="p-2.5 border-r border-border-main bg-primary-subtle text-primary text-center min-w-[65px]">KKM</th>`;
             
-            // Kolom Siswa dilimit lebarnya
             currentStudents.forEach(stu => {
-                html += `<th class="p-2 font-bold border border-outline-variant/30 text-center min-w-[90px] w-24 max-w-[110px] whitespace-normal leading-tight" title="${stu.nama}">${stu.nama}</th>`;
+                html += `<th class="p-2.5 border-r border-border-main text-center min-w-[90px] max-w-[120px] whitespace-normal leading-tight" title="${stu.nama}">${stu.nama}</th>`;
             });
-            html += `</tr></thead><tbody class="text-on-surface">`;
+            html += `</tr></thead><tbody class="divide-y divide-border-main">`;
             
             let colTotals = {};
             let colCounts = {};
 
-            // Baris Data Mapel
             currentSubjects.forEach(sub => {
-                html += `<tr class="hover:bg-surface-container-highest transition-colors">
-                            <td class="p-3 border border-outline-variant/30 font-bold text-xs md:text-sm sticky left-0 z-10 bg-surface-container-lowest whitespace-normal leading-tight shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${sub.nama_mapel}</td>
-                            <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary bg-primary/5">${kkmValue}</td>`; 
+                html += `<tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-normal leading-tight shadow-xs">${sub.nama_mapel}</td>
+                            <td class="p-2.5 border-r border-border-main text-center font-semibold text-text-muted bg-slate-50">${kkmValue}</td>`; 
                 
                 currentStudents.forEach(stu => {
                     let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
-                    if(score !== null) {
+                    if (score !== null) {
                         colTotals[stu.id] = (colTotals[stu.id] || 0) + parseFloat(score);
                         colCounts[stu.id] = (colCounts[stu.id] || 0) + 1;
                     }
-                    html += `<td class="p-2 border border-outline-variant/30 text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
+                    html += `<td class="p-2.5 border-r border-border-main text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
                 html += `</tr>`;
             });
 
             // Baris Rata-rata
-            html += `<tr class="bg-primary/5 avg-row">
-                        <td class="p-3 border border-outline-variant/30 font-black text-primary sticky left-0 z-10 bg-primary/10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">RATA-RATA SISWA</td>
-                        <td class="p-2 border border-outline-variant/30 text-center font-bold text-primary">${kkmValue}</td>`;
+            html += `<tr class="bg-slate-50/80 font-semibold avg-row">
+                        <td class="p-3 border-r border-border-main font-bold text-primary sticky left-0 z-10 bg-slate-100 shadow-xs">RATA-RATA SISWA</td>
+                        <td class="p-2.5 border-r border-border-main text-center text-text-muted">${kkmValue}</td>`;
             currentStudents.forEach(stu => {
                 let avg = colCounts[stu.id] > 0 ? (colTotals[stu.id] / colCounts[stu.id]) : null;
-                html += `<td class="p-2 border border-outline-variant/30 text-center font-black whitespace-nowrap ${getColorClass(avg)}">${fNum(avg)}</td>`;
+                html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap ${getColorClass(avg)}">${fNum(avg)}</td>`;
             });
             html += `</tr>`;
         }
@@ -313,7 +330,6 @@ require_once '../components/header.php';
         container.innerHTML = html;
     }
 
-    // --- LOGIKA CUSTOM URUTAN ---
     function customSort(originalArray, textInput, fieldName) {
         const lines = textInput.split(/\r?\n/).map(n => n.trim().toLowerCase()).filter(n => n);
         if (lines.length === 0) return [...originalArray];
@@ -332,7 +348,13 @@ require_once '../components/header.php';
         currentStudents = customSort(rawStudents, valSiswa, 'nama');
         currentSubjects = customSort(rawSubjects, valMapel, 'nama_mapel');
         renderTable();
-        alert('Urutan berhasil diterapkan!');
+        Swal.fire({
+            icon: 'success',
+            title: 'Urutan Disesuaikan',
+            text: 'Urutan tabel berhasil disesuaikan dengan daftar Excel.',
+            timer: 1500,
+            showConfirmButton: false
+        });
     }
 
     function resetUrutan() {
@@ -343,10 +365,9 @@ require_once '../components/header.php';
         renderTable();
     }
 
-    // --- LOGIKA COPY HANYA ANGKA MURNI ---
     function copyHanyaNilai() {
         const table = document.getElementById('rekapTable');
-        if(!table) return;
+        if (!table) return;
         
         let tsv = "";
         const rows = table.querySelectorAll('tbody tr:not(.avg-row):not(.kkm-row)');
@@ -367,15 +388,15 @@ require_once '../components/header.php';
         navigator.clipboard.writeText(tsv).then(() => {
             Swal.fire({
                 icon: 'success',
-                title: 'Bersih & Tercopy!',
-                text: 'Hanya angka nilai murni yang disalin (KKM dan Rata-rata diabaikan).',
+                title: 'Nilai Berhasil Disalin',
+                text: 'Data angka murni siap ditempel ke aplikasi atau lembar kerja lain.',
                 timer: 2000,
                 showConfirmButton: false
             });
         });
     }
 
-    if(document.getElementById('tableContainer')) {
+    if (document.getElementById('tableContainer')) {
         renderTable();
     }
 </script>

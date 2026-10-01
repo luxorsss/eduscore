@@ -1,97 +1,104 @@
-<div id="sidebarOverlay" class="fixed inset-0 bg-on-surface/40 z-40 hidden opacity-0 transition-opacity duration-300 md:hidden backdrop-blur-sm"></div>
+<div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden opacity-0 transition-opacity duration-200 md:hidden"></div>
 
-<aside id="mainSidebar" class="fixed left-0 top-0 h-screen w-64 bg-surface-container-high flex flex-col py-8 z-50 border-r border-outline-variant/20 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+<aside id="mainSidebar" class="fixed left-0 top-0 h-screen w-64 bg-surface-card flex flex-col py-6 z-50 border-r border-border-main transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out">
     
-    <div class="px-6 mb-8 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-black shadow-md">E</div>
-            <div>
-                <div class="text-xl font-black text-primary uppercase tracking-tighter">EduScore</div>
+    <div class="px-6 mb-6 flex items-center justify-between">
+        <a href="dashboard.php" class="flex items-center gap-3 group">
+            <div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-base shadow-xs group-hover:bg-primary-hover transition-colors">
+                E
             </div>
-        </div>
-        <button id="closeSidebarBtn" class="md:hidden text-on-surface-variant hover:text-error bg-surface-container-highest w-8 h-8 rounded-full flex items-center justify-center transition-colors">
-            <span class="material-symbols-outlined text-[18px]">close</span>
+            <div>
+                <span class="text-base font-bold text-primary tracking-tight block">EduScore</span>
+                <span class="text-[11px] text-text-muted block -mt-1 font-medium">Nilai & Akademik</span>
+            </div>
+        </a>
+        <button id="closeSidebarBtn" aria-label="Tutup navigasi sidebar" class="md:hidden text-text-muted hover:text-danger hover:bg-slate-100 w-11 h-11 rounded-lg flex items-center justify-center transition-colors focus-ring">
+            <span class="material-symbols-outlined text-xl">close</span>
         </button>
     </div>
 
-    <div class="flex-1 px-4 space-y-1">
+    <div class="flex-1 px-3 space-y-1 overflow-y-auto custom-scroll">
         <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
         
         <!-- Dashboard -->
-        <a href="dashboard.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'dashboard.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+        <a href="dashboard.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'dashboard.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
             <span class="material-symbols-outlined text-[20px]">dashboard</span>
-            <span class="font-medium text-sm">Dashboard</span>
+            <span class="text-xs">Dashboard</span>
         </a>
 
         <!-- Data Siswa -->
-        <a href="siswa.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'siswa.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+        <a href="siswa.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'siswa.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
             <span class="material-symbols-outlined text-[20px]">group</span>
-            <span class="font-medium text-sm">Data Siswa</span>
+            <span class="text-xs">Data Siswa</span>
         </a>
 
         <!-- Catatan Siswa -->
-        <a href="catatan.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'catatan.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+        <a href="catatan.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'catatan.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
             <span class="material-symbols-outlined text-[20px]">edit_note</span>
-            <span class="font-medium text-sm">Catatan Siswa</span>
+            <span class="text-xs">Catatan Siswa</span>
         </a>
 
         <!-- Bulk Catatan -->
-        <a href="bulk_catatan.php"
-        class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
-        <?= basename($_SERVER['PHP_SELF']) === 'bulk_catatan.php'
-            ? 'bg-primary text-white'
-            : 'text-on-surface-variant hover:bg-surface-container-low' ?>">
-            <span class="material-symbols-outlined">playlist_add</span>
-            <span>Bulk Catatan</span>
+        <a href="bulk_catatan.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'bulk_catatan.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
+            <span class="material-symbols-outlined text-[20px]">playlist_add</span>
+            <span class="text-xs">Bulk Catatan</span>
         </a>
 
         <!-- Summary Catatan -->
-        <a href="summary_catatan.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'summary_catatan.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+        <a href="summary_catatan.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'summary_catatan.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
             <span class="material-symbols-outlined text-[20px]">summarize</span>
-            <span class="font-medium text-sm">Summary Catatan</span>
+            <span class="text-xs">Summary Catatan</span>
         </a>
 
+        <div class="pt-3 pb-1 px-3">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Penilaian</span>
+        </div>
+
         <!-- Input Nilai -->
-        <a href="input_data.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'input_data.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+        <a href="input_data.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'input_data.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
             <span class="material-symbols-outlined text-[20px]">edit_square</span>
-            <span class="font-medium text-sm">Input Nilai</span>
+            <span class="text-xs">Input Nilai</span>
         </a>
 
         <!-- Analisa Nilai -->
-        <a href="analisa.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'analisa.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+        <a href="analisa.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'analisa.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
             <span class="material-symbols-outlined text-[20px]">analytics</span>
-            <span class="font-medium text-sm">Analisa Nilai</span>
-        </a>
-
-        <!-- Jadwal & Mapel -->
-        <a href="jadwal.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'jadwal.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
-            <span class="material-symbols-outlined text-[20px]">calendar_month</span>
-            <span class="font-medium text-sm">Jadwal & Mapel</span>
-        </a>
-
-        <!-- Mata Pelajaran -->
-        <a href="mapel.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'mapel.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
-            <span class="material-symbols-outlined text-[20px]">book</span>
-            <span class="font-medium text-sm">Mata Pelajaran</span>
-        </a>
-
-        <!-- Kelas -->
-        <a href="kelas.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'kelas.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
-            <span class="material-symbols-outlined text-[20px]">folder_open</span>
-            <span class="font-medium text-sm">Kelas</span>
+            <span class="text-xs">Analisa Nilai</span>
         </a>
 
         <!-- Wali Kelas -->
-        <a href="walikelas.php" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all <?= ($current_page == 'walikelas.php') ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-highest' ?>">
+        <a href="walikelas.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'walikelas.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
             <span class="material-symbols-outlined text-[20px]">assignment_ind</span>
-            <span class="font-medium text-sm">Wali Kelas</span>
+            <span class="text-xs">Rekap Wali Kelas</span>
+        </a>
+
+        <div class="pt-3 pb-1 px-3">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Master Data</span>
+        </div>
+
+        <!-- Jadwal & Mapel -->
+        <a href="jadwal.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'jadwal.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
+            <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+            <span class="text-xs">Jadwal Mengajar</span>
+        </a>
+
+        <!-- Mata Pelajaran -->
+        <a href="mapel.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'mapel.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
+            <span class="material-symbols-outlined text-[20px]">book</span>
+            <span class="text-xs">Mata Pelajaran</span>
+        </a>
+
+        <!-- Kelas -->
+        <a href="kelas.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'kelas.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
+            <span class="material-symbols-outlined text-[20px]">folder_open</span>
+            <span class="text-xs">Daftar Kelas</span>
         </a>
     </div>
 
-    <div class="px-6 border-t border-outline-variant/20 pt-6 mt-auto">
-        <a href="logout.php" class="flex items-center space-x-3 px-4 py-3 text-error hover:bg-error-container/50 rounded-xl transition-colors">
+    <div class="px-3 border-t border-border-main pt-4 mt-auto">
+        <a href="logout.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] text-danger hover:bg-danger-subtle rounded-lg transition-colors font-medium">
             <span class="material-symbols-outlined text-[20px]">logout</span>
-            <span class="font-bold text-sm">Keluar Akun</span>
+            <span class="text-xs">Keluar Akun</span>
         </a>
     </div>
 </aside>
@@ -101,32 +108,28 @@
         const sidebar = document.getElementById('mainSidebar');
         const overlay = document.getElementById('sidebarOverlay');
         
+        if (!sidebar || !overlay) return;
+
         if (sidebar.classList.contains('-translate-x-full')) {
-            // Animasi Buka
             sidebar.classList.remove('-translate-x-full');
             overlay.classList.remove('hidden');
-
             setTimeout(() => {
                 overlay.classList.remove('opacity-0');
             }, 10);
-
             document.body.style.overflow = 'hidden';
         } else {
-            // Animasi Tutup
             sidebar.classList.add('-translate-x-full');
             overlay.classList.add('opacity-0');
-
             setTimeout(() => {
                 overlay.classList.add('hidden');
-            }, 300);
-
+            }, 200);
             document.body.style.overflow = 'auto';
         }
     }
 
-    // Tutup saat area gelap diklik
-    document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+    const overlayEl = document.getElementById('sidebarOverlay');
+    if (overlayEl) overlayEl.addEventListener('click', toggleSidebar);
 
-    // Tutup saat tombol silang diklik
-    document.getElementById('closeSidebarBtn').addEventListener('click', toggleSidebar);
+    const closeBtnEl = document.getElementById('closeSidebarBtn');
+    if (closeBtnEl) closeBtnEl.addEventListener('click', toggleSidebar);
 </script>

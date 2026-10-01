@@ -11,118 +11,147 @@ if (!isset($_SESSION['user_id'])) {
 $stmt = $pdo->query("SELECT * FROM subjects ORDER BY nama_mapel ASC");
 $daftar_mapel = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$page_title = "EduScore - Mata Pelajaran";
+$page_title = "Mata Pelajaran - EduScore";
+$page_heading = "Manajemen Mata Pelajaran";
 require_once '../components/header.php'; 
 ?>
 
-<nav class="bg-surface-container-lowest shadow-sm border-b border-outline-variant/20 sticky top-0 z-30">
-    <div class="max-w-5xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-colors mr-1">
-                <span class="material-symbols-outlined">menu</span>
-            </button>
-            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary hidden md:flex">
-                <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">open_in_new</span>
-            </div>
-            <span class="font-headline font-bold text-primary tracking-tight text-lg">EduScore</span>
-            <span class="text-on-surface-variant ml-2 text-sm font-medium hidden md:block">| Manajemen Mata Pelajaran</span>
-        </div>
+<main class="flex-grow max-w-5xl mx-auto w-full p-4 md:p-8 flex flex-col gap-6">
+    
+    <!-- Header Section -->
+    <div class="bg-surface-card rounded-xl border border-border-main p-6 shadow-xs flex items-center justify-between gap-4">
         <div class="flex items-center gap-4">
-            <div class="w-8 h-8 rounded-full bg-[#d6e3ff] text-primary flex items-center justify-center font-bold text-sm">
-                <?= strtoupper(substr($_SESSION['nama_lengkap'], 0, 2)); ?>
+            <div class="w-12 h-12 rounded-xl bg-primary-subtle text-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">book</span>
+            </div>
+            <div>
+                <span class="text-xs font-semibold text-text-muted uppercase tracking-wider block">Master Data Kurikulum</span>
+                <h2 class="text-lg md:text-xl font-bold text-text-main mt-0.5">Daftar Mata Pelajaran</h2>
+                <p class="text-xs text-text-muted mt-0.5">
+                    Kelola mata pelajaran dan bidang studi yang dinilai dalam sistem.
+                </p>
             </div>
         </div>
-    </div>
-</nav>
 
-<main class="flex-grow max-w-5xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6">
-    <div>
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary mb-1">Daftar Mata Pelajaran</h1>
-        <p class="text-on-surface-variant text-sm">Kelola mata pelajaran yang akan dinilai di sistem.</p>
+        <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center hidden sm:block">
+            <span class="text-[11px] font-medium text-text-muted block">Total Mapel</span>
+            <span class="text-base font-bold text-text-main tabular-nums"><?= count($daftar_mapel) ?></span>
+        </div>
     </div>
 
-    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden">
-        <table class="w-full text-left">
-            <thead class="bg-surface-container-low text-xs uppercase font-bold text-on-surface-variant border-b border-outline-variant/20">
-                <tr>
-                    <th class="px-6 py-4 w-16 text-center">No</th>
-                    <th class="px-6 py-4">Nama Mata Pelajaran</th>
-                    <th class="px-6 py-4 w-20 text-center">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="text-sm divide-y divide-outline-variant/10">
-                <?php $no = 1; foreach ($daftar_mapel as $m): ?>
-                <tr class="hover:bg-surface-container-low/50 group">
-                    <td class="px-6 py-4 text-center text-on-surface-variant"><?= $no++; ?></td>
-                    
-                    <td class="px-6 py-4">
-                        <!-- Mode Teks Normal -->
-                        <div id="text_<?= $m['id']; ?>" class="font-bold">
-                            <?= htmlspecialchars($m['nama_mapel']); ?>
-                        </div>
-                        
-                        <!-- Mode Form Edit (Disembunyikan secara default) -->
-                        <form id="form_<?= $m['id']; ?>" action="proses_mapel.php" method="POST" class="hidden items-center gap-2 w-full">
-                            <input type="hidden" name="action" value="edit">
-                            <input type="hidden" name="id_mapel" value="<?= $m['id']; ?>">
-                            <input type="text" name="nama_mapel" value="<?= htmlspecialchars($m['nama_mapel']); ?>" required 
-                                   class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 px-2 py-1 text-sm font-bold text-primary">
-                            <button type="submit" class="text-primary hover:text-primary-container transition-colors" title="Simpan">
-                                <span class="material-symbols-outlined text-[20px]">check_circle</span>
-                            </button>
-                            <button type="button" onclick="toggleEdit(<?= $m['id']; ?>)" class="text-error hover:opacity-80 transition-opacity" title="Batal">
-                                <span class="material-symbols-outlined text-[20px]">cancel</span>
-                            </button>
-                        </form>
-                    </td>
+    <!-- Form Tambah Mapel Baru -->
+    <div class="bg-surface-card rounded-xl border border-border-main p-5 sm:p-6 shadow-xs">
+        <h3 class="text-sm font-bold text-text-main mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-base">add_circle</span>
+            Tambah Mata Pelajaran Baru
+        </h3>
 
-                    <td class="px-6 py-4 text-center space-x-1 whitespace-nowrap">
-                        <!-- Tombol Edit -->
-                        <button onclick="toggleEdit(<?= $m['id']; ?>)" class="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span class="material-symbols-outlined text-[20px]">edit</span>
-                        </button>
-                        <!-- Tombol Hapus -->
-                        <a href="proses_mapel.php?hapus=<?= $m['id']; ?>" onclick="return confirm('Hapus mapel?')" class="text-error opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span class="material-symbols-outlined text-[20px]">delete</span>
-                        </a>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
+        <form action="proses_mapel.php" method="POST" class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+            <input type="hidden" name="action" value="tambah"> 
+            
+            <div class="flex-1">
+                <label class="block text-xs font-semibold text-text-main mb-1.5" for="nama_mapel_input">Nama Mata Pelajaran</label>
+                <input id="nama_mapel_input" type="text" name="nama_mapel" required placeholder="Contoh: Matematika Wajib, Bahasa Indonesia, Biologi..." class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3.5 py-2.5 font-medium min-h-[42px] placeholder:text-slate-400">
+            </div>
 
-                <tr class="bg-primary/5 border-t-2 border-primary/20">
-                    <form action="proses_mapel.php" method="POST">
-                        <!-- Tambahkan identifier action -->
-                        <input type="hidden" name="action" value="tambah"> 
-                        <td class="px-6 py-4 text-center text-primary"><span class="material-symbols-outlined">add</span></td>
-                        <td class="px-6 py-3">
-                            <input type="text" name="nama_mapel" required class="w-full bg-surface-container-lowest border-0 border-b-2 border-primary focus:ring-0 px-2 py-2 text-sm font-bold text-primary placeholder-primary/30" placeholder="Ketik Nama Mapel Baru...">
-                        </td>
-                        <td class="px-6 py-3 text-center">
-                            <button type="submit" class="bg-primary text-on-primary px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all">Simpan</button>
-                        </td>
-                    </form>
-                </tr>
-            </tbody>
-        </table>
+            <button type="submit" class="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-xs min-h-[42px]">
+                <span class="material-symbols-outlined text-base">add</span>
+                <span>Simpan Mapel</span>
+            </button>
+        </form>
     </div>
+
+    <!-- Tabel Daftar Mapel -->
+    <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden">
+        <div class="px-5 py-4 border-b border-border-main bg-slate-50 flex items-center justify-between">
+            <h3 class="font-bold text-xs md:text-sm text-text-main">
+                Daftar Seluruh Mata Pelajaran
+            </h3>
+            <span class="text-xs text-text-muted bg-white border border-slate-200 px-2.5 py-1 rounded-md tabular-nums">
+                <?= count($daftar_mapel) ?> Mapel
+            </span>
+        </div>
+
+        <div class="overflow-x-auto custom-scroll">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-[11px] uppercase font-semibold text-text-muted border-b border-border-main">
+                        <th class="px-4 py-3 w-16 text-center">No</th>
+                        <th class="px-4 py-3">Nama Mata Pelajaran</th>
+                        <th class="px-4 py-3 w-28 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border-main">
+                    <?php if (empty($daftar_mapel)): ?>
+                        <tr>
+                            <td colspan="3" class="px-6 py-10 text-center text-text-muted">
+                                Belum ada mata pelajaran yang didaftarkan.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php $no = 1; foreach ($daftar_mapel as $m): ?>
+                        <tr class="hover:bg-slate-50/80 transition-colors group">
+                            <td class="px-4 py-3.5 text-center text-text-muted font-medium tabular-nums"><?= $no++; ?></td>
+                            
+                            <td class="px-4 py-3.5">
+                                <!-- Mode Teks Normal -->
+                                <div id="text_<?= $m['id']; ?>" class="font-bold text-xs md:text-sm text-text-main">
+                                    <?= htmlspecialchars($m['nama_mapel']); ?>
+                                </div>
+                                
+                                <!-- Mode Form Edit -->
+                                <form id="form_<?= $m['id']; ?>" action="proses_mapel.php" method="POST" class="hidden items-center gap-2 w-full max-w-md">
+                                    <input type="hidden" name="action" value="edit">
+                                    <input type="hidden" name="id_mapel" value="<?= $m['id']; ?>">
+                                    <input type="text" name="nama_mapel" value="<?= htmlspecialchars($m['nama_mapel']); ?>" required 
+                                           class="w-full bg-white border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg px-3 py-1.5 text-xs font-semibold text-text-main">
+                                    <button type="submit" class="p-1.5 rounded-lg bg-primary-subtle text-primary hover:bg-primary hover:text-white transition-colors" title="Simpan Perubahan">
+                                        <span class="material-symbols-outlined text-lg">check</span>
+                                    </button>
+                                    <button type="button" onclick="toggleEdit(<?= $m['id']; ?>)" class="p-1.5 rounded-lg text-text-muted hover:bg-slate-200 transition-colors" title="Batal">
+                                        <span class="material-symbols-outlined text-lg">close</span>
+                                    </button>
+                                </form>
+                            </td>
+
+                            <td class="px-4 py-3.5 text-center space-x-1 whitespace-nowrap">
+                                <!-- Tombol Edit -->
+                                <button type="button" onclick="toggleEdit(<?= $m['id']; ?>)" class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-slate-100 transition-colors" title="Edit Mata Pelajaran">
+                                    <span class="material-symbols-outlined text-lg">edit</span>
+                                </button>
+                                <!-- Tombol Hapus -->
+                                <a href="proses_mapel.php?hapus=<?= $m['id']; ?>" 
+                                   onclick="konfirmasiLink(event, this.href, 'Hapus mata pelajaran <?= htmlspecialchars($m['nama_mapel']); ?>?')" 
+                                   class="p-1.5 rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors inline-block" 
+                                   title="Hapus Mapel">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </main>
 
-<!-- Script untuk toggle tampilan Text vs Form -->
 <script>
 function toggleEdit(id) {
     const textDiv = document.getElementById('text_' + id);
     const formDiv = document.getElementById('form_' + id);
     
     if (textDiv.classList.contains('hidden')) {
-        // Batal Edit: Tampilkan teks, sembunyikan form
         textDiv.classList.remove('hidden');
         formDiv.classList.add('hidden');
         formDiv.classList.remove('flex');
     } else {
-        // Mulai Edit: Sembunyikan teks, tampilkan form
         textDiv.classList.add('hidden');
         formDiv.classList.remove('hidden');
         formDiv.classList.add('flex');
+        const input = formDiv.querySelector('input[type="text"]');
+        if (input) input.focus();
     }
 }
 </script>
