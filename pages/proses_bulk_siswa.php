@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once '../config/koneksi.php';
+require_once '../config/auth.php';
 
-if (!isset($_SESSION['user_id'])) exit;
+require_admin();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $aksi = $_POST['aksi'] ?? '';

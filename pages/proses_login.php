@@ -19,6 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
         $_SESSION['username'] = $user['username'];
+        $_SESSION['role'] = $user['role'] ?? 'guru';
 
         // Arahkan ke Dashboard
         header("Location: dashboard.php");

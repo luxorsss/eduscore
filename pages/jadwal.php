@@ -1,13 +1,11 @@
 <?php
 session_start();
-require_once '../config/koneksi.php';
+require_once '../config/auth.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+check_login();
 
-$user_id = $_SESSION['user_id'];
+$user_id = (int)$_SESSION['user_id'];
+$is_admin = is_admin();
 
 // 1. Ambil Semua Data Kelas untuk Dropdown
 $stmt_kelas = $pdo->query("SELECT * FROM classes ORDER BY jenjang, nama_kelas");
@@ -17,18 +15,39 @@ $semua_kelas = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
 $stmt_mapel = $pdo->query("SELECT * FROM subjects ORDER BY nama_mapel");
 $semua_mapel = $stmt_mapel->fetchAll(PDO::FETCH_ASSOC);
 
-// 3. Filter Kelas (via GET)
-$filter_kelas = isset($_GET['filter_kelas']) && $_GET['filter_kelas'] !== '' ? (int)$_GET['filter_kelas'] : null;
+// 3. Ambil Semua Guru (untuk filter & form Admin)
+$semua_guru = [];
+if ($is_admin) {
+    $stmt_guru = $pdo->query("SELECT id, nama_lengkap, username, role FROM users ORDER BY nama_lengkap ASC");
+    $semua_guru = $stmt_guru->fetchAll(PDO::FETCH_ASSOC);
+}
 
-// 4. Ambil Jadwal Aktif Milik Guru Ini (dengan filter kelas jika dipilih)
+// 4. Filter Kelas & Filter Guru (via GET)
+$filter_kelas = isset($_GET['filter_kelas']) && $_GET['filter_kelas'] !== '' ? (int)$_GET['filter_kelas'] : null;
+$filter_guru = ($is_admin && isset($_GET['filter_guru']) && $_GET['filter_guru'] !== '') ? (int)$_GET['filter_guru'] : null;
+
+// 5. Query Jadwal Aktif
 $sql_jadwal = "
-    SELECT ts.id as jadwal_id, ts.class_id, c.nama_kelas, c.jenjang, s.nama_mapel 
+    SELECT ts.id as jadwal_id, ts.class_id, ts.subject_id, ts.user_id, 
+           u.nama_lengkap as nama_guru, u.username as username_guru,
+           c.nama_kelas, c.jenjang, s.nama_mapel 
     FROM teaching_schedules ts
     JOIN classes c ON ts.class_id = c.id
     JOIN subjects s ON ts.subject_id = s.id
-    WHERE ts.user_id = ?
+    JOIN users u ON ts.user_id = u.id
+    WHERE 1=1
 ";
-$params = [$user_id];
+$params = [];
+
+if (!$is_admin) {
+    $sql_jadwal .= " AND ts.user_id = ?";
+    $params[] = $user_id;
+} else {
+    if ($filter_guru) {
+        $sql_jadwal .= " AND ts.user_id = ?";
+        $params[] = $filter_guru;
+    }
+}
 
 if ($filter_kelas) {
     $sql_jadwal .= " AND ts.class_id = ?";
@@ -41,8 +60,23 @@ $stmt_jadwal = $pdo->prepare($sql_jadwal);
 $stmt_jadwal->execute($params);
 $jadwal_aktif = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
 
+// 6. Ambil seluruh pemetaan yang sudah diambil oleh guru lain (untuk mencegah bentrok & disable pilihan)
+$stmt_taken = $pdo->query("
+    SELECT ts.class_id, ts.subject_id, ts.user_id, u.nama_lengkap 
+    FROM teaching_schedules ts 
+    JOIN users u ON ts.user_id = u.id
+");
+$all_taken = $stmt_taken->fetchAll(PDO::FETCH_ASSOC);
+$taken_map = [];
+foreach ($all_taken as $t) {
+    $taken_map[$t['class_id']][$t['subject_id']] = [
+        'user_id' => (int)$t['user_id'],
+        'nama' => $t['nama_lengkap']
+    ];
+}
+
 $page_title = "Jadwal Mengajar - EduScore";
-$page_heading = "Jadwal Mengajar Pengajar";
+$page_heading = $is_admin ? "Manajemen Jadwal Mengajar Sekolah" : "Jadwal Mengajar Pengajar";
 require_once '../components/header.php'; 
 ?>
 
@@ -55,10 +89,16 @@ require_once '../components/header.php';
                 <span class="material-symbols-outlined text-2xl">calendar_month</span>
             </div>
             <div>
-                <span class="text-xs font-semibold text-text-muted uppercase tracking-wider block">Pemetaan Penugasan Mengajar</span>
-                <h2 class="text-lg md:text-xl font-bold text-text-main mt-0.5">Jadwal Mengajar Pengajar</h2>
+                <span class="text-xs font-semibold text-text-muted uppercase tracking-wider block">
+                    <?= $is_admin ? 'Master Jadwal Kurikulum' : 'Pemetaan Penugasan Mengajar' ?>
+                </span>
+                <h2 class="text-lg md:text-xl font-bold text-text-main mt-0.5">
+                    <?= $is_admin ? 'Pengaturan Penugasan Guru & Jadwal' : 'Jadwal Mengajar Pengajar' ?>
+                </h2>
                 <p class="text-xs text-text-muted mt-0.5">
-                    Hubungkan mata pelajaran dengan rombongan belajar kelas yang Anda bimbing.
+                    <?= $is_admin 
+                        ? 'Pantau dan kelola pemetaan mata pelajaran di tiap kelas untuk seluruh dewan guru.' 
+                        : 'Tentukan mata pelajaran dan kelas yang Anda ampu (1 mapel di 1 kelas diampu oleh 1 pengajar).' ?>
                 </p>
             </div>
         </div>
@@ -71,7 +111,12 @@ require_once '../components/header.php';
 
     <!-- Alert Notifikasi Feedback -->
     <?php if (isset($_GET['pesan'])): ?>
-        <?php if ($_GET['pesan'] == 'sukses_hapus'): ?>
+        <?php if ($_GET['pesan'] == 'sukses_alihkan'): ?>
+            <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                <span>Pengampu jadwal mengajar berhasil dialihkan! Seluruh riwayat nilai siswa tetap terjaga utuh.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] == 'sukses_hapus'): ?>
             <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
                 <span class="material-symbols-outlined text-base">check_circle</span>
                 <span>Jadwal penugasan yang dipilih berhasil dihapus.</span>
@@ -91,7 +136,7 @@ require_once '../components/header.php';
                 <span>
                     <strong><?= $added ?></strong> jadwal penugasan berhasil disimpan!
                     <?php if ($skipped > 0): ?>
-                        (<?= $skipped ?> jadwal dilewati karena sudah terdaftar sebelumnya).
+                        (<?= $skipped ?> jadwal dilewati karena sudah diambil oleh guru lain atau terdaftar).
                     <?php endif; ?>
                 </span>
             </div>
@@ -110,7 +155,7 @@ require_once '../components/header.php';
             <div class="bg-surface-card rounded-xl border border-border-main shadow-xs p-6">
                 <h3 class="font-bold text-sm text-text-main mb-3 flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary text-base">add_circle</span>
-                    Tambah Jadwal Penugasan
+                    <?= $is_admin ? 'Tetapkan Jadwal Guru' : 'Pilih Jadwal Mengajar Anda' ?>
                 </h3>
 
                 <!-- Tab Segmented Control -->
@@ -128,9 +173,22 @@ require_once '../components/header.php';
                     <input type="hidden" name="aksi" value="tambah">
                     <input type="hidden" name="mode" value="kelas_to_mapel">
                     
+                    <?php if ($is_admin): ?>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-text-main">Pilih Guru Pengajar</label>
+                        <select name="target_user_id" id="target_user_kelas" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateSubjectCheckboxes()">
+                            <?php foreach($semua_guru as $g): ?>
+                                <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id'] || $g['id'] == $user_id) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($g['nama_lengkap']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-semibold text-text-main">Pilih Kelas</label>
-                        <select name="class_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required>
+                        <select name="class_id" id="select_class_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateSubjectCheckboxes()">
                             <option value="" disabled selected>-- Pilih Kelas --</option>
                             <?php foreach($semua_kelas as $k): ?>
                                 <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['jenjang']) ?> - <?= htmlspecialchars($k['nama_kelas']) ?></option>
@@ -141,13 +199,16 @@ require_once '../components/header.php';
                     <div class="flex flex-col gap-1.5">
                         <div class="flex justify-between items-center">
                             <label class="text-xs font-semibold text-text-main">Pilih Mata Pelajaran</label>
-                            <button type="button" onclick="toggleCheckAllGroup('cb-mapel')" class="text-[11px] text-primary font-semibold hover:underline">Pilih Semua</button>
+                            <button type="button" onclick="toggleCheckAllGroup('cb-mapel')" class="text-[11px] text-primary font-semibold hover:underline">Pilih Semua Tersedia</button>
                         </div>
-                        <div class="max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50/50 divide-y divide-slate-100 p-2 custom-scroll">
+                        <div class="max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50/50 divide-y divide-slate-100 p-2 custom-scroll" id="containerMapel">
                             <?php foreach($semua_mapel as $m): ?>
-                                <label class="flex items-center gap-2.5 p-1.5 hover:bg-white rounded cursor-pointer text-xs font-medium text-text-main select-none transition-colors">
-                                    <input type="checkbox" name="subject_ids[]" value="<?= $m['id'] ?>" class="cb-mapel rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
-                                    <span><?= htmlspecialchars($m['nama_mapel']) ?></span>
+                                <label id="label_mapel_<?= $m['id'] ?>" class="flex items-center justify-between p-1.5 hover:bg-white rounded cursor-pointer text-xs font-medium text-text-main select-none transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <input type="checkbox" name="subject_ids[]" value="<?= $m['id'] ?>" data-mid="<?= $m['id'] ?>" class="cb-mapel rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
+                                        <span class="truncate"><?= htmlspecialchars($m['nama_mapel']) ?></span>
+                                    </div>
+                                    <span id="badge_mapel_<?= $m['id'] ?>" class="hidden text-[10px] px-1.5 py-0.5 rounded font-medium"></span>
                                 </label>
                             <?php endforeach; ?>
                         </div>
@@ -163,9 +224,22 @@ require_once '../components/header.php';
                     <input type="hidden" name="aksi" value="tambah">
                     <input type="hidden" name="mode" value="mapel_to_kelas">
                     
+                    <?php if ($is_admin): ?>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-text-main">Pilih Guru Pengajar</label>
+                        <select name="target_user_id" id="target_user_mapel" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateClassCheckboxes()">
+                            <?php foreach($semua_guru as $g): ?>
+                                <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id'] || $g['id'] == $user_id) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($g['nama_lengkap']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-semibold text-text-main">Pilih Mata Pelajaran</label>
-                        <select name="subject_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required>
+                        <select name="subject_id" id="select_subject_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateClassCheckboxes()">
                             <option value="" disabled selected>-- Pilih Mapel --</option>
                             <?php foreach($semua_mapel as $m): ?>
                                 <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
@@ -176,13 +250,16 @@ require_once '../components/header.php';
                     <div class="flex flex-col gap-1.5">
                         <div class="flex justify-between items-center">
                             <label class="text-xs font-semibold text-text-main">Pilih Kelas</label>
-                            <button type="button" onclick="toggleCheckAllGroup('cb-kelas')" class="text-[11px] text-primary font-semibold hover:underline">Pilih Semua</button>
+                            <button type="button" onclick="toggleCheckAllGroup('cb-kelas')" class="text-[11px] text-primary font-semibold hover:underline">Pilih Semua Tersedia</button>
                         </div>
-                        <div class="max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50/50 divide-y divide-slate-100 p-2 custom-scroll">
+                        <div class="max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50/50 divide-y divide-slate-100 p-2 custom-scroll" id="containerKelas">
                             <?php foreach($semua_kelas as $k): ?>
-                                <label class="flex items-center gap-2.5 p-1.5 hover:bg-white rounded cursor-pointer text-xs font-medium text-text-main select-none transition-colors">
-                                    <input type="checkbox" name="class_ids[]" value="<?= $k['id'] ?>" class="cb-kelas rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
-                                    <span><?= htmlspecialchars($k['jenjang']) ?> - <?= htmlspecialchars($k['nama_kelas']) ?></span>
+                                <label id="label_kelas_<?= $k['id'] ?>" class="flex items-center justify-between p-1.5 hover:bg-white rounded cursor-pointer text-xs font-medium text-text-main select-none transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <input type="checkbox" name="class_ids[]" value="<?= $k['id'] ?>" data-cid="<?= $k['id'] ?>" class="cb-kelas rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
+                                        <span class="truncate"><?= htmlspecialchars($k['jenjang']) ?> - <?= htmlspecialchars($k['nama_kelas']) ?></span>
+                                    </div>
+                                    <span id="badge_kelas_<?= $k['id'] ?>" class="hidden text-[10px] px-1.5 py-0.5 rounded font-medium"></span>
                                 </label>
                             <?php endforeach; ?>
                         </div>
@@ -202,11 +279,24 @@ require_once '../components/header.php';
                 <!-- Filter Toolbar -->
                 <div class="p-5 border-b border-border-main bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h3 class="font-bold text-xs md:text-sm text-text-main">Daftar Jadwal Mengajar Anda</h3>
+                        <h3 class="font-bold text-xs md:text-sm text-text-main">
+                            <?= $is_admin ? 'Daftar Jadwal Mengajar Terdaftar' : 'Daftar Jadwal Mengajar Anda' ?>
+                        </h3>
                         <span class="text-xs text-text-muted tabular-nums"><?= count($jadwal_aktif) ?> jadwal terdaftar</span>
                     </div>
 
-                    <form method="GET" action="jadwal.php" class="flex items-center gap-2">
+                    <form method="GET" action="jadwal.php" class="flex flex-wrap items-center gap-2">
+                        <?php if ($is_admin): ?>
+                            <select name="filter_guru" onchange="this.form.submit()" class="text-xs font-medium rounded-lg border border-slate-300 bg-white text-text-main px-3 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[38px]">
+                                <option value="">Semua Guru</option>
+                                <?php foreach($semua_guru as $g): ?>
+                                    <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($g['nama_lengkap']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
+
                         <select name="filter_kelas" onchange="this.form.submit()" class="text-xs font-medium rounded-lg border border-slate-300 bg-white text-text-main px-3 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[38px]">
                             <option value="">Semua Kelas</option>
                             <?php foreach($semua_kelas as $k): ?>
@@ -215,8 +305,9 @@ require_once '../components/header.php';
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <?php if ($filter_kelas): ?>
-                            <a href="jadwal.php" class="text-xs text-primary hover:underline font-semibold">Reset</a>
+
+                        <?php if ($filter_kelas || $filter_guru): ?>
+                            <a href="jadwal.php" class="text-xs text-primary hover:underline font-semibold ml-1">Reset</a>
                         <?php endif; ?>
                     </form>
                 </div>
@@ -224,7 +315,8 @@ require_once '../components/header.php';
                 <!-- Form Bulk Delete -->
                 <form action="proses_jadwal.php" method="POST" id="formBulkDelete">
                     <input type="hidden" name="aksi" value="bulk_delete">
-                    <input type="hidden" name="redirect_filter" value="<?= htmlspecialchars((string)$filter_kelas) ?>">
+                    <input type="hidden" name="redirect_filter_kelas" value="<?= htmlspecialchars((string)$filter_kelas) ?>">
+                    <input type="hidden" name="redirect_filter_guru" value="<?= htmlspecialchars((string)$filter_guru) ?>">
 
                     <?php if(!empty($jadwal_aktif)): ?>
                         <div class="px-5 py-3 bg-slate-50/60 border-b border-border-main flex items-center justify-between">
@@ -243,8 +335,8 @@ require_once '../components/header.php';
                         <?php if(empty($jadwal_aktif)): ?>
                             <div class="flex flex-col items-center justify-center py-12 text-center">
                                 <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">calendar_add_on</span>
-                                <p class="text-sm font-semibold text-text-main">Belum Ada Jadwal Mengajar<?= $filter_kelas ? ' untuk Kelas Ini' : '' ?></p>
-                                <p class="text-xs text-text-muted mt-1 max-w-sm">Gunakan formulir di samping untuk menambahkan penugasan mata pelajaran ke kelas yang Anda ampu.</p>
+                                <p class="text-sm font-semibold text-text-main">Belum Ada Jadwal Mengajar<?= $filter_kelas ? ' untuk Kriteria Ini' : '' ?></p>
+                                <p class="text-xs text-text-muted mt-1 max-w-sm">Gunakan formulir di samping untuk menambahkan penugasan mata pelajaran ke kelas yang diampu.</p>
                             </div>
                         <?php else: ?>
                             <?php foreach($jadwal_aktif as $jadwal): ?>
@@ -257,22 +349,36 @@ require_once '../components/header.php';
                                         </div>
                                         <div class="min-w-0">
                                             <h4 class="font-bold text-xs md:text-sm text-text-main truncate"><?= htmlspecialchars($jadwal['nama_mapel']) ?></h4>
-                                            <p class="text-[11px] text-text-muted flex items-center gap-1 mt-0.5">
+                                            <p class="text-[11px] text-text-muted flex flex-wrap items-center gap-1.5 mt-0.5">
                                                 <span class="badge-grade-neutral px-2 py-0.5 rounded font-semibold text-[10px]">
                                                     <?= htmlspecialchars($jadwal['nama_kelas']) ?> (<?= htmlspecialchars($jadwal['jenjang']) ?>)
                                                 </span>
+                                                <?php if ($is_admin): ?>
+                                                    <span class="text-slate-300">•</span>
+                                                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+                                                        <span class="material-symbols-outlined text-[13px]">person</span>
+                                                        <?= htmlspecialchars($jadwal['nama_guru']) ?>
+                                                    </span>
+                                                <?php endif; ?>
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-2 shrink-0">
-                                        <form action="input_data.php" method="POST">
-                                            <input type="hidden" name="kelas" value="<?= $jadwal['class_id'] ?>">
-                                            <input type="hidden" name="mapel" value="<?= $jadwal['subject_id'] ?? '' ?>">
-                                            <a href="analisa.php?kelas=<?= $jadwal['class_id'] ?>&mapel=<?= $jadwal['subject_id'] ?? '' ?>" class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-slate-100 transition-colors hidden sm:inline-flex" title="Lihat Analisa">
-                                                <span class="material-symbols-outlined text-lg">analytics</span>
-                                            </a>
-                                        </form>
-                                        <a href="proses_jadwal.php?hapus=<?= $jadwal['jadwal_id'] ?>&redirect_filter=<?= urlencode((string)$filter_kelas) ?>" 
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <a href="input_data.php?kelas=<?= $jadwal['class_id'] ?>&mapel=<?= $jadwal['subject_id'] ?>" class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-slate-100 transition-colors hidden sm:inline-flex" title="Input Nilai">
+                                            <span class="material-symbols-outlined text-lg">edit_square</span>
+                                        </a>
+                                        <a href="analisa.php?kelas=<?= $jadwal['class_id'] ?>&mapel=<?= $jadwal['subject_id'] ?>" class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-slate-100 transition-colors hidden sm:inline-flex" title="Lihat Analisa">
+                                            <span class="material-symbols-outlined text-lg">analytics</span>
+                                        </a>
+                                        <?php if ($is_admin): ?>
+                                            <button type="button" 
+                                                    onclick="bukaModalAlihkan(<?= htmlspecialchars(json_encode($jadwal)) ?>)"
+                                                    class="p-1.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 transition-colors"
+                                                    title="Alihkan Pengampu ke Guru Lain">
+                                                <span class="material-symbols-outlined text-lg">swap_horiz</span>
+                                            </button>
+                                        <?php endif; ?>
+                                        <a href="proses_jadwal.php?hapus=<?= $jadwal['jadwal_id'] ?>&redirect_filter_kelas=<?= urlencode((string)$filter_kelas) ?>&redirect_filter_guru=<?= urlencode((string)$filter_guru) ?>" 
                                            onclick="konfirmasiLink(event, this.href, 'Hapus jadwal mata pelajaran <?= htmlspecialchars($jadwal['nama_mapel']) ?> di kelas <?= htmlspecialchars($jadwal['nama_kelas']) ?>?')" 
                                            class="p-1.5 rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors" 
                                            title="Hapus Jadwal">
@@ -292,6 +398,102 @@ require_once '../components/header.php';
 </main>
 
 <script>
+const takenMap = <?= json_encode($taken_map) ?>;
+const currentUserId = <?= (int)$user_id ?>;
+const isAdmin = <?= $is_admin ? 'true' : 'false' ?>;
+
+function getSelectedTeacherId(tab) {
+    if (isAdmin) {
+        const el = tab === 'kelas' ? document.getElementById('target_user_kelas') : document.getElementById('target_user_mapel');
+        return el ? parseInt(el.value) : currentUserId;
+    }
+    return currentUserId;
+}
+
+function updateSubjectCheckboxes() {
+    const classSelect = document.getElementById('select_class_id');
+    const classId = classSelect.value;
+    const teacherId = getSelectedTeacherId('kelas');
+
+    document.querySelectorAll('.cb-mapel').forEach(cb => {
+        const mid = cb.getAttribute('data-mid');
+        const badge = document.getElementById('badge_mapel_' + mid);
+        const label = document.getElementById('label_mapel_' + mid);
+
+        if (!classId) {
+            cb.disabled = false;
+            cb.checked = false;
+            label.classList.remove('opacity-60', 'cursor-not-allowed');
+            badge.classList.add('hidden');
+            return;
+        }
+
+        const classTaken = takenMap[classId] || {};
+        const assignment = classTaken[mid];
+
+        if (assignment) {
+            cb.checked = false;
+            cb.disabled = true;
+            label.classList.add('opacity-60', 'cursor-not-allowed');
+            badge.classList.remove('hidden');
+
+            if (assignment.user_id === teacherId) {
+                badge.textContent = 'Sudah Diambil';
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+            } else {
+                badge.textContent = 'Diampu: ' + assignment.nama;
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-amber-50 text-amber-700 border border-amber-200';
+            }
+        } else {
+            cb.disabled = false;
+            label.classList.remove('opacity-60', 'cursor-not-allowed');
+            badge.classList.add('hidden');
+        }
+    });
+}
+
+function updateClassCheckboxes() {
+    const mapelSelect = document.getElementById('select_subject_id');
+    const subjectId = mapelSelect.value;
+    const teacherId = getSelectedTeacherId('mapel');
+
+    document.querySelectorAll('.cb-kelas').forEach(cb => {
+        const cid = cb.getAttribute('data-cid');
+        const badge = document.getElementById('badge_kelas_' + cid);
+        const label = document.getElementById('label_kelas_' + cid);
+
+        if (!subjectId) {
+            cb.disabled = false;
+            cb.checked = false;
+            label.classList.remove('opacity-60', 'cursor-not-allowed');
+            badge.classList.add('hidden');
+            return;
+        }
+
+        const classTaken = takenMap[cid] || {};
+        const assignment = classTaken[subjectId];
+
+        if (assignment) {
+            cb.checked = false;
+            cb.disabled = true;
+            label.classList.add('opacity-60', 'cursor-not-allowed');
+            badge.classList.remove('hidden');
+
+            if (assignment.user_id === teacherId) {
+                badge.textContent = 'Sudah Diambil';
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+            } else {
+                badge.textContent = 'Diampu: ' + assignment.nama;
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-amber-50 text-amber-700 border border-amber-200';
+            }
+        } else {
+            cb.disabled = false;
+            label.classList.remove('opacity-60', 'cursor-not-allowed');
+            badge.classList.add('hidden');
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const checkAll = document.getElementById('checkAll');
     const itemCheckboxes = document.querySelectorAll('.item-checkbox');
@@ -338,20 +540,133 @@ function switchTab(mode) {
         formMapel.classList.add('hidden');
         btnKelas.className = "py-1.5 rounded-md bg-white text-primary shadow-xs transition-colors text-center";
         btnMapel.className = "py-1.5 rounded-md text-text-muted hover:text-text-main transition-colors text-center";
+        updateSubjectCheckboxes();
     } else {
         formMapel.classList.remove('hidden');
         formKelas.classList.add('hidden');
         btnMapel.className = "py-1.5 rounded-md bg-white text-primary shadow-xs transition-colors text-center";
         btnKelas.className = "py-1.5 rounded-md text-text-muted hover:text-text-main transition-colors text-center";
+        updateClassCheckboxes();
     }
 }
 
-// Toggle Select All Checkbox Group
+// Toggle Select All Checkbox Group (hanya yang tidak disabled)
 function toggleCheckAllGroup(className) {
-    const cbs = document.querySelectorAll('.' + className);
-    const allChecked = Array.from(cbs).every(cb => cb.checked);
+    const cbs = Array.from(document.querySelectorAll('.' + className)).filter(cb => !cb.disabled);
+    if (cbs.length === 0) return;
+    const allChecked = cbs.every(cb => cb.checked);
     cbs.forEach(cb => cb.checked = !allChecked);
 }
+
+function konfirmasiForm(event, message) {
+    event.preventDefault();
+    Swal.fire({
+        title: 'Konfirmasi Tindakan',
+        text: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#be123c',
+        cancelButtonColor: '#475569',
+        confirmButtonText: 'Ya, Lanjutkan',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('formBulkDelete').submit();
+        }
+    });
+}
+
+function konfirmasiLink(event, url, message) {
+    event.preventDefault();
+    Swal.fire({
+        title: 'Konfirmasi Tindakan',
+        text: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#be123c',
+        cancelButtonColor: '#475569',
+        confirmButtonText: 'Ya, Lanjutkan',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+}
+
+function bukaModalAlihkan(jadwal) {
+    const modal = document.getElementById('modalAlihkanPengampu');
+    if (!modal) return;
+    document.getElementById('alihkan_jadwal_id').value = jadwal.jadwal_id;
+    document.getElementById('alihkan_nama_mapel').textContent = jadwal.nama_mapel;
+    document.getElementById('alihkan_nama_kelas').textContent = jadwal.nama_kelas + ' (' + jadwal.jenjang + ')';
+    document.getElementById('alihkan_pengampu_saat_ini').textContent = jadwal.nama_guru;
+    document.getElementById('new_user_id').value = jadwal.user_id;
+    modal.classList.remove('hidden');
+}
+
+function tutupModalAlihkan() {
+    const modal = document.getElementById('modalAlihkanPengampu');
+    if (modal) modal.classList.add('hidden');
+}
 </script>
+
+<?php if ($is_admin): ?>
+<!-- Modal Alihkan Pengampu -->
+<div id="modalAlihkanPengampu" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 hidden p-4">
+    <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-6">
+        <div class="flex items-center justify-between pb-3 border-b border-border-main mb-4">
+            <h3 class="text-sm font-bold text-text-main flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-base">swap_horiz</span>
+                Alihkan Pengampu Jadwal
+            </h3>
+            <button type="button" onclick="tutupModalAlihkan()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+
+        <form action="proses_jadwal.php" method="POST" class="flex flex-col gap-4">
+            <input type="hidden" name="aksi" value="alihkan_pengampu">
+            <input type="hidden" name="jadwal_id" id="alihkan_jadwal_id">
+            <input type="hidden" name="redirect_filter_kelas" value="<?= htmlspecialchars((string)$filter_kelas) ?>">
+            <input type="hidden" name="redirect_filter_guru" value="<?= htmlspecialchars((string)$filter_guru) ?>">
+
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <p class="text-[11px] text-text-muted font-medium">Mata Pelajaran:</p>
+                <p class="text-xs font-bold text-text-main" id="alihkan_nama_mapel">-</p>
+                <p class="text-[11px] text-text-muted font-medium mt-1.5">Kelas:</p>
+                <p class="text-xs font-bold text-text-main" id="alihkan_nama_kelas">-</p>
+                <p class="text-[11px] text-text-muted font-medium mt-1.5">Pengampu Saat Ini:</p>
+                <p class="text-xs font-semibold text-primary" id="alihkan_pengampu_saat_ini">-</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-text-main mb-1" for="new_user_id">Pilih Pengampu Baru</label>
+                <select id="new_user_id" name="new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
+                    <option value="" disabled selected>-- Pilih Guru Pengampu --</option>
+                    <?php foreach ($semua_guru as $g): ?>
+                        <option value="<?= $g['id'] ?>">
+                            <?= htmlspecialchars($g['nama_lengkap']) ?> (<?= $g['id'] == $user_id ? 'Admin' : 'Guru' ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="text-[11px] text-text-muted mt-1.5 block">
+                    <span class="material-symbols-outlined text-[13px] text-emerald-600 align-middle">check_circle</span>
+                    Seluruh riwayat nilai siswa yang telah diisi pada jadwal ini akan otomatis dialihkan dan tidak akan hilang.
+                </span>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
+                <button type="button" onclick="tutupModalAlihkan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors">
+                    Batal
+                </button>
+                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors">
+                    Simpan & Alihkan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php require_once '../components/footer.php'; ?>

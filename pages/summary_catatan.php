@@ -1,23 +1,27 @@
 <?php
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
+require_once '../config/auth.php';
 
-require_once '../config/koneksi.php';
+check_login();
+
+$is_admin = is_admin();
+$wali_kelas = require_wali_kelas_or_admin($pdo);
 
 // Ambil data kelas
-$kelas_stmt = $pdo->query("
-    SELECT id, jenjang, nama_kelas
-    FROM classes
-    ORDER BY jenjang, nama_kelas
-");
-$kelas_list = $kelas_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Filter
-$class_id = filter_input(INPUT_GET, 'kelas_id', FILTER_VALIDATE_INT) ?: 0;
+if ($is_admin) {
+    $kelas_stmt = $pdo->query("
+        SELECT id, jenjang, nama_kelas
+        FROM classes
+        ORDER BY jenjang, nama_kelas
+    ");
+    $kelas_list = $kelas_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $class_id = filter_input(INPUT_GET, 'kelas_id', FILTER_VALIDATE_INT) ?: 0;
+} else {
+    $kelas_list = [$wali_kelas];
+    $class_id = (int)$wali_kelas['id']; // Terkunci otomatis ke kelas binaan
+}
 $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT) ?: 0;
 $dari = trim($_GET['dari'] ?? '');
 $sampai = trim($_GET['sampai'] ?? '');

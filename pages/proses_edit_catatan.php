@@ -1,116 +1,56 @@
 <?php
-
 session_start();
+require_once '../config/auth.php';
 
-// Edit catatan wajib login
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
+check_login();
 
-require_once '../config/koneksi.php';
-
-
-// =====================================================
-// HANYA TERIMA POST
-// =====================================================
+$is_admin = is_admin();
+$wali_kelas = require_wali_kelas_or_admin($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: summary_catatan.php');
     exit;
 }
 
-
-// =====================================================
-// AMBIL DATA
-// =====================================================
-
-$id = filter_input(
-    INPUT_POST,
-    'id',
-    FILTER_VALIDATE_INT
-);
-
+$id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 $tanggal = trim($_POST['tanggal'] ?? '');
 $catatan = trim($_POST['catatan'] ?? '');
 
-
-// =====================================================
-// VALIDASI DASAR
-// =====================================================
-
 if (!$id || $tanggal === '' || $catatan === '') {
-
-    header(
-        'Location: summary_catatan.php?status=edit_invalid'
-    );
-
+    header('Location: summary_catatan.php?status=edit_invalid');
     exit;
 }
 
-
-// =====================================================
-// VALIDASI TANGGAL
-// =====================================================
-
-$date = DateTime::createFromFormat(
-    'Y-m-d',
-    $tanggal
-);
-
-if (
-    !$date ||
-    $date->format('Y-m-d') !== $tanggal
-) {
-
-    header(
-        'Location: summary_catatan.php?status=edit_invalid'
-    );
-
+$date = DateTime::createFromFormat('Y-m-d', $tanggal);
+if (!$date || $date->format('Y-m-d') !== $tanggal) {
+    header('Location: summary_catatan.php?status=edit_invalid');
     exit;
 }
-
-
-// =====================================================
-// BATAS CATATAN
-// =====================================================
 
 if (strlen($catatan) > 2000) {
-
-    header(
-        'Location: summary_catatan.php?status=edit_invalid'
-    );
-
+    header('Location: summary_catatan.php?status=edit_invalid');
     exit;
 }
 
-
-// =====================================================
-// PASTIKAN CATATAN ADA
-// =====================================================
-
-$stmt = $pdo->prepare("
-    SELECT id
-    FROM student_notes
-    WHERE id = ?
-    LIMIT 1
-");
-
-$stmt->execute([$id]);
+// Pastikan catatan ada dan milik siswa kelas binaan jika bukan admin
+if ($is_admin) {
+    $stmt = $pdo->prepare("SELECT id FROM student_notes WHERE id = ? LIMIT 1");
+    $stmt->execute([$id]);
+} else {
+    $stmt = $pdo->prepare("
+        SELECT sn.id 
+        FROM student_notes sn 
+        JOIN students st ON sn.student_id = st.id 
+        WHERE sn.id = ? AND st.class_id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$id, $wali_kelas['id']]);
+}
 
 if (!$stmt->fetchColumn()) {
-
-    header(
-        'Location: summary_catatan.php?status=edit_not_found'
-    );
-
+    header('Location: summary_catatan.php?status=edit_not_found');
     exit;
 }
-
-
-// =====================================================
-// UPDATE
-// =====================================================
 
 $stmt = $pdo->prepare("
     UPDATE student_notes
@@ -126,13 +66,5 @@ $stmt->execute([
     $id
 ]);
 
-
-// =====================================================
-// SELESAI
-// =====================================================
-
-header(
-    'Location: summary_catatan.php?status=edit_success'
-);
-
+header('Location: summary_catatan.php?status=edit_success');
 exit;

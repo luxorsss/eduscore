@@ -1,46 +1,90 @@
 <?php
-session_start();
-
-// PENJAGA PINTU: Tendang ke login jika belum ada tiket (session)
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
-// 1. Panggil koneksi database
-require_once '../config/koneksi.php'; 
+require_once '../config/auth.php';
+
+check_login();
+
 $user_id = $_SESSION['user_id'];
+$is_admin = is_admin();
+$user_wk = get_user_wali_kelas($pdo, $user_id);
 
-// 2. Tarik Data KELAS & JENJANG berdasarkan Jadwal Guru ini
-$stmt_kelas = $pdo->prepare("
-    SELECT DISTINCT c.id, c.nama_kelas, c.jenjang 
-    FROM teaching_schedules ts 
-    JOIN classes c ON ts.class_id = c.id 
-    WHERE ts.user_id = ?
-    ORDER BY c.jenjang, c.nama_kelas
-");
-$stmt_kelas->execute([$user_id]);
-$kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
+// Stats tambahan untuk admin
+$admin_stats = [];
+if ($is_admin) {
+    $admin_stats['total_guru'] = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'guru'")->fetchColumn();
+    $admin_stats['total_kelas'] = $pdo->query("SELECT COUNT(*) FROM classes")->fetchColumn();
+    $admin_stats['total_siswa'] = $pdo->query("SELECT COUNT(*) FROM students")->fetchColumn();
+    $admin_stats['total_mapel'] = $pdo->query("SELECT COUNT(*) FROM subjects")->fetchColumn();
+}
 
-// 3. Tarik Pemetaan Kelas -> Mapel berdasarkan Jadwal Guru ini
-$stmt_jadwal = $pdo->prepare("
-    SELECT ts.id as schedule_id, ts.class_id, c.nama_kelas, c.jenjang, s.id as subject_id, s.nama_mapel 
-    FROM teaching_schedules ts 
-    JOIN classes c ON ts.class_id = c.id
-    JOIN subjects s ON ts.subject_id = s.id 
-    WHERE ts.user_id = ?
-    ORDER BY c.jenjang, c.nama_kelas, s.nama_mapel
-");
-$stmt_jadwal->execute([$user_id]);
-$jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
+// 2. Tarik Data Jadwal & Kelas yang berhak diisi nilainya
+if ($is_admin) {
+    $stmt_kelas = $pdo->query("
+        SELECT DISTINCT c.id, c.nama_kelas, c.jenjang 
+        FROM teaching_schedules ts 
+        JOIN classes c ON ts.class_id = c.id 
+        ORDER BY c.jenjang, c.nama_kelas
+    ");
+    $kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt_jadwal = $pdo->query("
+        SELECT ts.id as schedule_id, ts.class_id, c.nama_kelas, c.jenjang, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru, u.role as owner_role
+        FROM teaching_schedules ts 
+        JOIN classes c ON ts.class_id = c.id
+        JOIN subjects s ON ts.subject_id = s.id
+        JOIN users u ON ts.user_id = u.id
+        ORDER BY c.jenjang, c.nama_kelas, s.nama_mapel
+    ");
+    $jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    // Guru: mapel yang diampu sendiri + mapel manual di kelas binaannya
+    $sql_jadwal = "
+        SELECT ts.id as schedule_id, ts.class_id, c.nama_kelas, c.jenjang, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru, u.role as owner_role
+        FROM teaching_schedules ts 
+        JOIN classes c ON ts.class_id = c.id
+        JOIN subjects s ON ts.subject_id = s.id 
+        JOIN users u ON ts.user_id = u.id
+        WHERE ts.user_id = ?
+    ";
+    $params = [$user_id];
+    if ($user_wk) {
+        $sql_jadwal .= " OR (c.id = ? AND u.role = 'admin')";
+        $params[] = $user_wk['id'];
+    }
+    $sql_jadwal .= " ORDER BY c.jenjang, c.nama_kelas, s.nama_mapel";
+    
+    $stmt_jadwal = $pdo->prepare($sql_jadwal);
+    $stmt_jadwal->execute($params);
+    $jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
+
+    // Ambil daftar kelas unik
+    $kelas_map = [];
+    foreach ($jadwal_list as $row) {
+        $kelas_map[$row['class_id']] = [
+            'id' => $row['class_id'],
+            'nama_kelas' => $row['nama_kelas'],
+            'jenjang' => $row['jenjang']
+        ];
+    }
+    $kelas_list = array_values($kelas_map);
+}
 
 // Siapkan data JSON untuk dibaca oleh JavaScript filter
 $kelas_json = json_encode($kelas_list);
 
 $mapel_per_kelas = [];
 foreach ($jadwal_list as $row) {
+    $label_mapel = $row['nama_mapel'];
+    if ($is_admin && !empty($row['nama_guru'])) {
+        $label_mapel .= ' (' . $row['nama_guru'] . ')';
+    } elseif ($row['owner_role'] === 'admin' && !$is_admin) {
+        $label_mapel .= ' (Manual / Binaan)';
+    }
     $mapel_per_kelas[$row['class_id']][] = [
         'id' => $row['subject_id'],
-        'nama' => $row['nama_mapel']
+        'nama' => $label_mapel
     ];
 }
 $mapel_json = json_encode($mapel_per_kelas);
@@ -78,6 +122,88 @@ require_once '../components/header.php';
             </div>
         </div>
     </div>
+
+    <!-- Alert Notifikasi Akses -->
+    <?php if (isset($_GET['pesan'])): ?>
+        <?php if ($_GET['pesan'] === 'akses_ditolak'): ?>
+            <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-rose-200 bg-danger-subtle text-danger">
+                <span class="material-symbols-outlined text-base">lock</span>
+                <span><strong>Akses Ditolak:</strong> Halaman tersebut dikhususkan untuk Administrator sistem.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] === 'bukan_walikelas'): ?>
+            <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-amber-200 bg-warning-subtle text-warning">
+                <span class="material-symbols-outlined text-base">info</span>
+                <span><strong>Akses Dibatasi:</strong> Fitur Rekap & Catatan Wali Kelas hanya tersedia untuk guru yang telah ditugaskan membina rombel kelas.</span>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <!-- Banner Khusus Wali Kelas -->
+    <?php if ($user_wk): ?>
+        <div class="bg-gradient-to-r from-primary-subtle/50 to-white rounded-xl border border-primary/20 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <span class="material-symbols-outlined text-xl">assignment_ind</span>
+                </div>
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-primary block">Tugas Binaan Aktif</span>
+                    <h3 class="text-sm md:text-base font-bold text-text-main">
+                        Wali Kelas <?= htmlspecialchars($user_wk['jenjang']) ?> - <?= htmlspecialchars($user_wk['nama_kelas']) ?>
+                    </h3>
+                    <p class="text-xs text-text-muted mt-0.5">
+                        Anda dapat memantau seluruh nilai mata pelajaran dari guru lain dan mengelola catatan siswa di kelas ini.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <a href="walikelas.php" class="w-full sm:w-auto text-center px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors shadow-xs">
+                    Buka Rekap Kelas
+                </a>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- Kartu Statistik Khusus Administrator -->
+    <?php if ($is_admin): ?>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-surface-card p-4 rounded-xl border border-border-main shadow-xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-primary-subtle text-primary flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-xl">badge</span>
+                </div>
+                <div>
+                    <span class="text-[11px] text-text-muted font-medium block">Total Guru</span>
+                    <span class="text-base font-bold text-text-main tabular-nums"><?= $admin_stats['total_guru'] ?></span>
+                </div>
+            </div>
+            <div class="bg-surface-card p-4 rounded-xl border border-border-main shadow-xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200">
+                    <span class="material-symbols-outlined text-xl">folder_open</span>
+                </div>
+                <div>
+                    <span class="text-[11px] text-text-muted font-medium block">Total Rombel</span>
+                    <span class="text-base font-bold text-text-main tabular-nums"><?= $admin_stats['total_kelas'] ?></span>
+                </div>
+            </div>
+            <div class="bg-surface-card p-4 rounded-xl border border-border-main shadow-xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-200">
+                    <span class="material-symbols-outlined text-xl">group</span>
+                </div>
+                <div>
+                    <span class="text-[11px] text-text-muted font-medium block">Total Murid</span>
+                    <span class="text-base font-bold text-text-main tabular-nums"><?= $admin_stats['total_siswa'] ?></span>
+                </div>
+            </div>
+            <div class="bg-surface-card p-4 rounded-xl border border-border-main shadow-xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200">
+                    <span class="material-symbols-outlined text-xl">book</span>
+                </div>
+                <div>
+                    <span class="text-[11px] text-text-muted font-medium block">Total Mapel</span>
+                    <span class="text-base font-bold text-text-main tabular-nums"><?= $admin_stats['total_mapel'] ?></span>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <!-- Area Kerja Utama: Formulir Pemilihan Kelas & Nilai -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -152,7 +278,7 @@ require_once '../components/header.php';
             <!-- Daftar Jadwal Mengajar Guru -->
             <div class="bg-surface-card rounded-xl border border-border-main p-6 shadow-xs">
                 <div class="flex items-center justify-between pb-3 mb-3 border-b border-border-main">
-                    <h3 class="text-sm font-bold text-text-main">Jadwal Mengajar Anda</h3>
+                    <h3 class="text-sm font-bold text-text-main"><?= $is_admin ? 'Jadwal & Penugasan Mapel' : 'Jadwal Mengajar Anda' ?></h3>
                     <a href="jadwal.php" class="text-xs text-primary hover:underline font-semibold">Atur Jadwal</a>
                 </div>
 
@@ -167,15 +293,20 @@ require_once '../components/header.php';
                     <div class="divide-y divide-border-main max-h-[300px] overflow-y-auto custom-scroll pr-1">
                         <?php foreach ($jadwal_list as $jdw): ?>
                             <div class="py-2.5 flex items-center justify-between gap-3">
-                                <div>
-                                    <span class="text-xs font-semibold text-text-main block">
+                                <div class="min-w-0 pr-2">
+                                    <span class="text-xs font-semibold text-text-main block truncate">
                                         <?= htmlspecialchars($jdw['nama_kelas']) ?>
                                     </span>
-                                    <span class="text-[11px] text-text-muted block">
+                                    <span class="text-[11px] text-text-muted block truncate">
                                         <?= htmlspecialchars($jdw['nama_mapel']) ?> (<?= htmlspecialchars($jdw['jenjang']) ?>)
+                                        <?php if ($is_admin && !empty($jdw['nama_guru'])): ?>
+                                            &bull; <span class="text-slate-500 font-medium"><?= htmlspecialchars($jdw['nama_guru']) ?></span>
+                                        <?php elseif (!$is_admin && $jdw['owner_role'] === 'admin'): ?>
+                                            &bull; <span class="text-amber-600 font-medium">Manual Binaan</span>
+                                        <?php endif; ?>
                                     </span>
                                 </div>
-                                <form action="input_data.php" method="POST">
+                                <form action="input_data.php" method="POST" class="shrink-0">
                                     <input type="hidden" name="kelas" value="<?= $jdw['class_id'] ?>">
                                     <input type="hidden" name="mapel" value="<?= $jdw['subject_id'] ?>">
                                     <button type="submit" class="px-3 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-primary hover:bg-slate-50 transition-colors">
@@ -188,6 +319,7 @@ require_once '../components/header.php';
                 <?php endif; ?>
             </div>
 
+            <?php if ($is_admin): ?>
             <!-- Pemeliharaan Semester -->
             <div class="bg-surface-card rounded-xl border border-border-main p-6 shadow-xs">
                 <div class="flex items-start gap-3">
@@ -208,6 +340,7 @@ require_once '../components/header.php';
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
         </div>
 

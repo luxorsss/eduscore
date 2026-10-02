@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // 3. Simpan ke database menggunakan Prepared Statement (Mencegah SQL Injection)
-    $sql = "INSERT INTO users (nama_lengkap, username, password) VALUES (?, ?, ?)";
+    $sql = "INSERT INTO users (nama_lengkap, username, password, role) VALUES (?, ?, ?, 'guru')";
     $stmt = $pdo->prepare($sql);
     
     try {

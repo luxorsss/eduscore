@@ -83,13 +83,24 @@ if (session_status() === PHP_SESSION_NONE) {
                 <div class="flex items-center gap-3 relative">
                     <!-- User Profile & Action Dropdown -->
                     <div class="relative">
+                        <?php
+                        require_once __DIR__ . '/../config/auth.php';
+                        $header_role = $_SESSION['role'] ?? 'guru';
+                        $header_wk = get_user_wali_kelas($pdo, $_SESSION['user_id'] ?? 0);
+                        $role_display = ($header_role === 'admin') ? 'Administrator' : ($header_wk ? 'Wali Kelas ' . $header_wk['nama_kelas'] : 'Guru Pengajar');
+                        ?>
                         <button type="button" id="userMenuBtn" onclick="toggleUserMenu()" class="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-100 transition-colors focus-ring" aria-haspopup="true" aria-expanded="false">
                             <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shadow-xs">
                                 <?= strtoupper(substr($_SESSION['nama_lengkap'] ?? 'User', 0, 2)); ?>
                             </div>
-                            <span class="text-xs font-medium text-text-main hidden sm:block max-w-[140px] truncate">
-                                <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Pengajar'); ?>
-                            </span>
+                            <div class="hidden sm:flex flex-col text-left">
+                                <span class="text-xs font-semibold text-text-main max-w-[140px] truncate leading-tight">
+                                    <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Pengajar'); ?>
+                                </span>
+                                <span class="text-[10px] text-text-muted font-medium leading-tight">
+                                    <?= htmlspecialchars($role_display) ?>
+                                </span>
+                            </div>
                             <span class="material-symbols-outlined text-text-muted text-base">expand_more</span>
                         </button>
 
@@ -98,7 +109,11 @@ if (session_status() === PHP_SESSION_NONE) {
                             <div class="px-4 py-2 border-b border-border-main">
                                 <p class="text-xs text-text-muted">Masuk sebagai</p>
                                 <p class="text-sm font-semibold text-text-main truncate"><?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Pengajar'); ?></p>
-                                <p class="text-xs text-text-muted truncate">@<?= htmlspecialchars($_SESSION['username'] ?? 'guru'); ?></p>
+                                <div class="mt-1 flex items-center gap-1.5">
+                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-md <?= ($header_role === 'admin') ? 'bg-primary text-white' : 'bg-slate-100 text-text-muted border border-slate-200' ?>">
+                                        <?= htmlspecialchars($role_display) ?>
+                                    </span>
+                                </div>
                             </div>
                             <a href="dashboard.php" class="flex items-center gap-2.5 px-4 py-2.5 text-xs text-text-main hover:bg-slate-50 transition-colors">
                                 <span class="material-symbols-outlined text-lg text-text-muted">dashboard</span>

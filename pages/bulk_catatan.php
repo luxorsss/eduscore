@@ -1,20 +1,30 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once '../config/auth.php';
 
-require_once '../config/koneksi.php';
+check_login();
+
+$is_admin = is_admin();
+$wali_kelas = require_wali_kelas_or_admin($pdo);
 
 $page_title = 'Bulk Catatan Siswa - EduScore';
 $page_heading = 'Bulk Catatan Siswa';
 $status = $_GET['status'] ?? '';
 $total = (int) ($_GET['total'] ?? 0);
 
-// Ambil data kelas
-$kelas_stmt = $pdo->query("
-    SELECT id, jenjang, nama_kelas
-    FROM classes
-    ORDER BY jenjang, nama_kelas
-");
-$kelas_list = $kelas_stmt->fetchAll(PDO::FETCH_ASSOC);
+// Ambil data kelas (Admin: semua kelas, Wali Kelas: hanya kelas binaannya)
+if ($is_admin) {
+    $kelas_stmt = $pdo->query("
+        SELECT id, jenjang, nama_kelas
+        FROM classes
+        ORDER BY jenjang, nama_kelas
+    ");
+    $kelas_list = $kelas_stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $kelas_list = [$wali_kelas];
+}
 
 require_once '../components/header.php'; 
 ?>
@@ -54,7 +64,7 @@ require_once '../components/header.php';
             >
                 <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
                 <?php foreach ($kelas_list as $kelas): ?>
-                    <option value="<?= (int) $kelas['id'] ?>">
+                    <option value="<?= (int) $kelas['id'] ?>" <?= count($kelas_list) === 1 ? 'selected' : '' ?>>
                         <?= htmlspecialchars($kelas['jenjang']) ?> - <?= htmlspecialchars($kelas['nama_kelas']) ?>
                     </option>
                 <?php endforeach; ?>
@@ -169,6 +179,10 @@ kelasSelect.addEventListener('change', function () {
         `;
     });
 });
+
+if (kelasSelect && kelasSelect.value) {
+    kelasSelect.dispatchEvent(new Event('change'));
+}
 
 // =====================================================
 // RENDER SISWA

@@ -1,23 +1,36 @@
 <?php
-session_start();
-require_once '../config/koneksi.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
+require_once '../config/auth.php';
+
+check_login();
 
 $user_id = $_SESSION['user_id'];
-$class_id = $_GET['kelas'] ?? null;
+$is_admin = is_admin();
+$wali_kelas = require_wali_kelas_or_admin($pdo);
+
+if (!$is_admin && $wali_kelas) {
+    // Guru wali kelas terkunci otomatis pada kelas binaannya
+    $class_id = (int)$wali_kelas['id'];
+} else {
+    $class_id = isset($_GET['kelas']) && $_GET['kelas'] !== '' ? (int)$_GET['kelas'] : null;
+}
 $tipe_ujian = $_GET['tipe'] ?? 'UTS'; // Default UTS
 
 // 1. Ambil Data Kelas untuk Dropdown
-$stmt_kelas = $pdo->query("SELECT id, nama_kelas, jenjang FROM classes ORDER BY jenjang, nama_kelas");
-$kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
+if ($is_admin) {
+    $stmt_kelas = $pdo->query("SELECT id, nama_kelas, jenjang FROM classes ORDER BY jenjang, nama_kelas");
+    $kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $kelas_list = [$wali_kelas];
+}
 
 $students = [];
 $subjects = [];
 $matrix = [];
+$matrix_akhir = [];
+$matrix_ujian = [];
 $info_kelas = null;
 
 if ($class_id) {
@@ -31,16 +44,23 @@ if ($class_id) {
     $stmt_siswa->execute([$class_id]);
     $students = $stmt_siswa->fetchAll(PDO::FETCH_ASSOC);
 
-    // Ambil Mapel yang diajarkan di kelas ini
+    // Ambil Mapel yang diajarkan di kelas ini beserta data pengampu
     $stmt_mapel = $pdo->prepare("
-        SELECT DISTINCT s.id, s.nama_mapel 
+        SELECT DISTINCT s.id, s.nama_mapel, ts.user_id as teacher_id, u.nama_lengkap as nama_guru, u.role as guru_role
         FROM teaching_schedules ts
         JOIN subjects s ON ts.subject_id = s.id
+        JOIN users u ON ts.user_id = u.id
         WHERE ts.class_id = ?
         ORDER BY s.nama_mapel ASC
     ");
     $stmt_mapel->execute([$class_id]);
-    $subjects = $stmt_mapel->fetchAll(PDO::FETCH_ASSOC);
+    $raw_subs = $stmt_mapel->fetchAll(PDO::FETCH_ASSOC);
+    $subjects = [];
+    foreach ($raw_subs as $rs) {
+        $can_edit = $is_admin || ($user_id == $rs['teacher_id']) || ($rs['guru_role'] === 'admin');
+        $rs['can_edit'] = $can_edit;
+        $subjects[] = $rs;
+    }
 
     // Ambil Nilai dan Hitung Rumus
     $stmt_nilai = $pdo->prepare("
@@ -183,6 +203,46 @@ require_once '../components/header.php';
         </div>
     </div>
 
+    <!-- Panel Pintasan Entri Nilai Mapel Kelas Binaan -->
+    <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden">
+        <button type="button" onclick="document.getElementById('areaAksiMapel').classList.toggle('hidden')" class="w-full px-4 py-3 flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors focus-ring">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-base text-primary">edit_square</span> 
+                <span>Entri Nilai Mapel Kelas Ini (<?= count($subjects) ?> Mapel Terdaftar)</span>
+            </div>
+            <span class="material-symbols-outlined text-text-muted text-base">expand_more</span>
+        </button>
+        <div id="areaAksiMapel" class="p-4 bg-slate-50/50 border-t border-border-main grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <?php foreach ($subjects as $s): ?>
+                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <span class="font-bold text-xs text-text-main block truncate"><?= htmlspecialchars($s['nama_mapel']) ?></span>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            <?php if ($s['guru_role'] === 'admin'): ?>
+                                <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                    Manual (Disetor)
+                                </span>
+                            <?php else: ?>
+                                <span class="text-[10px] text-text-muted truncate">
+                                    Guru: <?= htmlspecialchars($s['nama_guru']) ?>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php if ($s['can_edit']): ?>
+                        <a href="input_data.php?kelas=<?= $class_id ?>&mapel=<?= $s['id'] ?>" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-[11px] font-semibold shadow-xs flex items-center gap-1 shrink-0 transition-colors">
+                            <span class="material-symbols-outlined text-[14px]">edit</span> Isi Nilai
+                        </a>
+                    <?php else: ?>
+                        <span class="text-[11px] text-text-muted italic flex items-center gap-1 shrink-0 bg-slate-100 px-2 py-1 rounded">
+                            <span class="material-symbols-outlined text-[13px]">lock</span> Hanya Guru Mapel
+                        </span>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
     <!-- Tabel Matriks Rekap Nilai -->
     <div class="bg-surface-card rounded-xl shadow-xs border border-border-main overflow-hidden">
         <div class="p-4 border-b border-border-main bg-slate-50 flex flex-wrap justify-between items-center gap-2">
@@ -226,6 +286,7 @@ require_once '../components/header.php';
     const matrixUjian = <?= json_encode($matrix_ujian) ?>;
     const tipeUjianText = <?= json_encode($tipe_ujian) ?>;
     const infoKelasText = <?= json_encode($info_kelas) ?>;
+    const currentClassId = <?= (int)($class_id ?? 0) ?>;
     
     let currentMode = 'siswa'; 
     let currentScoreType = 'akhir'; // 'akhir' atau 'ujian'
@@ -304,7 +365,14 @@ require_once '../components/header.php';
                         <th class="p-3 border-r border-border-main sticky left-0 z-20 bg-slate-50 min-w-[160px] max-w-[220px] shadow-xs">Nama Siswa</th>`;
             
             currentSubjects.forEach(sub => {
-                html += `<th class="p-2.5 border-r border-border-main text-center min-w-[85px] max-w-[120px] whitespace-normal leading-tight" title="${sub.nama_mapel}">${sub.nama_mapel}</th>`;
+                let actionHtml = '';
+                if (sub.can_edit) {
+                    actionHtml = `<div class="mt-1"><a href="input_data.php?kelas=${currentClassId}&mapel=${sub.id}" class="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-0.5 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs">Isi</a></div>`;
+                }
+                html += `<th class="p-2.5 border-r border-border-main text-center min-w-[85px] max-w-[120px] whitespace-normal leading-tight" title="${sub.nama_mapel}">
+                    <div class="font-bold truncate">${sub.nama_mapel}</div>
+                    ${actionHtml}
+                </th>`;
             });
             if (currentScoreType === 'akhir') {
                 html += `<th class="p-2.5 font-bold border-border-main text-center bg-primary-subtle text-primary min-w-[90px]">RATA-RATA</th>`;
@@ -362,8 +430,17 @@ require_once '../components/header.php';
             let colCounts = {};
 
             currentSubjects.forEach(sub => {
+                let actionHtml = '';
+                if (sub.can_edit) {
+                    actionHtml = `<a href="input_data.php?kelas=${currentClassId}&mapel=${sub.id}" class="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-0.5 bg-slate-100 hover:bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs shrink-0">Isi Nilai</a>`;
+                }
                 html += `<tr class="hover:bg-slate-50 transition-colors">
-                            <td class="p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-normal leading-tight shadow-xs">${sub.nama_mapel}</td>`;
+                            <td class="p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-normal leading-tight shadow-xs">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span>${sub.nama_mapel}</span>
+                                    ${actionHtml}
+                                </div>
+                            </td>`;
                 
                 if (currentScoreType === 'akhir') {
                     html += `<td class="p-2.5 border-r border-border-main text-center font-semibold text-text-muted bg-slate-50">${kkmValue}</td>`;

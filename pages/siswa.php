@@ -1,12 +1,9 @@
 <?php
 session_start();
-require_once '../config/koneksi.php';
+require_once '../config/auth.php';
 
-// Penjaga Pintu
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+// Penjaga Pintu: Hanya Admin yang bisa mengelola siswa
+require_admin();
 
 // Ambil Data Siswa (LEFT JOIN agar yang tidak punya kelas tetap muncul)
 $sql = "SELECT s.*, c.nama_kelas 

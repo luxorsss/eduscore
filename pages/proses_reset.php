@@ -1,12 +1,9 @@
 <?php
 session_start();
-require_once '../config/koneksi.php';
+require_once '../config/auth.php';
 
-// Proteksi keamanan
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+// Proteksi keamanan: Hanya Admin yang bisa mereset nilai
+require_admin();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['reset_semua_nilai'])) {
     try {

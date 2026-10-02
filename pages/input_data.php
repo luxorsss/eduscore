@@ -1,11 +1,10 @@
 <?php
-session_start();
-require_once '../config/koneksi.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
+require_once '../config/auth.php';
+
+check_login();
 
 $user_id = $_SESSION['user_id'];
 $class_id = $_POST['kelas'] ?? $_GET['kelas'] ?? null;
@@ -27,10 +26,27 @@ if (!$info) {
 }
 
 // Cari ID Jadwal (schedule_id)
-$stmt_sched = $pdo->prepare("SELECT id FROM teaching_schedules WHERE user_id = ? AND class_id = ? AND subject_id = ?");
-$stmt_sched->execute([$user_id, $class_id, $mapel_id]);
+$stmt_sched = $pdo->prepare("
+    SELECT ts.id, ts.user_id, u.nama_lengkap as nama_guru, u.role as owner_role
+    FROM teaching_schedules ts
+    JOIN users u ON ts.user_id = u.id
+    WHERE ts.class_id = ? AND ts.subject_id = ?
+");
+$stmt_sched->execute([$class_id, $mapel_id]);
 $schedule = $stmt_sched->fetch(PDO::FETCH_ASSOC);
-$schedule_id = $schedule['id'] ?? 0;
+
+if (!$schedule) {
+    header("Location: dashboard.php?pesan=jadwal_tidak_ditemukan");
+    exit();
+}
+
+$schedule_id = (int)$schedule['id'];
+
+// Cek hak akses input nilai
+if (!can_edit_schedule_grades($pdo, $user_id, $schedule_id)) {
+    header("Location: dashboard.php?pesan=akses_ditolak");
+    exit();
+}
 
 // Ambil Daftar Siswa BESERTA Seluruh Nilainya saat ini
 $stmt_siswa = $pdo->prepare("
@@ -58,6 +74,12 @@ require_once '../components/header.php';
                 <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Entri Nilai Kelas</span>
                 <span class="text-slate-300">•</span>
                 <span class="text-xs font-bold text-primary"><?= htmlspecialchars($info['nama_kelas']) ?></span>
+                <?php if ($schedule['owner_role'] === 'admin'): ?>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+                        Entri Manual (Disetor)
+                    </span>
+                <?php endif; ?>
             </div>
             <h2 class="text-lg font-bold text-text-main mt-0.5"><?= htmlspecialchars($info['nama_mapel']) ?></h2>
             <p class="text-xs text-text-muted">Total <?= count($students) ?> siswa terdaftar. Nilai langsung tersimpan saat menekan tombol simpan.</p>

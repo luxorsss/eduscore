@@ -1,17 +1,67 @@
 <?php
 session_start();
-require_once '../config/koneksi.php';
+require_once '../config/auth.php';
 
-// Proteksi: Pastikan hanya user login yang bisa akses
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+// Proteksi: Hanya Admin yang bisa mengelola data mapel
+require_admin();
 
 // 1. PROSES TAMBAH & EDIT MAPEL (Metode POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
     $action = $_POST['action'];
-    $nama_mapel = trim($_POST['nama_mapel']);
+
+    // --- PROSES BULK TAMBAH ---
+    if ($action === 'bulk_tambah') {
+        $mapel_list = $_POST['nama_mapel_bulk'] ?? [];
+        if (!is_array($mapel_list)) {
+            $mapel_list = [];
+        }
+
+        // Ambil mapel yang sudah ada untuk validasi sisi server
+        $stmt_existing = $pdo->query("SELECT LOWER(TRIM(nama_mapel)) FROM subjects");
+        $existing = $stmt_existing->fetchAll(PDO::FETCH_COLUMN);
+        $existing_set = array_flip($existing);
+
+        $inserted = 0;
+        $skipped = [];
+        $added = [];
+
+        try {
+            $pdo->beginTransaction();
+            $stmt_insert = $pdo->prepare("INSERT INTO subjects (nama_mapel) VALUES (?)");
+
+            foreach ($mapel_list as $item) {
+                $clean_name = trim($item);
+                if (empty($clean_name)) continue;
+
+                $lower = strtolower($clean_name);
+                if (isset($existing_set[$lower])) {
+                    $skipped[] = $clean_name;
+                } else {
+                    $stmt_insert->execute([$clean_name]);
+                    $existing_set[$lower] = true;
+                    $added[] = $clean_name;
+                    $inserted++;
+                }
+            }
+
+            $pdo->commit();
+            $_SESSION['bulk_status'] = [
+                'success' => true,
+                'inserted' => $inserted,
+                'added' => $added,
+                'skipped' => $skipped
+            ];
+            header("Location: mapel.php");
+            exit();
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            die("Gagal menambah mapel massal: " . $e->getMessage());
+        }
+    }
+
+    $nama_mapel = isset($_POST['nama_mapel']) ? trim($_POST['nama_mapel']) : '';
 
     if (!empty($nama_mapel)) {
         try {

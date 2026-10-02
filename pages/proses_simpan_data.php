@@ -1,13 +1,23 @@
 <?php
-session_start();
-require_once '../config/koneksi.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once '../config/auth.php';
 
-if (!isset($_SESSION['user_id']) || $_SERVER["REQUEST_METHOD"] != "POST") {
+check_login();
+
+if ($_SERVER["REQUEST_METHOD"] != "POST") {
     header("Location: dashboard.php");
     exit();
 }
 
-$schedule_id = $_POST['schedule_id'] ?? 0;
+$user_id = $_SESSION['user_id'];
+$schedule_id = (int)($_POST['schedule_id'] ?? 0);
+
+if (!$schedule_id || !can_edit_schedule_grades($pdo, $user_id, $schedule_id)) {
+    header("Location: dashboard.php?pesan=akses_ditolak");
+    exit();
+}
 $n_h_uts = $_POST['n_h_uts'] ?? [];
 $n_uts = $_POST['n_uts'] ?? [];
 $n_t_uts = $_POST['n_t_uts'] ?? [];

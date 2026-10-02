@@ -1,16 +1,25 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once '../config/auth.php';
 
-require_once '../config/koneksi.php';
+check_login();
 
-// Ambil daftar kelas
-$kelas_stmt = $pdo->query("
-    SELECT id, jenjang, nama_kelas
-    FROM classes
-    ORDER BY jenjang, nama_kelas
-");
+$is_admin = is_admin();
+$wali_kelas = require_wali_kelas_or_admin($pdo);
 
-$kelas_list = $kelas_stmt->fetchAll(PDO::FETCH_ASSOC);
+// Ambil daftar kelas (Admin: semua kelas, Wali Kelas: hanya kelas binaannya)
+if ($is_admin) {
+    $kelas_stmt = $pdo->query("
+        SELECT id, jenjang, nama_kelas
+        FROM classes
+        ORDER BY jenjang, nama_kelas
+    ");
+    $kelas_list = $kelas_stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $kelas_list = [$wali_kelas];
+}
 
 // Status dari proses_catatan.php
 $status = $_GET['status'] ?? '';
@@ -53,7 +62,7 @@ require_once '../components/header.php';
                 >
                     <option value="">-- Pilih Kelas --</option>
                     <?php foreach ($kelas_list as $kelas): ?>
-                        <option value="<?= (int) $kelas['id'] ?>">
+                        <option value="<?= (int) $kelas['id'] ?>" <?= count($kelas_list) === 1 ? 'selected' : '' ?>>
                             <?= htmlspecialchars($kelas['jenjang'] . ' - ' . $kelas['nama_kelas']) ?>
                         </option>
                     <?php endforeach; ?>
@@ -249,6 +258,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (studentLoading) studentLoading.classList.add('hidden');
         });
     });
+
+    if (kelasSelect && kelasSelect.value) {
+        kelasSelect.dispatchEvent(new Event('change'));
+    }
 
     // ==========================================
     // Character counter
