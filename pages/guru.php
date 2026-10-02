@@ -426,10 +426,18 @@ require_once '../components/header.php';
 
                 <div class="flex flex-col gap-2">
                     <label class="flex items-start gap-2.5 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
-                        <input type="radio" name="tindakan_jadwal" value="admin" checked class="mt-0.5 text-primary focus:ring-primary" onchange="togglePilihGuruLain(false)">
+                        <input type="radio" name="tindakan_jadwal" value="kosong" checked class="mt-0.5 text-primary focus:ring-primary" onchange="togglePilihGuruLain(false)">
                         <div class="text-[11px]">
-                            <strong class="text-text-main block">Alihkan ke Admin (Rekomendasi)</strong>
-                            <span class="text-text-muted block">Jadwal dialihkan ke Admin sebagai Titipan Manual. Seluruh nilai siswa tetap tersimpan aman.</span>
+                            <strong class="text-text-main block">🟡 Kosongkan Jadwal (Slot Terbuka / Tersedia untuk Diambil)</strong>
+                            <span class="text-text-muted block">Jadwal menjadi terbuka tanpa pengampu sehingga bisa langsung diambil mandiri oleh rekan guru lain. Nilai siswa tetap aman.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-2.5 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                        <input type="radio" name="tindakan_jadwal" value="admin" class="mt-0.5 text-primary focus:ring-primary" onchange="togglePilihGuruLain(false)">
+                        <div class="text-[11px]">
+                            <strong class="text-text-main block">Alihkan ke Admin (Titipan Manual)</strong>
+                            <span class="text-text-muted block">Jadwal dialihkan ke Admin sebagai Titipan Manual. Wali kelas berhak mengisi nilai di kelas binaannya.</span>
                         </div>
                     </label>
 

@@ -125,7 +125,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
         $jumlah_jadwal = (int)$stmt_jdw->fetchColumn();
 
         if ($jumlah_jadwal > 0) {
-            if ($tindakan_jadwal === 'alihkan' && $target_guru_id > 0 && $target_guru_id !== $target_id) {
+            if ($tindakan_jadwal === 'kosong') {
+                // Kosongkan pengampu agar jadwal berstatus slot terbuka
+                $stmt_alih = $pdo->prepare("UPDATE teaching_schedules SET user_id = NULL, is_manual = 1 WHERE user_id = ?");
+                $stmt_alih->execute([$target_id]);
+            } elseif ($tindakan_jadwal === 'alihkan' && $target_guru_id > 0 && $target_guru_id !== $target_id) {
                 // Alihkan ke guru tujuan
                 $stmt_role = $pdo->prepare("SELECT role FROM users WHERE id = ?");
                 $stmt_role->execute([$target_guru_id]);

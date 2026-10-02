@@ -43,79 +43,112 @@ if (isset($_GET['toggle_manual'])) {
     exit();
 }
 
-// 0. ALIKHAN PENGAMPU (Khusus Admin: Transfer Jadwal & Nilai ke Guru Baru)
+// 0. ALIKHAN PENGAMPU (Khusus Admin: Transfer Jadwal & Nilai ke Guru Baru atau Kosongkan)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'alihkan_pengampu') {
     require_admin();
     $jadwal_id = (int)($_POST['jadwal_id'] ?? 0);
-    $new_user_id = (int)($_POST['new_user_id'] ?? 0);
+    $new_user_raw = $_POST['new_user_id'] ?? '';
     $redirect_filter_kelas = !empty($_POST['redirect_filter_kelas']) ? $_POST['redirect_filter_kelas'] : null;
     $redirect_filter_guru = !empty($_POST['redirect_filter_guru']) ? $_POST['redirect_filter_guru'] : null;
 
-    if ($jadwal_id > 0 && $new_user_id > 0) {
-        $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
-        $stmt_user->execute([$new_user_id]);
-        $new_role = $stmt_user->fetchColumn();
-        $new_is_manual = ($new_role === 'admin') ? 1 : 0;
+    if ($jadwal_id > 0) {
+        if ($new_user_raw === 'kosong' || $new_user_raw === '') {
+            // Kosongkan pengampu (buka slot untuk guru lain)
+            $stmt_update = $pdo->prepare("UPDATE teaching_schedules SET user_id = NULL, is_manual = 1 WHERE id = ?");
+            $stmt_update->execute([$jadwal_id]);
+            header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_dikosongkan'));
+            exit();
+        } else {
+            $new_user_id = (int)$new_user_raw;
+            if ($new_user_id > 0) {
+                $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+                $stmt_user->execute([$new_user_id]);
+                $new_role = $stmt_user->fetchColumn();
+                $new_is_manual = ($new_role === 'admin') ? 1 : 0;
 
-        $stmt_update = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE id = ?");
-        $stmt_update->execute([$new_user_id, $new_is_manual, $jadwal_id]);
-        header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_alihkan'));
-        exit();
+                $stmt_update = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE id = ?");
+                $stmt_update->execute([$new_user_id, $new_is_manual, $jadwal_id]);
+                header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_alihkan'));
+                exit();
+            }
+        }
     }
     header("Location: jadwal.php");
     exit();
 }
 
-// 0.1 BULK ALIKHAN PENGAMPU (Khusus Admin: Alihkan Banyak Jadwal Sekaligus)
+// 0.1 BULK ALIKHAN PENGAMPU (Khusus Admin: Alihkan Banyak Jadwal Sekaligus / Kosongkan)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'bulk_alihkan') {
     require_admin();
     $jadwal_ids = isset($_POST['jadwal_ids']) && is_array($_POST['jadwal_ids']) ? array_map('intval', $_POST['jadwal_ids']) : [];
-    $new_user_id = (int)($_POST['new_user_id'] ?? 0);
+    $new_user_raw = $_POST['new_user_id'] ?? '';
     $redirect_filter_kelas = !empty($_POST['redirect_filter_kelas']) ? $_POST['redirect_filter_kelas'] : null;
     $redirect_filter_guru = !empty($_POST['redirect_filter_guru']) ? $_POST['redirect_filter_guru'] : null;
 
-    if (!empty($jadwal_ids) && $new_user_id > 0) {
-        $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
-        $stmt_user->execute([$new_user_id]);
-        $new_role = $stmt_user->fetchColumn();
-        $new_is_manual = ($new_role === 'admin') ? 1 : 0;
-
+    if (!empty($jadwal_ids)) {
         $inClause = implode(',', array_fill(0, count($jadwal_ids), '?'));
-        $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE id IN ($inClause)");
-        $params = array_merge([$new_user_id, $new_is_manual], $jadwal_ids);
-        $stmt->execute($params);
+        if ($new_user_raw === 'kosong' || $new_user_raw === '') {
+            // Kosongkan semua pengampu terpilih
+            $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = NULL, is_manual = 1 WHERE id IN ($inClause)");
+            $stmt->execute($jadwal_ids);
+            header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_bulk_kosong'));
+            exit();
+        } else {
+            $new_user_id = (int)$new_user_raw;
+            if ($new_user_id > 0) {
+                $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+                $stmt_user->execute([$new_user_id]);
+                $new_role = $stmt_user->fetchColumn();
+                $new_is_manual = ($new_role === 'admin') ? 1 : 0;
 
-        header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_bulk_alihkan'));
-        exit();
+                $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE id IN ($inClause)");
+                $params = array_merge([$new_user_id, $new_is_manual], $jadwal_ids);
+                $stmt->execute($params);
+
+                header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_bulk_alihkan'));
+                exit();
+            }
+        }
     }
     header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'kosong'));
     exit();
 }
 
-// 0.2 ALIKHAN SEMUA JADWAL DARI GURU TERTENTU (Khusus Admin: Kosongkan Jadwal Guru Agar Bisa Dihapus)
+// 0.2 ALIKHAN SEMUA JADWAL DARI GURU TERTENTU (Kosongkan Jadwal Guru Agar Bisa Dihapus atau Diambil Guru Lain)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'alihkan_semua_guru') {
     require_admin();
     $from_user_id = (int)($_POST['from_user_id'] ?? 0);
-    $new_user_id = (int)($_POST['new_user_id'] ?? 0);
+    $new_user_raw = $_POST['new_user_id'] ?? '';
     $redirect_filter_kelas = !empty($_POST['redirect_filter_kelas']) ? $_POST['redirect_filter_kelas'] : null;
 
-    if ($from_user_id > 0 && $new_user_id > 0) {
-        $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
-        $stmt_user->execute([$new_user_id]);
-        $new_role = $stmt_user->fetchColumn();
-        $new_is_manual = ($new_role === 'admin') ? 1 : 0;
+    if ($from_user_id > 0) {
+        if ($new_user_raw === 'kosong' || $new_user_raw === '') {
+            // Kosongkan semua jadwal guru tersebut
+            $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = NULL, is_manual = 1 WHERE user_id = ?");
+            $stmt->execute([$from_user_id]);
+            header("Location: " . getRedirectUrl($redirect_filter_kelas, null, 'sukses_semua_kosong'));
+            exit();
+        } else {
+            $new_user_id = (int)$new_user_raw;
+            if ($new_user_id > 0) {
+                $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+                $stmt_user->execute([$new_user_id]);
+                $new_role = $stmt_user->fetchColumn();
+                $new_is_manual = ($new_role === 'admin') ? 1 : 0;
 
-        $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE user_id = ?");
-        $stmt->execute([$new_user_id, $new_is_manual, $from_user_id]);
+                $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE user_id = ?");
+                $stmt->execute([$new_user_id, $new_is_manual, $from_user_id]);
 
-        header("Location: " . getRedirectUrl($redirect_filter_kelas, null, 'sukses_alihkan_semua'));
-        exit();
+                header("Location: " . getRedirectUrl($redirect_filter_kelas, null, 'sukses_alihkan_semua'));
+                exit();
+            }
+        }
     }
     header("Location: jadwal.php");
     exit();
 }
 
-// 1. TAMBAH JADWAL (Single, Bulk Mapel per Kelas, & Bulk Kelas per Mapel)
+// 1. TAMBAH / KLAIM JADWAL (Single, Bulk Mapel per Kelas, & Bulk Kelas per Mapel)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'tambah') {
     $mode = $_POST['mode'] ?? 'kelas_to_mapel';
     $pairs = []; // Array kumpulan [class_id, subject_id]
@@ -159,8 +192,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     try {
         $pdo->beginTransaction();
 
-        // Cek apakah kombinasi (class_id, subject_id) SUDAH diampu siapapun (Strictly 1 guru per mapel per kelas)
-        $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM teaching_schedules WHERE class_id = ? AND subject_id = ?");
+        // Cari apakah kombinasi (class_id, subject_id) sudah ada (bisa jadi kosong/NULL atau sudah diampu)
+        $stmt_find = $pdo->prepare("SELECT id, user_id FROM teaching_schedules WHERE class_id = ? AND subject_id = ? LIMIT 1");
+        $stmt_claim = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE id = ?");
         $stmt_insert = $pdo->prepare("INSERT INTO teaching_schedules (user_id, class_id, subject_id, is_manual) VALUES (?, ?, ?, ?)");
 
         $berhasil = 0;
@@ -170,12 +204,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
             $cid = $p[0];
             $sid = $p[1];
 
-            $stmt_check->execute([$cid, $sid]);
-            if ($stmt_check->fetchColumn() == 0) {
+            $stmt_find->execute([$cid, $sid]);
+            $existing = $stmt_find->fetch(PDO::FETCH_ASSOC);
+
+            if ($existing) {
+                if ($existing['user_id'] === null) {
+                    // Jadwal ada dan KOSONG -> Klaim jadwal ini!
+                    $stmt_claim->execute([$assignee_id, $is_manual, $existing['id']]);
+                    $berhasil++;
+                } else {
+                    // Jadwal sudah ada pengampunya
+                    $dilewati++;
+                }
+            } else {
+                // Belum pernah dibuat jadwalnya sama sekali, insert baru
                 $stmt_insert->execute([$assignee_id, $cid, $sid, $is_manual]);
                 $berhasil++;
-            } else {
-                $dilewati++;
             }
         }
 

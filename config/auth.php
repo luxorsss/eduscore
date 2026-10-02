@@ -58,7 +58,7 @@ function can_edit_schedule_grades($pdo, $user_id, $schedule_id) {
         SELECT ts.user_id as teacher_id, ts.class_id, ts.is_manual, c.wali_kelas_id, u.role as owner_role
         FROM teaching_schedules ts
         JOIN classes c ON ts.class_id = c.id
-        JOIN users u ON ts.user_id = u.id
+        LEFT JOIN users u ON ts.user_id = u.id
         WHERE ts.id = ?
         LIMIT 1
     ");
@@ -68,12 +68,14 @@ function can_edit_schedule_grades($pdo, $user_id, $schedule_id) {
         return false;
     }
     // Jika user adalah guru pengampu jadwal tersebut
-    if ((int)$row['teacher_id'] === (int)$user_id) {
+    if (!empty($row['teacher_id']) && (int)$row['teacher_id'] === (int)$user_id) {
         return true;
     }
-    // Jika user adalah wali kelas dari kelas ini dan mapel ditandai sebagai titipan manual (is_manual = 1)
-    if (!empty($row['wali_kelas_id']) && (int)$row['wali_kelas_id'] === (int)$user_id && (int)$row['is_manual'] === 1) {
-        return true;
+    // Jika user adalah wali kelas dari kelas ini, dan mapel ini belum ada pengampu (kosong) atau ditandai titipan manual
+    if (!empty($row['wali_kelas_id']) && (int)$row['wali_kelas_id'] === (int)$user_id) {
+        if ($row['teacher_id'] === null || (int)$row['is_manual'] === 1) {
+            return true;
+        }
     }
     return false;
 }

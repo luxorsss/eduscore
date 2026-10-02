@@ -30,27 +30,27 @@ if ($is_admin) {
     $kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
 
     $stmt_jadwal = $pdo->query("
-        SELECT ts.id as schedule_id, ts.class_id, c.nama_kelas, c.jenjang, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru, u.role as owner_role
+        SELECT ts.id as schedule_id, ts.class_id, ts.user_id, c.nama_kelas, c.jenjang, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru, u.role as owner_role
         FROM teaching_schedules ts 
         JOIN classes c ON ts.class_id = c.id
         JOIN subjects s ON ts.subject_id = s.id
-        JOIN users u ON ts.user_id = u.id
+        LEFT JOIN users u ON ts.user_id = u.id
         ORDER BY c.jenjang, c.nama_kelas, s.nama_mapel
     ");
     $jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
 } else {
-    // Guru: mapel yang diampu sendiri + mapel manual di kelas binaannya (is_manual = 1)
+    // Guru: mapel yang diampu sendiri + mapel manual / slot terbuka di kelas binaannya
     $sql_jadwal = "
-        SELECT ts.id as schedule_id, ts.class_id, ts.is_manual, c.nama_kelas, c.jenjang, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru, u.role as owner_role
+        SELECT ts.id as schedule_id, ts.class_id, ts.is_manual, ts.user_id, c.nama_kelas, c.jenjang, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru, u.role as owner_role
         FROM teaching_schedules ts 
         JOIN classes c ON ts.class_id = c.id
         JOIN subjects s ON ts.subject_id = s.id 
-        JOIN users u ON ts.user_id = u.id
+        LEFT JOIN users u ON ts.user_id = u.id
         WHERE ts.user_id = ?
     ";
     $params = [$user_id];
     if ($user_wk) {
-        $sql_jadwal .= " OR (c.id = ? AND ts.is_manual = 1)";
+        $sql_jadwal .= " OR (c.id = ? AND (ts.user_id IS NULL OR ts.is_manual = 1))";
         $params[] = $user_wk['id'];
     }
     $sql_jadwal .= " ORDER BY c.jenjang, c.nama_kelas, s.nama_mapel";
@@ -77,10 +77,14 @@ $kelas_json = json_encode($kelas_list);
 $mapel_per_kelas = [];
 foreach ($jadwal_list as $row) {
     $label_mapel = $row['nama_mapel'];
-    if ($is_admin && !empty($row['nama_guru'])) {
-        $label_mapel .= ' (' . $row['nama_guru'] . ')';
-    } elseif ((int)($row['is_manual'] ?? 0) === 1 && !$is_admin) {
-        $label_mapel .= ' (Manual / Binaan)';
+    if ($is_admin) {
+        if (!empty($row['nama_guru'])) {
+            $label_mapel .= ' (' . $row['nama_guru'] . ')';
+        } else {
+            $label_mapel .= ' (Belum Ada Guru)';
+        }
+    } elseif ((empty($row['user_id']) || (int)($row['is_manual'] ?? 0) === 1) && !$is_admin) {
+        $label_mapel .= empty($row['user_id']) ? ' (Slot Terbuka / Binaan)' : ' (Manual / Binaan)';
     }
     $mapel_per_kelas[$row['class_id']][] = [
         'id' => $row['subject_id'],
@@ -337,10 +341,10 @@ require_once '../components/header.php';
                                     </span>
                                     <span class="text-[11px] text-text-muted block truncate">
                                         <?= htmlspecialchars($jdw['nama_mapel']) ?> (<?= htmlspecialchars($jdw['jenjang']) ?>)
-                                        <?php if ($is_admin && !empty($jdw['nama_guru'])): ?>
-                                            &bull; <span class="text-slate-500 font-medium"><?= htmlspecialchars($jdw['nama_guru']) ?></span>
-                                        <?php elseif (!$is_admin && (int)($jdw['is_manual'] ?? 0) === 1): ?>
-                                            &bull; <span class="text-amber-600 font-medium">Manual Binaan</span>
+                                        <?php if ($is_admin): ?>
+                                            &bull; <span class="text-slate-500 font-medium"><?= !empty($jdw['nama_guru']) ? htmlspecialchars($jdw['nama_guru']) : 'Belum Ada Guru' ?></span>
+                                        <?php elseif (empty($jdw['user_id']) || (int)($jdw['is_manual'] ?? 0) === 1): ?>
+                                            &bull; <span class="text-amber-600 font-medium"><?= empty($jdw['user_id']) ? 'Slot Terbuka (Binaan)' : 'Manual Binaan' ?></span>
                                         <?php endif; ?>
                                     </span>
                                 </div>

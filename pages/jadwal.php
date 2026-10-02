@@ -24,7 +24,7 @@ if ($is_admin) {
 
 // 4. Filter Kelas & Filter Guru (via GET)
 $filter_kelas = isset($_GET['filter_kelas']) && $_GET['filter_kelas'] !== '' ? (int)$_GET['filter_kelas'] : null;
-$filter_guru = ($is_admin && isset($_GET['filter_guru']) && $_GET['filter_guru'] !== '') ? (int)$_GET['filter_guru'] : null;
+$filter_guru = ($is_admin && isset($_GET['filter_guru']) && $_GET['filter_guru'] !== '') ? $_GET['filter_guru'] : null;
 
 // 5. Query Jadwal Aktif
 $sql_jadwal = "
@@ -34,7 +34,7 @@ $sql_jadwal = "
     FROM teaching_schedules ts
     JOIN classes c ON ts.class_id = c.id
     JOIN subjects s ON ts.subject_id = s.id
-    JOIN users u ON ts.user_id = u.id
+    LEFT JOIN users u ON ts.user_id = u.id
     WHERE 1=1
 ";
 $params = [];
@@ -43,9 +43,11 @@ if (!$is_admin) {
     $sql_jadwal .= " AND ts.user_id = ?";
     $params[] = $user_id;
 } else {
-    if ($filter_guru) {
+    if ($filter_guru === 'kosong') {
+        $sql_jadwal .= " AND ts.user_id IS NULL";
+    } elseif ($filter_guru) {
         $sql_jadwal .= " AND ts.user_id = ?";
-        $params[] = $filter_guru;
+        $params[] = (int)$filter_guru;
     }
 }
 
@@ -64,14 +66,14 @@ $jadwal_aktif = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
 $stmt_taken = $pdo->query("
     SELECT ts.class_id, ts.subject_id, ts.user_id, u.nama_lengkap 
     FROM teaching_schedules ts 
-    JOIN users u ON ts.user_id = u.id
+    LEFT JOIN users u ON ts.user_id = u.id
 ");
 $all_taken = $stmt_taken->fetchAll(PDO::FETCH_ASSOC);
 $taken_map = [];
 foreach ($all_taken as $t) {
     $taken_map[$t['class_id']][$t['subject_id']] = [
-        'user_id' => (int)$t['user_id'],
-        'nama' => $t['nama_lengkap']
+        'user_id' => $t['user_id'] !== null ? (int)$t['user_id'] : null,
+        'nama' => $t['nama_lengkap'] ?? null
     ];
 }
 
@@ -115,6 +117,21 @@ require_once '../components/header.php';
             <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
                 <span class="material-symbols-outlined text-base">check_circle</span>
                 <span>Pengampu jadwal mengajar berhasil dialihkan! Seluruh riwayat nilai siswa tetap terjaga utuh.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] == 'sukses_dikosongkan'): ?>
+            <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                <span>Pengampu jadwal berhasil dikosongkan! Jadwal kini terbuka dan bisa langsung diambil oleh guru lain.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] == 'sukses_bulk_kosong'): ?>
+            <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                <span>Seluruh jadwal terpilih berhasil dikosongkan dan terbuka untuk diambil oleh rekan guru lain.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] == 'sukses_semua_kosong'): ?>
+            <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                <span>Seluruh jadwal guru berhasil dikosongkan pengampunya dan siap diambil oleh guru pengganti.</span>
             </div>
         <?php elseif ($_GET['pesan'] == 'sukses_bulk_alihkan'): ?>
             <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
@@ -340,8 +357,9 @@ require_once '../components/header.php';
                         <?php if ($is_admin): ?>
                             <select name="filter_guru" onchange="this.form.submit()" class="text-xs font-medium rounded-lg border border-slate-300 bg-white text-text-main px-3 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[38px]">
                                 <option value="">Semua Guru</option>
+                                <option value="kosong" <?= ($filter_guru === 'kosong') ? 'selected' : '' ?>>🟡 Belum Ada Pengampu (Kosong)</option>
                                 <?php foreach($semua_guru as $g): ?>
-                                    <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id']) ? 'selected' : '' ?>>
+                                    <option value="<?= $g['id'] ?>" <?= ($filter_guru !== 'kosong' && $filter_guru == $g['id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($g['nama_lengkap']) ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -431,7 +449,13 @@ require_once '../components/header.php';
                                                 <span class="badge-grade-neutral px-2 py-0.5 rounded font-semibold text-[10px]">
                                                     <?= htmlspecialchars($jadwal['nama_kelas']) ?> (<?= htmlspecialchars($jadwal['jenjang']) ?>)
                                                 </span>
-                                                <?php if ($is_admin): ?>
+                                                <?php if ($jadwal['user_id'] === null): ?>
+                                                    <span class="text-slate-300">•</span>
+                                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                        <span>Belum Ada Guru (Slot Terbuka)</span>
+                                                    </span>
+                                                <?php elseif ($is_admin): ?>
                                                     <span class="text-slate-300">•</span>
                                                     <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700">
                                                         <span class="material-symbols-outlined text-[13px]">person</span>
@@ -534,17 +558,27 @@ function updateSubjectCheckboxes() {
         const assignment = classTaken[mid];
 
         if (assignment) {
-            cb.checked = false;
-            cb.disabled = true;
-            label.classList.add('opacity-60', 'cursor-not-allowed');
-            badge.classList.remove('hidden');
-
-            if (assignment.user_id === teacherId) {
+            if (assignment.user_id === null) {
+                // Jadwal terdaftar tapi masih KOSONG: Bebas diambil oleh guru!
+                cb.disabled = false;
+                label.classList.remove('opacity-60', 'cursor-not-allowed');
+                badge.classList.remove('hidden');
+                badge.textContent = 'Tersedia (Bisa Diambil)';
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+            } else if (assignment.user_id === teacherId) {
+                cb.checked = false;
+                cb.disabled = true;
+                label.classList.add('opacity-60', 'cursor-not-allowed');
+                badge.classList.remove('hidden');
                 badge.textContent = 'Sudah Diambil';
-                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200';
             } else {
-                badge.textContent = 'Diampu: ' + assignment.nama;
-                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-amber-50 text-amber-700 border border-amber-200';
+                cb.checked = false;
+                cb.disabled = true;
+                label.classList.add('opacity-60', 'cursor-not-allowed');
+                badge.classList.remove('hidden');
+                badge.textContent = 'Diampu: ' + (assignment.nama || 'Guru Lain');
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 text-slate-500 border border-slate-200';
             }
         } else {
             cb.disabled = false;
@@ -576,17 +610,27 @@ function updateClassCheckboxes() {
         const assignment = classTaken[subjectId];
 
         if (assignment) {
-            cb.checked = false;
-            cb.disabled = true;
-            label.classList.add('opacity-60', 'cursor-not-allowed');
-            badge.classList.remove('hidden');
-
-            if (assignment.user_id === teacherId) {
+            if (assignment.user_id === null) {
+                // Jadwal terdaftar tapi masih KOSONG: Bebas diambil oleh guru!
+                cb.disabled = false;
+                label.classList.remove('opacity-60', 'cursor-not-allowed');
+                badge.classList.remove('hidden');
+                badge.textContent = 'Tersedia (Bisa Diambil)';
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+            } else if (assignment.user_id === teacherId) {
+                cb.checked = false;
+                cb.disabled = true;
+                label.classList.add('opacity-60', 'cursor-not-allowed');
+                badge.classList.remove('hidden');
                 badge.textContent = 'Sudah Diambil';
-                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200';
             } else {
-                badge.textContent = 'Diampu: ' + assignment.nama;
-                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-amber-50 text-amber-700 border border-amber-200';
+                cb.checked = false;
+                cb.disabled = true;
+                label.classList.add('opacity-60', 'cursor-not-allowed');
+                badge.classList.remove('hidden');
+                badge.textContent = 'Diampu: ' + (assignment.nama || 'Guru Lain');
+                badge.className = 'text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 text-slate-500 border border-slate-200';
             }
         } else {
             cb.disabled = false;
@@ -806,7 +850,8 @@ function tutupModalAlihkanSemuaGuru() {
             <div>
                 <label class="block text-xs font-semibold text-text-main mb-1" for="new_user_id">Pilih Pengampu Baru</label>
                 <select id="new_user_id" name="new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
-                    <option value="" disabled selected>-- Pilih Guru Pengampu --</option>
+                    <option value="" disabled selected>-- Pilih Pengampu Baru --</option>
+                    <option value="kosong" class="font-semibold text-amber-700 bg-amber-50">🟡 Kosongkan Pengampu (Slot Terbuka / Tersedia untuk Diambil Guru)</option>
                     <?php foreach ($semua_guru as $g): ?>
                         <option value="<?= $g['id'] ?>">
                             <?= htmlspecialchars($g['nama_lengkap']) ?> (<?= $g['id'] == $user_id ? 'Admin' : 'Guru' ?>)
@@ -858,7 +903,8 @@ function tutupModalAlihkanSemuaGuru() {
             <div>
                 <label class="block text-xs font-semibold text-text-main mb-1" for="bulk_target_new_user_id">Pilih Pengampu Baru</label>
                 <select id="bulk_target_new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
-                    <option value="" disabled selected>-- Pilih Guru Pengampu --</option>
+                    <option value="" disabled selected>-- Pilih Pengampu Baru / Tindakan --</option>
+                    <option value="kosong" class="font-semibold text-amber-700 bg-amber-50">🟡 Kosongkan Pengampu (Slot Terbuka / Tersedia untuk Diambil Guru)</option>
                     <?php foreach ($semua_guru as $g): ?>
                         <option value="<?= $g['id'] ?>">
                             <?= htmlspecialchars($g['nama_lengkap']) ?> <?= ($g['id'] == $user_id) ? '(Admin - Ditampung Manual)' : '(Guru)' ?>
@@ -867,7 +913,7 @@ function tutupModalAlihkanSemuaGuru() {
                 </select>
                 <span class="text-[11px] text-text-muted mt-1.5 block">
                     <span class="material-symbols-outlined text-[13px] text-emerald-600 align-middle">info</span>
-                    Jika dialihkan ke Admin, jadwal otomatis berstatus Titipan Manual sehingga wali kelas bisa mengisi nilai.
+                    Pilih <strong>Kosongkan Pengampu</strong> agar jadwal bisa langsung dipilih sendiri oleh guru lain. Jika dialihkan ke Admin, jadwal berstatus Titipan Manual sehingga wali kelas bisa mengisi nilai.
                 </span>
             </div>
 
@@ -913,7 +959,8 @@ function tutupModalAlihkanSemuaGuru() {
             <div>
                 <label class="block text-xs font-semibold text-text-main mb-1" for="semua_new_user_id">Alihkan Semua Jadwal Ke:</label>
                 <select id="semua_new_user_id" name="new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
-                    <option value="" disabled selected>-- Pilih Guru Tujuan --</option>
+                    <option value="" disabled selected>-- Pilih Guru Tujuan / Tindakan --</option>
+                    <option value="kosong" class="font-semibold text-amber-700 bg-amber-50">🟡 Kosongkan Semua (Slot Terbuka / Siap Diambil Guru Lain)</option>
                     <?php foreach ($semua_guru as $g): ?>
                         <option value="<?= $g['id'] ?>">
                             <?= htmlspecialchars($g['nama_lengkap']) ?> <?= ($g['id'] == $user_id) ? '(Admin - Ditampung Manual)' : '(Guru)' ?>
@@ -921,7 +968,7 @@ function tutupModalAlihkanSemuaGuru() {
                     <?php endforeach; ?>
                 </select>
                 <span class="text-[11px] text-text-muted mt-1.5 block">
-                    Pilih <strong>Admin</strong> jika Anda ingin mengosongkan tugas guru ini dan menampungnya kembali sebagai mapel titipan sekolah.
+                    Pilih <strong>Kosongkan Semua</strong> agar jadwal terbuka untuk dipilih oleh guru baru/pengganti, atau pilih <strong>Admin</strong> jika ditampung sementara.
                 </span>
             </div>
 
