@@ -27,9 +27,9 @@ if (!$info) {
 
 // Cari ID Jadwal (schedule_id)
 $stmt_sched = $pdo->prepare("
-    SELECT ts.id, ts.user_id, u.nama_lengkap as nama_guru, u.role as owner_role
+    SELECT ts.id, ts.user_id, ts.is_manual, u.nama_lengkap as nama_guru, u.role as owner_role
     FROM teaching_schedules ts
-    JOIN users u ON ts.user_id = u.id
+    LEFT JOIN users u ON ts.user_id = u.id
     WHERE ts.class_id = ? AND ts.subject_id = ?
 ");
 $stmt_sched->execute([$class_id, $mapel_id]);
@@ -74,10 +74,20 @@ require_once '../components/header.php';
                 <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Entri Nilai Kelas</span>
                 <span class="text-slate-300">•</span>
                 <span class="text-xs font-bold text-primary"><?= htmlspecialchars($info['nama_kelas']) ?></span>
-                <?php if ($schedule['owner_role'] === 'admin'): ?>
+                <?php if (empty($schedule['user_id'])): ?>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
+                        Belum Ada Guru (Slot Terbuka)
+                    </span>
+                <?php elseif ($schedule['owner_role'] === 'admin' || (int)($schedule['is_manual'] ?? 0) === 1): ?>
                     <span class="text-slate-300">•</span>
                     <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
                         Entri Manual (Disetor)
+                    </span>
+                <?php elseif (!empty($schedule['nama_guru'])): ?>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                        Pengampu: <?= htmlspecialchars($schedule['nama_guru']) ?>
                     </span>
                 <?php endif; ?>
             </div>
