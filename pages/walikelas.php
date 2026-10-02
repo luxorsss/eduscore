@@ -53,27 +53,35 @@ if ($class_id) {
     $stmt_nilai->execute([$class_id]);
     $raw_grades = $stmt_nilai->fetchAll(PDO::FETCH_ASSOC);
 
+    // Matrix nilai akhir & Matrix nilai ujian murni
+    $matrix_akhir = [];
+    $matrix_ujian = [];
+
     // Proses perhitungan: (Harian * 20%) + (Ujian * 80%) + Tambahan -> Maksimal 100
     foreach ($raw_grades as $row) {
         $sid = $row['student_id'];
         $subid = $row['subject_id'];
-        $score = 0;
 
         if ($tipe_ujian === 'UTS') {
             $h = (float)($row['h_uts'] ?? 0);
-            $u = (float)($row['uts'] ?? 0);
+            $u_raw = $row['uts'];
+            $u = (float)($u_raw ?? 0);
             $t = (float)($row['tambahan_uts'] ?? 0);
         } else {
             $h = (float)($row['h_uas'] ?? 0);
-            $u = (float)($row['uas'] ?? 0);
+            $u_raw = $row['uas'];
+            $u = (float)($u_raw ?? 0);
             $t = (float)($row['tambahan_uas'] ?? 0);
         }
 
         $calc = ($h * 0.20) + ($u * 0.80) + $t;
         $final_score = min(100, $calc); // Limit max 100
 
-        $matrix[$sid][$subid] = round($final_score, 2);
+        $matrix_akhir[$sid][$subid] = round($final_score, 2);
+        $matrix_ujian[$sid][$subid] = ($u_raw !== null && $u_raw !== '') ? round((float)$u_raw, 2) : null;
     }
+
+    $matrix = $matrix_akhir; // Kompatibilitas
 }
 
 $page_title = "Rekap Wali Kelas - EduScore";
@@ -116,17 +124,30 @@ require_once '../components/header.php';
     
     <!-- Kontrol Tampilan & KKM -->
     <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface-card p-4 rounded-xl border border-border-main shadow-xs">
-        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg w-full md:w-auto">
-            <button type="button" onclick="setMode('siswa')" id="btnModeSiswa" class="flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors">
-                Orientasi Baris Siswa
-            </button>
-            <button type="button" onclick="setMode('mapel')" id="btnModeMapel" class="flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors">
-                Orientasi Baris Mapel
-            </button>
+        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+            <!-- Orientasi Baris -->
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+                <button type="button" onclick="setMode('siswa')" id="btnModeSiswa" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors">
+                    Orientasi Baris Siswa
+                </button>
+                <button type="button" onclick="setMode('mapel')" id="btnModeMapel" class="px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors">
+                    Orientasi Baris Mapel
+                </button>
+            </div>
+
+            <!-- Tipe Nilai (Akhir vs Ujian Murni) -->
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+                <button type="button" onclick="setScoreType('akhir')" id="btnScoreAkhir" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors">
+                    Nilai Akhir
+                </button>
+                <button type="button" onclick="setScoreType('ujian')" id="btnScoreUjian" class="px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors">
+                    Nilai Murni Ujian
+                </button>
+            </div>
         </div>
         
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-xs">
+            <div id="kkmContainer" class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-xs">
                 <label for="inputKkm" class="text-xs font-semibold text-text-muted">Batas KKM:</label>
                 <input type="number" id="inputKkm" value="75" min="0" max="100" oninput="updateKkm()" class="w-12 bg-transparent text-xs font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none tabular-nums">
             </div>
@@ -166,11 +187,11 @@ require_once '../components/header.php';
     <div class="bg-surface-card rounded-xl shadow-xs border border-border-main overflow-hidden">
         <div class="p-4 border-b border-border-main bg-slate-50 flex flex-wrap justify-between items-center gap-2">
             <div>
-                <h3 class="font-bold text-xs md:text-sm text-text-main">
+                <h3 id="tableTitle" class="font-bold text-xs md:text-sm text-text-main">
                     Rekap Nilai Akhir <?= htmlspecialchars($tipe_ujian) ?> — Kelas <?= htmlspecialchars($info_kelas) ?>
                 </h3>
             </div>
-            <span class="text-[11px] bg-slate-200 text-text-main px-2.5 py-1 rounded-md font-medium tabular-nums">
+            <span id="tableBadge" class="text-[11px] bg-slate-200 text-text-main px-2.5 py-1 rounded-md font-medium tabular-nums">
                 Rumus: (Harian × 20%) + (Ujian × 80%) + Tambahan
             </span>
         </div>
@@ -201,9 +222,13 @@ require_once '../components/header.php';
 <script>
     const rawStudents = <?= json_encode($students) ?>;
     const rawSubjects = <?= json_encode($subjects) ?>;
-    const gradeMatrix = <?= json_encode($matrix) ?>;
+    const matrixAkhir = <?= json_encode($matrix_akhir) ?>;
+    const matrixUjian = <?= json_encode($matrix_ujian) ?>;
+    const tipeUjianText = <?= json_encode($tipe_ujian) ?>;
+    const infoKelasText = <?= json_encode($info_kelas) ?>;
     
     let currentMode = 'siswa'; 
+    let currentScoreType = 'akhir'; // 'akhir' atau 'ujian'
     let currentStudents = [...rawStudents];
     let currentSubjects = [...rawSubjects];
     
@@ -217,6 +242,9 @@ require_once '../components/header.php';
 
     function getColorClass(score) {
         if (score === null || score === undefined) return 'text-slate-400';
+        if (currentScoreType === 'ujian') {
+            return 'text-text-main font-semibold';
+        }
         return score < kkmValue ? 'text-danger font-bold' : 'text-success font-semibold';
     }
 
@@ -231,11 +259,35 @@ require_once '../components/header.php';
         const btnMapel = document.getElementById('btnModeMapel');
         
         if (mode === 'siswa') {
-            btnSiswa.className = 'flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
-            btnMapel.className = 'flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
+            btnSiswa.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
+            btnMapel.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
         } else {
-            btnMapel.className = 'flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
-            btnSiswa.className = 'flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
+            btnMapel.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
+            btnSiswa.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
+        }
+        renderTable();
+    }
+
+    function setScoreType(type) {
+        currentScoreType = type;
+        const btnAkhir = document.getElementById('btnScoreAkhir');
+        const btnUjian = document.getElementById('btnScoreUjian');
+        const kkmContainer = document.getElementById('kkmContainer');
+        const tableTitle = document.getElementById('tableTitle');
+        const tableBadge = document.getElementById('tableBadge');
+
+        if (type === 'akhir') {
+            btnAkhir.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
+            btnUjian.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
+            if (kkmContainer) kkmContainer.classList.remove('hidden');
+            if (tableTitle) tableTitle.textContent = `Rekap Nilai Akhir ${tipeUjianText} — Kelas ${infoKelasText}`;
+            if (tableBadge) tableBadge.textContent = 'Rumus: (Harian × 20%) + (Ujian × 80%) + Tambahan';
+        } else {
+            btnUjian.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
+            btnAkhir.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
+            if (kkmContainer) kkmContainer.classList.add('hidden');
+            if (tableTitle) tableTitle.textContent = `Rekap Nilai Murni Ujian ${tipeUjianText} — Kelas ${infoKelasText}`;
+            if (tableBadge) tableBadge.textContent = `Nilai Murni Ujian (${tipeUjianText}) Tanpa Campuran`;
         }
         renderTable();
     }
@@ -244,6 +296,7 @@ require_once '../components/header.php';
         const container = document.getElementById('tableContainer');
         if (!container) return;
 
+        const activeMatrix = currentScoreType === 'akhir' ? matrixAkhir : matrixUjian;
         let html = '<table class="w-full text-left border-collapse text-xs tabular-nums" id="rekapTable">';
         
         if (currentMode === 'siswa') {
@@ -253,17 +306,21 @@ require_once '../components/header.php';
             currentSubjects.forEach(sub => {
                 html += `<th class="p-2.5 border-r border-border-main text-center min-w-[85px] max-w-[120px] whitespace-normal leading-tight" title="${sub.nama_mapel}">${sub.nama_mapel}</th>`;
             });
-            html += `<th class="p-2.5 font-bold border-border-main text-center bg-primary-subtle text-primary min-w-[90px]">RATA-RATA</th>`;
+            if (currentScoreType === 'akhir') {
+                html += `<th class="p-2.5 font-bold border-border-main text-center bg-primary-subtle text-primary min-w-[90px]">RATA-RATA</th>`;
+            }
             html += `</tr></thead><tbody class="divide-y divide-border-main">`;
             
-            // Baris KKM
-            html += `<tr class="bg-slate-50/80 text-text-main kkm-row font-semibold">
-                        <td class="p-3 border-r border-border-main sticky left-0 z-10 bg-slate-100 shadow-xs font-bold text-primary">BATAS KKM</td>`;
-            currentSubjects.forEach(() => {
-                html += `<td class="p-2.5 border-r border-border-main text-center text-text-muted">${kkmValue}</td>`;
-            });
-            html += `<td class="p-2.5 text-center font-bold text-primary bg-primary-subtle">${kkmValue}</td>`;
-            html += `</tr>`;
+            // Baris KKM (hanya tampil di mode nilai akhir)
+            if (currentScoreType === 'akhir') {
+                html += `<tr class="bg-slate-50/80 text-text-main kkm-row font-semibold">
+                            <td class="p-3 border-r border-border-main sticky left-0 z-10 bg-slate-100 shadow-xs font-bold text-primary">BATAS KKM</td>`;
+                currentSubjects.forEach(() => {
+                    html += `<td class="p-2.5 border-r border-border-main text-center text-text-muted">${kkmValue}</td>`;
+                });
+                html += `<td class="p-2.5 text-center font-bold text-primary bg-primary-subtle">${kkmValue}</td>`;
+                html += `</tr>`;
+            }
 
             // Baris Data Siswa
             currentStudents.forEach(stu => {
@@ -274,7 +331,7 @@ require_once '../components/header.php';
                             <td class="p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-nowrap truncate max-w-[220px] shadow-xs" title="${stu.nama}">${stu.nama}</td>`;
                 
                 currentSubjects.forEach(sub => {
-                    let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
+                    let score = activeMatrix[stu.id] && activeMatrix[stu.id][sub.id] !== undefined ? activeMatrix[stu.id][sub.id] : null;
                     if (score !== null) {
                         totalScore += parseFloat(score);
                         count++;
@@ -282,14 +339,19 @@ require_once '../components/header.php';
                     html += `<td class="p-2.5 border-r border-border-main text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
 
-                let avg = count > 0 ? (totalScore / count) : null;
-                html += `<td class="p-2.5 text-center font-bold whitespace-nowrap ${getColorClass(avg)} bg-slate-50">${fNum(avg)}</td>`;
+                if (currentScoreType === 'akhir') {
+                    let avg = count > 0 ? (totalScore / count) : null;
+                    html += `<td class="p-2.5 text-center font-bold whitespace-nowrap ${getColorClass(avg)} bg-slate-50">${fNum(avg)}</td>`;
+                }
                 html += `</tr>`;
             });
         } else {
             html += `<thead><tr class="bg-slate-50 text-text-muted text-[11px] uppercase tracking-wider font-semibold border-b border-border-main">
-                        <th class="p-3 border-r border-border-main sticky left-0 z-20 bg-slate-50 min-w-[150px] max-w-[200px] shadow-xs">Mata Pelajaran</th>
-                        <th class="p-2.5 border-r border-border-main bg-primary-subtle text-primary text-center min-w-[65px]">KKM</th>`;
+                        <th class="p-3 border-r border-border-main sticky left-0 z-20 bg-slate-50 min-w-[150px] max-w-[200px] shadow-xs">Mata Pelajaran</th>`;
+            
+            if (currentScoreType === 'akhir') {
+                html += `<th class="p-2.5 border-r border-border-main bg-primary-subtle text-primary text-center min-w-[65px]">KKM</th>`;
+            }
             
             currentStudents.forEach(stu => {
                 html += `<th class="p-2.5 border-r border-border-main text-center min-w-[90px] max-w-[120px] whitespace-normal leading-tight" title="${stu.nama}">${stu.nama}</th>`;
@@ -301,11 +363,14 @@ require_once '../components/header.php';
 
             currentSubjects.forEach(sub => {
                 html += `<tr class="hover:bg-slate-50 transition-colors">
-                            <td class="p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-normal leading-tight shadow-xs">${sub.nama_mapel}</td>
-                            <td class="p-2.5 border-r border-border-main text-center font-semibold text-text-muted bg-slate-50">${kkmValue}</td>`; 
+                            <td class="p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-normal leading-tight shadow-xs">${sub.nama_mapel}</td>`;
+                
+                if (currentScoreType === 'akhir') {
+                    html += `<td class="p-2.5 border-r border-border-main text-center font-semibold text-text-muted bg-slate-50">${kkmValue}</td>`;
+                }
                 
                 currentStudents.forEach(stu => {
-                    let score = gradeMatrix[stu.id] && gradeMatrix[stu.id][sub.id] !== undefined ? gradeMatrix[stu.id][sub.id] : null;
+                    let score = activeMatrix[stu.id] && activeMatrix[stu.id][sub.id] !== undefined ? activeMatrix[stu.id][sub.id] : null;
                     if (score !== null) {
                         colTotals[stu.id] = (colTotals[stu.id] || 0) + parseFloat(score);
                         colCounts[stu.id] = (colCounts[stu.id] || 0) + 1;
@@ -315,28 +380,54 @@ require_once '../components/header.php';
                 html += `</tr>`;
             });
 
-            // Baris Rata-rata
-            html += `<tr class="bg-slate-50/80 font-semibold avg-row">
-                        <td class="p-3 border-r border-border-main font-bold text-primary sticky left-0 z-10 bg-slate-100 shadow-xs">RATA-RATA SISWA</td>
-                        <td class="p-2.5 border-r border-border-main text-center text-text-muted">${kkmValue}</td>`;
-            currentStudents.forEach(stu => {
-                let avg = colCounts[stu.id] > 0 ? (colTotals[stu.id] / colCounts[stu.id]) : null;
-                html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap ${getColorClass(avg)}">${fNum(avg)}</td>`;
-            });
-            html += `</tr>`;
+            // Baris Rata-rata (hanya tampil di mode nilai akhir)
+            if (currentScoreType === 'akhir') {
+                html += `<tr class="bg-slate-50/80 font-semibold avg-row">
+                            <td class="p-3 border-r border-border-main font-bold text-primary sticky left-0 z-10 bg-slate-100 shadow-xs">RATA-RATA SISWA</td>
+                            <td class="p-2.5 border-r border-border-main text-center text-text-muted">${kkmValue}</td>`;
+                currentStudents.forEach(stu => {
+                    let avg = colCounts[stu.id] > 0 ? (colTotals[stu.id] / colCounts[stu.id]) : null;
+                    html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap ${getColorClass(avg)}">${fNum(avg)}</td>`;
+                });
+                html += `</tr>`;
+            }
         }
         
         html += `</tbody></table>`;
         container.innerHTML = html;
     }
 
-    function customSort(originalArray, textInput, fieldName) {
+    function cleanMapelName(str) {
+        if (!str) return '';
+        return str
+            .toLowerCase()
+            // Hapus tanda kurung berisi angka, misal: (1) atau ( 2 )
+            .replace(/\(\s*\d+\s*\)/g, '')
+            // Hapus pemisah dan angka di akhir nama, misal: " 1", " - 2", ".3"
+            .replace(/[\s\-_.]+\d+[\s\-_.]*$/g, '')
+            // Rapikan spasi berlebih
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function customSort(originalArray, textInput, fieldName, isMapel = false) {
         const lines = textInput.split(/\r?\n/).map(n => n.trim().toLowerCase()).filter(n => n);
         if (lines.length === 0) return [...originalArray];
         let matched = [];
         let remaining = [...originalArray];
         lines.forEach(line => {
-            const index = remaining.findIndex(item => item[fieldName].toLowerCase() === line);
+            // 1. Coba exact match terlebih dahulu
+            let index = remaining.findIndex(item => item[fieldName].toLowerCase() === line);
+
+            // 2. Jika mapel dan belum cocok, coba bandingkan setelah angka/format dibersihkan
+            if (index === -1 && isMapel) {
+                const cleanedLine = cleanMapelName(line);
+                index = remaining.findIndex(item => {
+                    const cleanedItem = cleanMapelName(item[fieldName]);
+                    return cleanedItem === cleanedLine || cleanedItem === line || item[fieldName].toLowerCase() === cleanedLine;
+                });
+            }
+
             if (index > -1) matched.push(remaining.splice(index, 1)[0]);
         });
         return matched.concat(remaining);
@@ -345,8 +436,8 @@ require_once '../components/header.php';
     function terapkanUrutan() {
         const valSiswa = document.getElementById('urutSiswa').value;
         const valMapel = document.getElementById('urutMapel').value;
-        currentStudents = customSort(rawStudents, valSiswa, 'nama');
-        currentSubjects = customSort(rawSubjects, valMapel, 'nama_mapel');
+        currentStudents = customSort(rawStudents, valSiswa, 'nama', false);
+        currentSubjects = customSort(rawSubjects, valMapel, 'nama_mapel', true);
         renderTable();
         Swal.fire({
             icon: 'success',
