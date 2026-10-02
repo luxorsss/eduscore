@@ -111,17 +111,55 @@ require_once '../components/header.php';
             </p>
         </div>
 
-        <div class="flex items-center gap-3 w-full md:w-auto">
-            <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center flex-1 md:flex-none">
-                <span class="text-[11px] font-medium text-text-muted block">Kelas Diampu</span>
-                <span class="text-base font-bold text-text-main tabular-nums"><?= count($kelas_list) ?></span>
-            </div>
-            <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center flex-1 md:flex-none">
-                <span class="text-[11px] font-medium text-text-muted block">Jadwal Mapel</span>
-                <span class="text-base font-bold text-text-main tabular-nums"><?= count($jadwal_list) ?></span>
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <button type="button" onclick="bukaModalPanduan()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-text-main text-xs font-semibold shadow-2xs transition-colors cursor-pointer w-full sm:w-auto justify-center">
+                <span class="material-symbols-outlined text-base text-primary">menu_book</span>
+                <span>Panduan Pengajar</span>
+            </button>
+            <div class="flex items-center gap-3 flex-1 sm:flex-none">
+                <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center flex-1 sm:flex-none">
+                    <span class="text-[11px] font-medium text-text-muted block">Kelas Diampu</span>
+                    <span class="text-base font-bold text-text-main tabular-nums"><?= count($kelas_list) ?></span>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center flex-1 sm:flex-none">
+                    <span class="text-[11px] font-medium text-text-muted block">Jadwal Mapel</span>
+                    <span class="text-base font-bold text-text-main tabular-nums"><?= count($jadwal_list) ?></span>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Onboarding Card untuk Guru yang Belum Mengambil Jadwal -->
+    <?php if (!$is_admin && empty($jadwal_list)): ?>
+        <div class="bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-white rounded-xl border border-blue-200/80 p-5 md:p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <span class="material-symbols-outlined text-2xl">school</span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary-subtle px-2 py-0.5 rounded-full">Langkah Awal Guru Baru</span>
+                    </div>
+                    <h3 class="text-sm md:text-base font-bold text-text-main mt-1">
+                        Selamat datang di EduScore! Mulai dengan menentukan jadwal mengajar Anda.
+                    </h3>
+                    <p class="text-xs text-text-muted mt-1 max-w-2xl leading-relaxed">
+                        Akun Anda belum memiliki mata pelajaran yang diampu. Silakan tentukan mata pelajaran dan kelas yang Anda ajar agar formulir pengisian nilai aktif.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2.5 w-full md:w-auto shrink-0">
+                <button type="button" onclick="bukaModalPanduan()" class="w-full md:w-auto px-4 py-2.5 text-xs font-semibold rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-text-main transition-colors shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-base text-primary">help_outline</span>
+                    <span>Pelajari Alur</span>
+                </button>
+                <a href="jadwal.php" class="w-full md:w-auto px-4 py-2.5 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors shadow-xs flex items-center justify-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">calendar_add_on</span>
+                    <span>Atur Jadwal</span>
+                </a>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <!-- Alert Notifikasi Akses -->
     <?php if (isset($_GET['pesan'])): ?>
@@ -405,7 +443,185 @@ require_once '../components/header.php';
     selectKelas.addEventListener('change', updateDropdownMapel);
 
     updateDropdownKelas();
+
+    // Fungsi Modal Panduan Pengajar
+    function bukaModalPanduan(defaultTab = 'guru') {
+        const modal = document.getElementById('modalPanduanPengajar');
+        if (modal) {
+            modal.classList.remove('hidden');
+            gantiTabPanduan(defaultTab);
+        }
+    }
+
+    function tutupModalPanduan() {
+        const modal = document.getElementById('modalPanduanPengajar');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    function gantiTabPanduan(tab) {
+        const tabGuru = document.getElementById('tabContentGuru');
+        const tabWali = document.getElementById('tabContentWali');
+        const btnGuru = document.getElementById('btnTabGuru');
+        const btnWali = document.getElementById('btnTabWali');
+
+        if (tab === 'guru') {
+            tabGuru.classList.remove('hidden');
+            tabWali.classList.add('hidden');
+            btnGuru.className = "flex-1 py-2.5 px-4 text-xs font-bold border-b-2 border-primary text-primary bg-primary-subtle/30 transition-colors flex items-center justify-center gap-1.5";
+            btnWali.className = "flex-1 py-2.5 px-4 text-xs font-semibold border-b-2 border-transparent text-text-muted hover:text-text-main transition-colors flex items-center justify-center gap-1.5";
+        } else {
+            tabGuru.classList.add('hidden');
+            tabWali.classList.remove('hidden');
+            btnWali.className = "flex-1 py-2.5 px-4 text-xs font-bold border-b-2 border-primary text-primary bg-primary-subtle/30 transition-colors flex items-center justify-center gap-1.5";
+            btnGuru.className = "flex-1 py-2.5 px-4 text-xs font-semibold border-b-2 border-transparent text-text-muted hover:text-text-main transition-colors flex items-center justify-center gap-1.5";
+        }
+    }
 </script>
+
+<!-- Modal Panduan Alur Kerja Pengajar -->
+<div id="modalPanduanPengajar" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 hidden p-4">
+    <div class="bg-surface-card rounded-2xl border border-border-main shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden animate-fadeIn">
+        
+        <!-- Header Modal -->
+        <div class="p-5 border-b border-border-main flex items-center justify-between bg-slate-50/70">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <span class="material-symbols-outlined text-xl">menu_book</span>
+                </div>
+                <div>
+                    <h3 class="text-sm md:text-base font-bold text-text-main">Panduan Alur Pengajar</h3>
+                    <p class="text-[11px] text-text-muted">Petunjuk langkah awal untuk Guru Pengajar dan Wali Kelas</p>
+                </div>
+            </div>
+            <button type="button" onclick="tutupModalPanduan()" class="text-text-muted hover:text-danger p-1.5 rounded-lg transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+
+        <!-- Tab Selector -->
+        <div class="flex border-b border-border-main bg-white">
+            <button type="button" id="btnTabGuru" onclick="gantiTabPanduan('guru')" class="flex-1 py-2.5 px-4 text-xs font-bold border-b-2 border-primary text-primary bg-primary-subtle/30 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                <span class="material-symbols-outlined text-base">school</span>
+                <span>Alur Guru Mapel</span>
+            </button>
+            <button type="button" id="btnTabWali" onclick="gantiTabPanduan('wali')" class="flex-1 py-2.5 px-4 text-xs font-semibold border-b-2 border-transparent text-text-muted hover:text-text-main transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                <span class="material-symbols-outlined text-base">assignment_ind</span>
+                <span>Khusus Wali Kelas</span>
+            </button>
+        </div>
+
+        <!-- Body Konten Panduan (Scrollable) -->
+        <div class="p-5 sm:p-6 overflow-y-auto custom-scroll flex flex-col gap-4 text-xs">
+            
+            <!-- KONTEN TAB 1: GURU MAPEL -->
+            <div id="tabContentGuru" class="flex flex-col gap-4">
+                
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-lg bg-primary-subtle text-primary font-bold flex items-center justify-center shrink-0 text-xs">
+                        1
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-text-main text-xs">Tentukan Jadwal Mengajar Anda</h4>
+                        <p class="text-text-muted text-[11px] mt-1 leading-relaxed">
+                            Buka menu <strong class="text-text-main">Jadwal Mengajar</strong>. Pilih jenjang, kelas, dan mata pelajaran yang Anda ampu pada semester ini, lalu klik tombol Simpan.
+                        </p>
+                        <div class="mt-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-start gap-1.5">
+                            <span class="material-symbols-outlined text-xs shrink-0 mt-0.5">info</span>
+                            <span>Jika mata pelajaran Anda belum ada pada daftar pilihan, hubungi Administrator sistem untuk menambahkannya ke master mata pelajaran.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-lg bg-primary-subtle text-primary font-bold flex items-center justify-center shrink-0 text-xs">
+                        2
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-text-main text-xs">Input & Simpan Nilai Siswa</h4>
+                        <p class="text-text-muted text-[11px] mt-1 leading-relaxed">
+                            Pada Dashboard, pilih jenjang, kelas, dan mata pelajaran yang sudah Anda ambil. Tentukan kategori ujian (Harian UTS, Ujian UTS, UAS, dll.) lalu masukkan nilai siswa per kelas.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-lg bg-primary-subtle text-primary font-bold flex items-center justify-center shrink-0 text-xs">
+                        3
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-text-main text-xs">Pantau Analisis Hasil Belajar</h4>
+                        <p class="text-text-muted text-[11px] mt-1 leading-relaxed">
+                            Buka menu <strong class="text-text-main">Analisis Nilai</strong> untuk melihat ketuntasan belajar, nilai tertinggi/terendah, dan rata-rata kelas secara otomatis.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- KONTEN TAB 2: KHUSUS WALI KELAS -->
+            <div id="tabContentWali" class="flex flex-col gap-4 hidden">
+                
+                <div class="p-4 rounded-xl border border-primary/20 bg-primary-subtle/20 flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-lg bg-primary text-white font-bold flex items-center justify-center shrink-0 text-xs">
+                        1
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-text-main text-xs">Pantau Rekap Nilai Seluruh Mapel</h4>
+                        <p class="text-text-muted text-[11px] mt-1 leading-relaxed">
+                            Buka menu <strong class="text-text-main">Rekap Nilai Wali Kelas</strong>. Nilai yang telah diinput oleh guru mata pelajaran lain akan otomatis terkumpul di tabel kelas binaan Anda secara real-time.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl border border-amber-200 bg-amber-50/50 flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-lg bg-amber-600 text-white font-bold flex items-center justify-center shrink-0 text-xs">
+                        2
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-amber-900 text-xs">Entri Nilai Mapel Offline / Manual</h4>
+                        <p class="text-amber-800 text-[11px] mt-1 leading-relaxed">
+                            Jika ada guru yang belum memiliki akun aplikasi dan mengirim nilai secara offline (kertas/excel), mapel tersebut sementara berstatus titipan di akun Admin. Anda berhak langsung menginput nilainya lewat tombol edit pada tabel rekap kelas binaan Anda.
+                        </p>
+                        <p class="text-amber-700 text-[10px] mt-1.5 italic">
+                            *Catatan: Saat guru bersangkutan mendaftar akun, Admin akan mengalihkan jadwal ke guru tersebut dan status Anda otomatis menjadi pemantau (read-only).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-lg bg-primary-subtle text-primary font-bold flex items-center justify-center shrink-0 text-xs">
+                        3
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-text-main text-xs">Jurnal Catatan Sikap & Perilaku Siswa</h4>
+                        <p class="text-text-muted text-[11px] mt-1 leading-relaxed">
+                            Gunakan menu <strong class="text-text-main">Catatan Siswa</strong> atau <strong class="text-text-main">Bulk Catatan</strong> untuk mencatat kedisiplinan dan kejadian penting. Rekapitulasi per siswa dapat dipantau di <strong class="text-text-main">Summary Catatan</strong>.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="p-4 border-t border-border-main bg-slate-50/70 flex items-center justify-between gap-3">
+            <span class="text-[11px] text-text-muted">Butuh bantuan lain? Hubungi Admin sekolah.</span>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="tutupModalPanduan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-200 hover:bg-slate-300 text-text-main transition-colors cursor-pointer">
+                    Tutup
+                </button>
+                <a href="jadwal.php" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer flex items-center gap-1">
+                    <span>Atur Jadwal</span>
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 <?php 
 require_once '../components/footer.php'; 
