@@ -26,6 +26,23 @@ function getRedirectUrl($filter_kelas = null, $filter_guru = null, $pesan = null
     return $url;
 }
 
+// -1. TOGGLE STATUS MANUAL / DIAJAR SENDIRI (Khusus Admin)
+if (isset($_GET['toggle_manual'])) {
+    require_admin();
+    $jadwal_id = (int)$_GET['toggle_manual'];
+    $redirect_filter_kelas = $_GET['redirect_filter_kelas'] ?? null;
+    $redirect_filter_guru = $_GET['redirect_filter_guru'] ?? null;
+
+    if ($jadwal_id > 0) {
+        $stmt_toggle = $pdo->prepare("UPDATE teaching_schedules SET is_manual = IF(is_manual = 1, 0, 1) WHERE id = ?");
+        $stmt_toggle->execute([$jadwal_id]);
+        header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_status'));
+        exit();
+    }
+    header("Location: jadwal.php");
+    exit();
+}
+
 // 0. ALIKHAN PENGAMPU (Khusus Admin: Transfer Jadwal & Nilai ke Guru Baru)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'alihkan_pengampu') {
     require_admin();
@@ -35,8 +52,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     $redirect_filter_guru = !empty($_POST['redirect_filter_guru']) ? $_POST['redirect_filter_guru'] : null;
 
     if ($jadwal_id > 0 && $new_user_id > 0) {
-        $stmt_update = $pdo->prepare("UPDATE teaching_schedules SET user_id = ? WHERE id = ?");
-        $stmt_update->execute([$new_user_id, $jadwal_id]);
+        $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+        $stmt_user->execute([$new_user_id]);
+        $new_role = $stmt_user->fetchColumn();
+        $new_is_manual = ($new_role === 'admin') ? 1 : 0;
+
+        $stmt_update = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE id = ?");
+        $stmt_update->execute([$new_user_id, $new_is_manual, $jadwal_id]);
         header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_alihkan'));
         exit();
     }
@@ -53,6 +75,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     $assignee_id = $user_id;
     if ($is_admin && !empty($_POST['target_user_id'])) {
         $assignee_id = (int)$_POST['target_user_id'];
+    }
+
+    $is_manual = 0;
+    if ($is_admin && isset($_POST['is_manual'])) {
+        $is_manual = (int)$_POST['is_manual'] === 1 ? 1 : 0;
     }
 
     if ($mode === 'kelas_to_mapel') {
@@ -85,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
 
         // Cek apakah kombinasi (class_id, subject_id) SUDAH diampu siapapun (Strictly 1 guru per mapel per kelas)
         $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM teaching_schedules WHERE class_id = ? AND subject_id = ?");
-        $stmt_insert = $pdo->prepare("INSERT INTO teaching_schedules (user_id, class_id, subject_id) VALUES (?, ?, ?)");
+        $stmt_insert = $pdo->prepare("INSERT INTO teaching_schedules (user_id, class_id, subject_id, is_manual) VALUES (?, ?, ?, ?)");
 
         $berhasil = 0;
         $dilewati = 0;
@@ -96,7 +123,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
 
             $stmt_check->execute([$cid, $sid]);
             if ($stmt_check->fetchColumn() == 0) {
-                $stmt_insert->execute([$assignee_id, $cid, $sid]);
+                $stmt_insert->execute([$assignee_id, $cid, $sid, $is_manual]);
                 $berhasil++;
             } else {
                 $dilewati++;

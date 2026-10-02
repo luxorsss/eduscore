@@ -46,7 +46,7 @@ if ($class_id) {
 
     // Ambil Mapel yang diajarkan di kelas ini beserta data pengampu
     $stmt_mapel = $pdo->prepare("
-        SELECT DISTINCT s.id, s.nama_mapel, ts.user_id as teacher_id, u.nama_lengkap as nama_guru, u.role as guru_role
+        SELECT DISTINCT s.id, s.nama_mapel, ts.user_id as teacher_id, ts.is_manual, u.nama_lengkap as nama_guru, u.role as guru_role
         FROM teaching_schedules ts
         JOIN subjects s ON ts.subject_id = s.id
         JOIN users u ON ts.user_id = u.id
@@ -57,7 +57,7 @@ if ($class_id) {
     $raw_subs = $stmt_mapel->fetchAll(PDO::FETCH_ASSOC);
     $subjects = [];
     foreach ($raw_subs as $rs) {
-        $can_edit = $is_admin || ($user_id == $rs['teacher_id']) || ($rs['guru_role'] === 'admin');
+        $can_edit = $is_admin || ($user_id == $rs['teacher_id']) || ((int)$rs['is_manual'] === 1);
         $rs['can_edit'] = $can_edit;
         $subjects[] = $rs;
     }
@@ -218,13 +218,13 @@ require_once '../components/header.php';
                     <div class="min-w-0">
                         <span class="font-bold text-xs text-text-main block truncate"><?= htmlspecialchars($s['nama_mapel']) ?></span>
                         <div class="flex items-center gap-1.5 mt-0.5">
-                            <?php if ($s['guru_role'] === 'admin'): ?>
+                            <?php if ((int)$s['is_manual'] === 1): ?>
                                 <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                                    Manual (Disetor)
+                                    Manual (Titipan Disetor)
                                 </span>
                             <?php else: ?>
                                 <span class="text-[10px] text-text-muted truncate">
-                                    Guru: <?= htmlspecialchars($s['nama_guru']) ?>
+                                    Pengampu: <?= htmlspecialchars($s['nama_guru']) ?>
                                 </span>
                             <?php endif; ?>
                         </div>

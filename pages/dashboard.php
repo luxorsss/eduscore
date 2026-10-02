@@ -39,9 +39,9 @@ if ($is_admin) {
     ");
     $jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
 } else {
-    // Guru: mapel yang diampu sendiri + mapel manual di kelas binaannya
+    // Guru: mapel yang diampu sendiri + mapel manual di kelas binaannya (is_manual = 1)
     $sql_jadwal = "
-        SELECT ts.id as schedule_id, ts.class_id, c.nama_kelas, c.jenjang, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru, u.role as owner_role
+        SELECT ts.id as schedule_id, ts.class_id, ts.is_manual, c.nama_kelas, c.jenjang, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru, u.role as owner_role
         FROM teaching_schedules ts 
         JOIN classes c ON ts.class_id = c.id
         JOIN subjects s ON ts.subject_id = s.id 
@@ -50,7 +50,7 @@ if ($is_admin) {
     ";
     $params = [$user_id];
     if ($user_wk) {
-        $sql_jadwal .= " OR (c.id = ? AND u.role = 'admin')";
+        $sql_jadwal .= " OR (c.id = ? AND ts.is_manual = 1)";
         $params[] = $user_wk['id'];
     }
     $sql_jadwal .= " ORDER BY c.jenjang, c.nama_kelas, s.nama_mapel";
@@ -79,7 +79,7 @@ foreach ($jadwal_list as $row) {
     $label_mapel = $row['nama_mapel'];
     if ($is_admin && !empty($row['nama_guru'])) {
         $label_mapel .= ' (' . $row['nama_guru'] . ')';
-    } elseif ($row['owner_role'] === 'admin' && !$is_admin) {
+    } elseif ((int)($row['is_manual'] ?? 0) === 1 && !$is_admin) {
         $label_mapel .= ' (Manual / Binaan)';
     }
     $mapel_per_kelas[$row['class_id']][] = [
@@ -339,7 +339,7 @@ require_once '../components/header.php';
                                         <?= htmlspecialchars($jdw['nama_mapel']) ?> (<?= htmlspecialchars($jdw['jenjang']) ?>)
                                         <?php if ($is_admin && !empty($jdw['nama_guru'])): ?>
                                             &bull; <span class="text-slate-500 font-medium"><?= htmlspecialchars($jdw['nama_guru']) ?></span>
-                                        <?php elseif (!$is_admin && $jdw['owner_role'] === 'admin'): ?>
+                                        <?php elseif (!$is_admin && (int)($jdw['is_manual'] ?? 0) === 1): ?>
                                             &bull; <span class="text-amber-600 font-medium">Manual Binaan</span>
                                         <?php endif; ?>
                                     </span>

@@ -28,8 +28,8 @@ $filter_guru = ($is_admin && isset($_GET['filter_guru']) && $_GET['filter_guru']
 
 // 5. Query Jadwal Aktif
 $sql_jadwal = "
-    SELECT ts.id as jadwal_id, ts.class_id, ts.subject_id, ts.user_id, 
-           u.nama_lengkap as nama_guru, u.username as username_guru,
+    SELECT ts.id as jadwal_id, ts.class_id, ts.subject_id, ts.user_id, ts.is_manual,
+           u.nama_lengkap as nama_guru, u.username as username_guru, u.role as guru_role,
            c.nama_kelas, c.jenjang, s.nama_mapel 
     FROM teaching_schedules ts
     JOIN classes c ON ts.class_id = c.id
@@ -116,6 +116,11 @@ require_once '../components/header.php';
                 <span class="material-symbols-outlined text-base">check_circle</span>
                 <span>Pengampu jadwal mengajar berhasil dialihkan! Seluruh riwayat nilai siswa tetap terjaga utuh.</span>
             </div>
+        <?php elseif ($_GET['pesan'] == 'sukses_status'): ?>
+            <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                <span>Sifat penugasan jadwal berhasil diperbarui (Diajar Sendiri / Titipan Manual).</span>
+            </div>
         <?php elseif ($_GET['pesan'] == 'sukses_hapus'): ?>
             <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
                 <span class="material-symbols-outlined text-base">check_circle</span>
@@ -184,6 +189,24 @@ require_once '../components/header.php';
                             <?php endforeach; ?>
                         </select>
                     </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-text-main">Sifat Penugasan (Jika Dipegang Admin)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="is_manual" value="0" checked class="peer sr-only">
+                                <div class="p-2 rounded-lg border border-slate-300 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-800 text-[11px] font-semibold transition-colors">
+                                    Diajar Sendiri
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="is_manual" value="1" class="peer sr-only">
+                                <div class="p-2 rounded-lg border border-slate-300 text-center peer-checked:border-amber-600 peer-checked:bg-amber-50 peer-checked:text-amber-800 text-[11px] font-semibold transition-colors">
+                                    Titipan Manual
+                                </div>
+                            </label>
+                        </div>
+                    </div>
                     <?php endif; ?>
 
                     <div class="flex flex-col gap-1.5">
@@ -234,6 +257,24 @@ require_once '../components/header.php';
                                 </option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-text-main">Sifat Penugasan (Jika Dipegang Admin)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="is_manual" value="0" checked class="peer sr-only">
+                                <div class="p-2 rounded-lg border border-slate-300 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-800 text-[11px] font-semibold transition-colors">
+                                    Diajar Sendiri
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="is_manual" value="1" class="peer sr-only">
+                                <div class="p-2 rounded-lg border border-slate-300 text-center peer-checked:border-amber-600 peer-checked:bg-amber-50 peer-checked:text-amber-800 text-[11px] font-semibold transition-colors">
+                                    Titipan Manual
+                                </div>
+                            </label>
+                        </div>
                     </div>
                     <?php endif; ?>
 
@@ -355,10 +396,34 @@ require_once '../components/header.php';
                                                 </span>
                                                 <?php if ($is_admin): ?>
                                                     <span class="text-slate-300">•</span>
-                                                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+                                                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700">
                                                         <span class="material-symbols-outlined text-[13px]">person</span>
                                                         <?= htmlspecialchars($jadwal['nama_guru']) ?>
                                                     </span>
+                                                    <?php if ($jadwal['guru_role'] === 'admin'): ?>
+                                                        <?php if ((int)$jadwal['is_manual'] === 1): ?>
+                                                            <a href="proses_jadwal.php?toggle_manual=<?= $jadwal['jadwal_id'] ?>&redirect_filter_kelas=<?= urlencode((string)$filter_kelas) ?>&redirect_filter_guru=<?= urlencode((string)$filter_guru) ?>" 
+                                                               class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
+                                                               title="Klik untuk ubah menjadi: Diajar Sendiri oleh Admin">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                                <span>Titipan Manual (Wali Kelas Boleh Input)</span>
+                                                                <span class="material-symbols-outlined text-[11px]">sync</span>
+                                                            </a>
+                                                        <?php else: ?>
+                                                            <a href="proses_jadwal.php?toggle_manual=<?= $jadwal['jadwal_id'] ?>&redirect_filter_kelas=<?= urlencode((string)$filter_kelas) ?>&redirect_filter_guru=<?= urlencode((string)$filter_guru) ?>" 
+                                                               class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                                                               title="Klik untuk ubah menjadi: Titipan Manual (Wali Kelas Boleh Input)">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                                <span>Diajar Sendiri (Wali Kelas Terkunci)</span>
+                                                                <span class="material-symbols-outlined text-[11px]">sync</span>
+                                                            </a>
+                                                        <?php endif; ?>
+                                                    <?php else: ?>
+                                                        <span class="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                                            <span>Diajar Guru Resmi</span>
+                                                        </span>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                             </p>
                                         </div>
