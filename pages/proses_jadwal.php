@@ -66,6 +66,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     exit();
 }
 
+// 0.1 BULK ALIKHAN PENGAMPU (Khusus Admin: Alihkan Banyak Jadwal Sekaligus)
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'bulk_alihkan') {
+    require_admin();
+    $jadwal_ids = isset($_POST['jadwal_ids']) && is_array($_POST['jadwal_ids']) ? array_map('intval', $_POST['jadwal_ids']) : [];
+    $new_user_id = (int)($_POST['new_user_id'] ?? 0);
+    $redirect_filter_kelas = !empty($_POST['redirect_filter_kelas']) ? $_POST['redirect_filter_kelas'] : null;
+    $redirect_filter_guru = !empty($_POST['redirect_filter_guru']) ? $_POST['redirect_filter_guru'] : null;
+
+    if (!empty($jadwal_ids) && $new_user_id > 0) {
+        $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+        $stmt_user->execute([$new_user_id]);
+        $new_role = $stmt_user->fetchColumn();
+        $new_is_manual = ($new_role === 'admin') ? 1 : 0;
+
+        $inClause = implode(',', array_fill(0, count($jadwal_ids), '?'));
+        $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE id IN ($inClause)");
+        $params = array_merge([$new_user_id, $new_is_manual], $jadwal_ids);
+        $stmt->execute($params);
+
+        header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_bulk_alihkan'));
+        exit();
+    }
+    header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'kosong'));
+    exit();
+}
+
+// 0.2 ALIKHAN SEMUA JADWAL DARI GURU TERTENTU (Khusus Admin: Kosongkan Jadwal Guru Agar Bisa Dihapus)
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'alihkan_semua_guru') {
+    require_admin();
+    $from_user_id = (int)($_POST['from_user_id'] ?? 0);
+    $new_user_id = (int)($_POST['new_user_id'] ?? 0);
+    $redirect_filter_kelas = !empty($_POST['redirect_filter_kelas']) ? $_POST['redirect_filter_kelas'] : null;
+
+    if ($from_user_id > 0 && $new_user_id > 0) {
+        $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+        $stmt_user->execute([$new_user_id]);
+        $new_role = $stmt_user->fetchColumn();
+        $new_is_manual = ($new_role === 'admin') ? 1 : 0;
+
+        $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = ?, is_manual = ? WHERE user_id = ?");
+        $stmt->execute([$new_user_id, $new_is_manual, $from_user_id]);
+
+        header("Location: " . getRedirectUrl($redirect_filter_kelas, null, 'sukses_alihkan_semua'));
+        exit();
+    }
+    header("Location: jadwal.php");
+    exit();
+}
+
 // 1. TAMBAH JADWAL (Single, Bulk Mapel per Kelas, & Bulk Kelas per Mapel)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'tambah') {
     $mode = $_POST['mode'] ?? 'kelas_to_mapel';

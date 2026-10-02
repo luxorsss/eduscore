@@ -116,6 +116,16 @@ require_once '../components/header.php';
                 <span class="material-symbols-outlined text-base">check_circle</span>
                 <span>Pengampu jadwal mengajar berhasil dialihkan! Seluruh riwayat nilai siswa tetap terjaga utuh.</span>
             </div>
+        <?php elseif ($_GET['pesan'] == 'sukses_bulk_alihkan'): ?>
+            <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                <span>Seluruh jadwal terpilih berhasil dialihkan ke pengampu baru! Nilai siswa tetap aman.</span>
+            </div>
+        <?php elseif ($_GET['pesan'] == 'sukses_alihkan_semua'): ?>
+            <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                <span>Seluruh jadwal guru berhasil dialihkan / dikosongkan. Akun guru kini aman untuk dinonaktifkan atau dihapus!</span>
+            </div>
         <?php elseif ($_GET['pesan'] == 'sukses_status'): ?>
             <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
                 <span class="material-symbols-outlined text-base">check_circle</span>
@@ -353,9 +363,28 @@ require_once '../components/header.php';
                     </form>
                 </div>
 
+                <?php if ($is_admin && $filter_guru && !empty($jadwal_aktif)): ?>
+                    <?php 
+                        $target_guru_name = '';
+                        foreach ($semua_guru as $g) {
+                            if ($g['id'] == $filter_guru) { $target_guru_name = $g['nama_lengkap']; break; }
+                        }
+                    ?>
+                    <div class="p-4 bg-amber-50/80 border-b border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center gap-2.5 text-amber-900">
+                            <span class="material-symbols-outlined text-amber-700 text-lg shrink-0">info</span>
+                            <span>Menampilkan <strong><?= count($jadwal_aktif) ?></strong> jadwal milik <strong><?= htmlspecialchars($target_guru_name) ?></strong>.</span>
+                        </div>
+                        <button type="button" onclick="bukaModalAlihkanSemuaGuru(<?= (int)$filter_guru ?>, '<?= htmlspecialchars(addslashes($target_guru_name)) ?>', <?= count($jadwal_aktif) ?>)" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">swap_horiz</span>
+                            <span>Kosongkan / Alihkan Semua Jadwal Guru Ini</span>
+                        </button>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Form Bulk Delete -->
                 <form action="proses_jadwal.php" method="POST" id="formBulkDelete">
-                    <input type="hidden" name="aksi" value="bulk_delete">
+                    <input type="hidden" name="aksi" value="bulk_delete" id="formBulkAction">
                     <input type="hidden" name="redirect_filter_kelas" value="<?= htmlspecialchars((string)$filter_kelas) ?>">
                     <input type="hidden" name="redirect_filter_guru" value="<?= htmlspecialchars((string)$filter_guru) ?>">
 
@@ -365,10 +394,18 @@ require_once '../components/header.php';
                                 <input type="checkbox" id="checkAll" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
                                 <span>Pilih Semua</span>
                             </label>
-                            <button type="submit" id="btnBulkDelete" onclick="konfirmasiForm(event, 'Hapus seluruh jadwal penugasan yang dicentang? Pastikan tidak ada data nilai yang terikat.')" class="hidden items-center gap-1.5 text-xs font-semibold text-danger hover:bg-danger-subtle px-3 py-1.5 rounded-lg border border-danger/20 transition-colors">
-                                <span class="material-symbols-outlined text-sm">delete</span>
-                                <span id="countSelected">Hapus Terpilih</span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <?php if ($is_admin): ?>
+                                    <button type="button" id="btnBulkAlihkan" onclick="bukaModalBulkAlihkan()" class="hidden items-center gap-1.5 text-xs font-semibold text-primary hover:bg-primary-subtle px-3 py-1.5 rounded-lg border border-primary/20 transition-colors cursor-pointer">
+                                        <span class="material-symbols-outlined text-sm">swap_horiz</span>
+                                        <span>Alihkan Terpilih</span>
+                                    </button>
+                                <?php endif; ?>
+                                <button type="submit" id="btnBulkDelete" onclick="konfirmasiForm(event, 'Hapus seluruh jadwal penugasan yang dicentang? Pastikan tidak ada data nilai yang terikat.')" class="hidden items-center gap-1.5 text-xs font-semibold text-danger hover:bg-danger-subtle px-3 py-1.5 rounded-lg border border-danger/20 transition-colors cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                    <span id="countSelected">Hapus Terpilih</span>
+                                </button>
+                            </div>
                         </div>
                     <?php endif; ?>
 
@@ -567,13 +604,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateBulkButton() {
         const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+        const btnBulkAlihkan = document.getElementById('btnBulkAlihkan');
+
         if (checkedCount > 0) {
             btnBulkDelete.classList.remove('hidden');
             btnBulkDelete.classList.add('inline-flex');
             countSelected.textContent = `Hapus (${checkedCount}) Terpilih`;
+
+            if (btnBulkAlihkan) {
+                btnBulkAlihkan.classList.remove('hidden');
+                btnBulkAlihkan.classList.add('inline-flex');
+            }
         } else {
             btnBulkDelete.classList.add('hidden');
             btnBulkDelete.classList.remove('inline-flex');
+
+            if (btnBulkAlihkan) {
+                btnBulkAlihkan.classList.add('hidden');
+                btnBulkAlihkan.classList.remove('inline-flex');
+            }
         }
 
         if (checkAll && itemCheckboxes.length > 0) {
@@ -674,10 +723,59 @@ function tutupModalAlihkan() {
     const modal = document.getElementById('modalAlihkanPengampu');
     if (modal) modal.classList.add('hidden');
 }
+
+function bukaModalBulkAlihkan() {
+    const checkedBoxes = document.querySelectorAll('.item-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        Swal.fire('Perhatian', 'Pilih minimal satu jadwal yang ingin dialihkan.', 'info');
+        return;
+    }
+    document.getElementById('bulk_count_text').textContent = checkedBoxes.length;
+    document.getElementById('modalBulkAlihkan').classList.remove('hidden');
+}
+
+function tutupModalBulkAlihkan() {
+    document.getElementById('modalBulkAlihkan').classList.add('hidden');
+}
+
+function submitBulkAlihkan() {
+    const targetSelect = document.getElementById('bulk_target_new_user_id');
+    const newUserId = targetSelect.value;
+    if (!newUserId) {
+        Swal.fire('Perhatian', 'Harap pilih pengampu baru.', 'warning');
+        return;
+    }
+
+    const form = document.getElementById('formBulkDelete');
+    document.getElementById('formBulkAction').value = 'bulk_alihkan';
+
+    let inputTarget = document.getElementById('hidden_new_user_id');
+    if (!inputTarget) {
+        inputTarget = document.createElement('input');
+        inputTarget.type = 'hidden';
+        inputTarget.name = 'new_user_id';
+        inputTarget.id = 'hidden_new_user_id';
+        form.appendChild(inputTarget);
+    }
+    inputTarget.value = newUserId;
+
+    form.submit();
+}
+
+function bukaModalAlihkanSemuaGuru(guruId, guruNama, totalJadwal) {
+    document.getElementById('semua_from_user_id').value = guruId;
+    document.getElementById('semua_nama_guru').textContent = guruNama;
+    document.getElementById('semua_total_jadwal').textContent = totalJadwal;
+    document.getElementById('modalAlihkanSemuaGuru').classList.remove('hidden');
+}
+
+function tutupModalAlihkanSemuaGuru() {
+    document.getElementById('modalAlihkanSemuaGuru').classList.add('hidden');
+}
 </script>
 
 <?php if ($is_admin): ?>
-<!-- Modal Alihkan Pengampu -->
+<!-- Modal Alihkan Pengampu Tunggal -->
 <div id="modalAlihkanPengampu" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 hidden p-4">
     <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-6">
         <div class="flex items-center justify-between pb-3 border-b border-border-main mb-4">
@@ -722,11 +820,117 @@ function tutupModalAlihkan() {
             </div>
 
             <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
-                <button type="button" onclick="tutupModalAlihkan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors">
+                <button type="button" onclick="tutupModalAlihkan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors">
+                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer">
                     Simpan & Alihkan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Bulk Alihkan Pengampu Terpilih -->
+<div id="modalBulkAlihkan" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 hidden p-4">
+    <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-6">
+        <div class="flex items-center justify-between pb-3 border-b border-border-main mb-4">
+            <h3 class="text-sm font-bold text-text-main flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-base">swap_horiz</span>
+                Alihkan Pengampu Terpilih
+            </h3>
+            <button type="button" onclick="tutupModalBulkAlihkan()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+
+        <div class="flex flex-col gap-4">
+            <div class="bg-primary-subtle/30 border border-primary/20 p-3.5 rounded-xl flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary text-2xl">checklist</span>
+                <div>
+                    <p class="text-xs font-bold text-text-main">
+                        <span id="bulk_count_text">0</span> Jadwal Terpilih
+                    </p>
+                    <p class="text-[11px] text-text-muted mt-0.5">Pilih guru yang akan ditugaskan mengampu jadwal-jadwal tersebut.</p>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-text-main mb-1" for="bulk_target_new_user_id">Pilih Pengampu Baru</label>
+                <select id="bulk_target_new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
+                    <option value="" disabled selected>-- Pilih Guru Pengampu --</option>
+                    <?php foreach ($semua_guru as $g): ?>
+                        <option value="<?= $g['id'] ?>">
+                            <?= htmlspecialchars($g['nama_lengkap']) ?> <?= ($g['id'] == $user_id) ? '(Admin - Ditampung Manual)' : '(Guru)' ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="text-[11px] text-text-muted mt-1.5 block">
+                    <span class="material-symbols-outlined text-[13px] text-emerald-600 align-middle">info</span>
+                    Jika dialihkan ke Admin, jadwal otomatis berstatus Titipan Manual sehingga wali kelas bisa mengisi nilai.
+                </span>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
+                <button type="button" onclick="tutupModalBulkAlihkan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" onclick="submitBulkAlihkan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer">
+                    Simpan & Alihkan Semua
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Alihkan Seluruh Jadwal Milik Guru Tertentu -->
+<div id="modalAlihkanSemuaGuru" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 hidden p-4">
+    <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-6">
+        <div class="flex items-center justify-between pb-3 border-b border-border-main mb-4">
+            <h3 class="text-sm font-bold text-text-main flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-600 text-base">swap_horiz</span>
+                Kosongkan / Alihkan Jadwal Guru
+            </h3>
+            <button type="button" onclick="tutupModalAlihkanSemuaGuru()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+
+        <form action="proses_jadwal.php" method="POST" class="flex flex-col gap-4">
+            <input type="hidden" name="aksi" value="alihkan_semua_guru">
+            <input type="hidden" name="from_user_id" id="semua_from_user_id">
+            <input type="hidden" name="redirect_filter_kelas" value="<?= htmlspecialchars((string)$filter_kelas) ?>">
+
+            <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-xl">
+                <p class="text-xs font-bold text-amber-900">
+                    Guru: <span id="semua_nama_guru">-</span>
+                </p>
+                <p class="text-[11px] text-amber-800 mt-1">
+                    Total ada <strong id="semua_total_jadwal">0</strong> jadwal mengajar yang diampu oleh guru ini. Tindakan ini akan mengalihkan seluruh jadwal sekaligus agar guru tidak memiliki jadwal mengampu lagi.
+                </p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-text-main mb-1" for="semua_new_user_id">Alihkan Semua Jadwal Ke:</label>
+                <select id="semua_new_user_id" name="new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
+                    <option value="" disabled selected>-- Pilih Guru Tujuan --</option>
+                    <?php foreach ($semua_guru as $g): ?>
+                        <option value="<?= $g['id'] ?>">
+                            <?= htmlspecialchars($g['nama_lengkap']) ?> <?= ($g['id'] == $user_id) ? '(Admin - Ditampung Manual)' : '(Guru)' ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="text-[11px] text-text-muted mt-1.5 block">
+                    Pilih <strong>Admin</strong> jika Anda ingin mengosongkan tugas guru ini dan menampungnya kembali sebagai mapel titipan sekolah.
+                </span>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
+                <button type="button" onclick="tutupModalAlihkanSemuaGuru()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
+                    Batal
+                </button>
+                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors cursor-pointer">
+                    Proses Alihkan Semua
                 </button>
             </div>
         </form>

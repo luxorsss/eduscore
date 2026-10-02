@@ -109,6 +109,12 @@
             <span class="material-symbols-outlined text-[20px]">folder_open</span>
             <span class="text-xs">Daftar Kelas & Wali</span>
         </a>
+
+        <!-- Akun Guru -->
+        <a href="guru.php" class="flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-lg transition-colors <?= ($current_page == 'guru.php') ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:bg-slate-100 hover:text-text-main font-medium' ?>">
+            <span class="material-symbols-outlined text-[20px]">badge</span>
+            <span class="text-xs">Data & Akun Guru</span>
+        </a>
         <?php endif; ?>
     </div>
 
