@@ -14,7 +14,7 @@ require_once '../components/header.php';
 <main class="flex-grow max-w-5xl mx-auto w-full p-4 md:p-8 flex flex-col gap-6">
     
     <!-- Header Section -->
-    <div class="bg-surface-card rounded-xl border border-border-main p-6 shadow-xs flex items-center justify-between gap-4">
+    <div class="bg-surface-card rounded-xl border border-border-main p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-primary-subtle text-primary flex items-center justify-center shrink-0">
                 <span class="material-symbols-outlined text-2xl">book</span>
@@ -28,14 +28,14 @@ require_once '../components/header.php';
             </div>
         </div>
 
-        <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center hidden sm:block">
+        <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center self-stretch sm:self-auto flex sm:flex-col justify-between sm:justify-center items-center">
             <span class="text-[11px] font-medium text-text-muted block">Total Mapel</span>
             <span class="text-base font-bold text-text-main tabular-nums"><?= count($daftar_mapel) ?></span>
         </div>
     </div>
 
     <!-- Form Tambah Mapel Baru (Satuan & Massal) -->
-    <div class="bg-surface-card rounded-xl border border-border-main p-5 sm:p-6 shadow-xs">
+    <div class="bg-surface-card rounded-xl border border-border-main p-4 sm:p-6 shadow-xs">
         <div class="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-border-main">
             <h3 class="text-sm font-bold text-text-main flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-base">add_circle</span>
@@ -43,11 +43,11 @@ require_once '../components/header.php';
             </h3>
             
             <!-- Tab Switcher: Satuan vs Massal -->
-            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-                <button type="button" onclick="switchTab('single')" id="tabBtnSingle" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors">
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-full sm:w-auto">
+                <button type="button" onclick="switchTab('single')" id="tabBtnSingle" class="flex-1 sm:flex-initial px-3.5 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors min-h-[38px] text-center">
                     Input Satuan
                 </button>
-                <button type="button" onclick="switchTab('bulk')" id="tabBtnBulk" class="px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors">
+                <button type="button" onclick="switchTab('bulk')" id="tabBtnBulk" class="flex-1 sm:flex-initial px-3.5 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors min-h-[38px] text-center">
                     Input Massal (Excel)
                 </button>
             </div>
@@ -60,10 +60,10 @@ require_once '../components/header.php';
                 
                 <div class="flex-1">
                     <label class="block text-xs font-semibold text-text-main mb-1.5" for="nama_mapel_input">Nama Mata Pelajaran</label>
-                    <input id="nama_mapel_input" type="text" name="nama_mapel" required placeholder="Contoh: Matematika Wajib, Bahasa Indonesia, Biologi..." class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3.5 py-2.5 font-medium min-h-[42px] placeholder:text-slate-400">
+                    <input id="nama_mapel_input" type="text" name="nama_mapel" required placeholder="Contoh: Matematika Wajib, Bahasa Indonesia, Biologi..." class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3.5 py-2.5 font-medium min-h-[44px] placeholder:text-slate-400">
                 </div>
 
-                <button type="submit" class="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-xs min-h-[42px]">
+                <button type="submit" class="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-xs min-h-[44px]">
                     <span class="material-symbols-outlined text-base">add</span>
                     <span>Simpan Mapel</span>
                 </button>
@@ -138,32 +138,36 @@ Fisika" class="w-full bg-white text-text-main text-xs rounded-lg border border-s
                                 </div>
                                 
                                 <!-- Mode Form Edit -->
-                                <form id="form_<?= $m['id']; ?>" action="proses_mapel.php" method="POST" class="hidden items-center gap-2 w-full max-w-md">
+                                <form id="form_<?= $m['id']; ?>" action="proses_mapel.php" method="POST" class="hidden flex-wrap sm:flex-nowrap items-center gap-2 w-full max-w-md">
                                     <input type="hidden" name="action" value="edit">
                                     <input type="hidden" name="id_mapel" value="<?= $m['id']; ?>">
                                     <input type="text" name="nama_mapel" value="<?= htmlspecialchars($m['nama_mapel']); ?>" required 
-                                           class="w-full bg-white border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg px-3 py-1.5 text-xs font-semibold text-text-main">
-                                    <button type="submit" class="p-1.5 rounded-lg bg-primary-subtle text-primary hover:bg-primary hover:text-white transition-colors" title="Simpan Perubahan">
-                                        <span class="material-symbols-outlined text-lg">check</span>
-                                    </button>
-                                    <button type="button" onclick="toggleEdit(<?= $m['id']; ?>)" class="p-1.5 rounded-lg text-text-muted hover:bg-slate-200 transition-colors" title="Batal">
-                                        <span class="material-symbols-outlined text-lg">close</span>
-                                    </button>
+                                           class="flex-1 min-w-[140px] bg-white border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg px-3 py-2 text-xs font-semibold text-text-main min-h-[44px]">
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <button type="submit" class="w-10 h-10 inline-flex items-center justify-center rounded-lg bg-primary-subtle text-primary hover:bg-primary hover:text-white transition-colors" title="Simpan Perubahan" aria-label="Simpan perubahan mapel">
+                                            <span class="material-symbols-outlined text-lg">check</span>
+                                        </button>
+                                        <button type="button" onclick="toggleEdit(<?= $m['id']; ?>)" class="w-10 h-10 inline-flex items-center justify-center rounded-lg text-text-muted hover:bg-slate-200 transition-colors" title="Batal" aria-label="Batal edit">
+                                            <span class="material-symbols-outlined text-lg">close</span>
+                                        </button>
+                                    </div>
                                 </form>
                             </td>
 
-                            <td class="px-4 py-3.5 text-center space-x-1 whitespace-nowrap">
-                                <!-- Tombol Edit -->
-                                <button type="button" onclick="toggleEdit(<?= $m['id']; ?>)" class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-slate-100 transition-colors" title="Edit Mata Pelajaran">
-                                    <span class="material-symbols-outlined text-lg">edit</span>
-                                </button>
-                                <!-- Tombol Hapus -->
-                                <a href="proses_mapel.php?hapus=<?= $m['id']; ?>" 
-                                   onclick="konfirmasiLink(event, this.href, 'Hapus mata pelajaran <?= htmlspecialchars($m['nama_mapel']); ?>?')" 
-                                   class="p-1.5 rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors inline-block" 
-                                   title="Hapus Mapel">
-                                    <span class="material-symbols-outlined text-lg">delete</span>
-                                </a>
+                            <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                <div class="inline-flex items-center justify-center gap-1.5">
+                                    <!-- Tombol Edit -->
+                                    <button type="button" onclick="toggleEdit(<?= $m['id']; ?>)" class="w-10 h-10 inline-flex items-center justify-center rounded-lg text-text-muted hover:text-primary hover:bg-slate-100 transition-colors" title="Edit Mata Pelajaran" aria-label="Edit mapel <?= htmlspecialchars($m['nama_mapel']); ?>">
+                                        <span class="material-symbols-outlined text-lg">edit</span>
+                                    </button>
+                                    <!-- Tombol Hapus -->
+                                    <a href="proses_mapel.php?hapus=<?= $m['id']; ?>" 
+                                       onclick="konfirmasiLink(event, this.href, 'Hapus mata pelajaran <?= htmlspecialchars($m['nama_mapel']); ?>?')" 
+                                       class="w-10 h-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors" 
+                                       title="Hapus Mapel" aria-label="Hapus mapel <?= htmlspecialchars($m['nama_mapel']); ?>">
+                                        <span class="material-symbols-outlined text-lg">delete</span>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -177,7 +181,7 @@ Fisika" class="w-full bg-white text-text-main text-xs rounded-lg border border-s
     <div id="modalPreviewBulk" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
         <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
             <!-- Modal Header -->
-            <div class="p-5 border-b border-border-main flex items-center justify-between bg-slate-50/50">
+            <div class="p-4 sm:p-5 border-b border-border-main flex items-center justify-between bg-slate-50/50">
                 <div class="flex items-center gap-2.5">
                     <span class="material-symbols-outlined text-primary text-xl">fact_check</span>
                     <div>
@@ -185,7 +189,7 @@ Fisika" class="w-full bg-white text-text-main text-xs rounded-lg border border-s
                         <p class="text-xs text-text-muted mt-0.5">Tinjau mapel baru dan mapel yang dilewati karena dobel.</p>
                     </div>
                 </div>
-                <button type="button" onclick="tutupPratinjauBulk()" class="text-slate-400 hover:text-text-main p-1 rounded-lg hover:bg-slate-100 transition-colors">
+                <button type="button" onclick="tutupPratinjauBulk()" class="w-10 h-10 inline-flex items-center justify-center text-slate-400 hover:text-text-main rounded-lg hover:bg-slate-100 transition-colors" aria-label="Tutup pratinjau">
                     <span class="material-symbols-outlined text-lg">close</span>
                 </button>
             </div>
@@ -195,7 +199,7 @@ Fisika" class="w-full bg-white text-text-main text-xs rounded-lg border border-s
                 <input type="hidden" name="action" value="bulk_tambah">
 
                 <!-- Modal Body -->
-                <div class="p-5 overflow-y-auto custom-scroll flex flex-col gap-4 flex-1">
+                <div class="p-4 sm:p-5 overflow-y-auto custom-scroll flex flex-col gap-4 flex-1">
                     <!-- Status Badges -->
                     <div class="grid grid-cols-2 gap-3">
                         <div class="p-3 rounded-xl bg-success-subtle/50 border border-success/20 flex items-center gap-3">
@@ -243,11 +247,11 @@ Fisika" class="w-full bg-white text-text-main text-xs rounded-lg border border-s
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="p-4 border-t border-border-main bg-slate-50 flex items-center justify-between gap-3">
-                    <button type="button" onclick="tutupPratinjauBulk()" class="text-xs font-semibold text-text-muted hover:text-text-main px-4 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition-colors">
+                <div class="p-4 border-t border-border-main bg-slate-50 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <button type="button" onclick="tutupPratinjauBulk()" class="min-h-[44px] text-xs font-semibold text-text-muted hover:text-text-main px-4 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition-colors inline-flex items-center justify-center">
                         Batal / Ubah Teks
                     </button>
-                    <button type="submit" id="btnKonfirmasiSimpan" class="bg-primary hover:bg-primary-hover disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center gap-2 transition-colors shadow-xs min-h-[40px]">
+                    <button type="submit" id="btnKonfirmasiSimpan" class="bg-primary hover:bg-primary-hover disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-semibold px-5 py-2.5 rounded-lg inline-flex items-center justify-center gap-2 transition-colors shadow-xs min-h-[44px]">
                         <span class="material-symbols-outlined text-base">save</span>
                         <span id="labelSimpanBulk">Simpan Mapel Terpilih</span>
                     </button>

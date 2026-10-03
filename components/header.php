@@ -63,7 +63,7 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     ?>
 
-    <div class="flex-1 <?= isset($_SESSION['user_id']) ? 'md:ml-64' : '' ?> flex flex-col min-h-screen">
+    <div class="flex-1 <?= isset($_SESSION['user_id']) ? 'md:ml-64' : '' ?> flex flex-col min-h-screen min-w-0 overflow-x-clip">
         <?php if (isset($_SESSION['user_id'])): ?>
         <!-- Top App Bar Terpadu (Menghilangkan duplikasi navbar di tiap halaman) -->
         <header class="bg-surface-card border-b border-border-main sticky top-0 z-30 shadow-xs">

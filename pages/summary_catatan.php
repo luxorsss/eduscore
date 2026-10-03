@@ -160,7 +160,7 @@ require_once '../components/header.php';
                     <select
                         id="filterKelas"
                         name="kelas_id"
-                        class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]"
+                        class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[44px]"
                     >
                         <option value="">Semua Kelas</option>
                         <?php foreach ($kelas_list as $kelas): ?>
@@ -179,7 +179,7 @@ require_once '../components/header.php';
                     <select
                         id="filterSiswa"
                         name="student_id"
-                        class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px] disabled:bg-slate-50 disabled:text-text-muted disabled:cursor-not-allowed"
+                        class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[44px] disabled:bg-slate-50 disabled:text-text-muted disabled:cursor-not-allowed"
                         <?= !$class_id ? 'disabled' : '' ?>
                     >
                         <option value="">Semua Siswa</option>
@@ -196,7 +196,7 @@ require_once '../components/header.php';
                         id="tanggalDari"
                         name="dari"
                         value="<?= htmlspecialchars($dari) ?>"
-                        class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors font-medium min-h-[42px]"
+                        class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors font-medium min-h-[44px]"
                     >
                 </div>
 
@@ -210,7 +210,7 @@ require_once '../components/header.php';
                         id="tanggalSampai"
                         name="sampai"
                         value="<?= htmlspecialchars($sampai) ?>"
-                        class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors font-medium min-h-[42px]"
+                        class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors font-medium min-h-[44px]"
                     >
                 </div>
             </div>
@@ -219,7 +219,7 @@ require_once '../components/header.php';
             <div class="flex flex-wrap items-center gap-3 pt-2">
                 <button
                     type="submit"
-                    class="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-xs min-h-[40px]"
+                    class="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-xs min-h-[44px]"
                 >
                     <span class="material-symbols-outlined text-base">search</span>
                     <span>Terapkan Filter</span>
@@ -227,7 +227,7 @@ require_once '../components/header.php';
 
                 <a
                     href="summary_catatan.php"
-                    class="px-4 py-2.5 rounded-lg border border-slate-200 text-xs font-semibold text-text-muted hover:text-text-main hover:bg-slate-50 transition-colors min-h-[40px] flex items-center justify-center"
+                    class="px-4 py-2.5 rounded-lg border border-slate-200 text-xs font-semibold text-text-muted hover:text-text-main hover:bg-slate-50 transition-colors min-h-[44px] flex items-center justify-center"
                 >
                     Reset Filter
                 </a>
@@ -321,9 +321,9 @@ require_once '../components/header.php';
                                             <?= json_encode($note['tanggal']) ?>,
                                             <?= json_encode($note['catatan'], JSON_UNESCAPED_UNICODE) ?>
                                         )'
-                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-text-main text-xs font-semibold hover:bg-slate-50 transition-colors"
+                                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-text-main text-xs font-semibold hover:bg-slate-50 transition-colors min-h-[38px]"
                                     >
-                                        <span class="material-symbols-outlined text-[16px] text-text-muted">edit</span>
+                                        <span class="material-symbols-outlined text-[18px] text-text-muted">edit</span>
                                         <span>Edit</span>
                                     </button>
 
@@ -333,9 +333,9 @@ require_once '../components/header.php';
                                             <?= (int) $note['id'] ?>,
                                             <?= json_encode($note['nama_siswa'], JSON_UNESCAPED_UNICODE) ?>
                                         )'
-                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-rose-200 bg-white text-danger text-xs font-semibold hover:bg-danger-subtle transition-colors"
+                                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-rose-200 bg-white text-danger text-xs font-semibold hover:bg-danger-subtle transition-colors min-h-[38px]"
                                     >
-                                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                                        <span class="material-symbols-outlined text-[18px]">delete</span>
                                         <span>Hapus</span>
                                     </button>
                                 </div>

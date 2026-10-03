@@ -100,8 +100,8 @@ require_once '../components/header.php';
     <?php if ($class_id && $mapel_id && $info): ?>
     
     <!-- Legend Status KKM Berkontras Tinggi -->
-    <div class="bg-surface-card p-4 rounded-xl border border-border-main shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-3 text-xs">
+    <div class="bg-surface-card p-4 rounded-xl border border-border-main shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-2.5 text-xs">
             <span class="text-text-muted font-semibold text-[11px] uppercase tracking-wider">Kriteria:</span>
             <div class="inline-flex items-center gap-1.5 badge-grade-danger px-2.5 py-1 rounded-md text-[11px]">
                 <span>Nilai 0 / Kosong</span>
@@ -114,14 +114,14 @@ require_once '../components/header.php';
             </div>
         </div>
 
-        <a href="input_data.php?kelas=<?= $class_id ?>&mapel=<?= $mapel_id ?>" class="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+        <a href="input_data.php?kelas=<?= $class_id ?>&mapel=<?= $mapel_id ?>" class="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 min-h-[36px]">
             <span class="material-symbols-outlined text-base">edit_square</span> Ubah Nilai di Kelas Ini
         </a>
     </div>
 
     <!-- Sinkronisasi Urutan Excel -->
     <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden">
-        <button type="button" onclick="document.getElementById('syncArea').classList.toggle('hidden')" class="w-full px-4 py-3 flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors focus-ring">
+        <button type="button" onclick="document.getElementById('syncArea').classList.toggle('hidden')" class="w-full px-4 py-3 min-h-[44px] flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors focus-ring">
             <div class="flex items-center gap-2 text-text-muted">
                 <span class="material-symbols-outlined text-base text-primary">sync_alt</span> 
                 <span>Sesuaikan Urutan Siswa Berdasarkan Excel Sekolah</span>
@@ -132,9 +132,9 @@ require_once '../components/header.php';
             <p class="text-xs text-text-muted">Tempel daftar nama siswa dari kolom Excel sekolah untuk menyesuaikan susunan baris secara otomatis.</p>
             <textarea id="excelNames" rows="3" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary font-mono" placeholder="Tempel daftar nama dari Excel di sini..."></textarea>
             
-            <div class="flex flex-wrap justify-between items-center gap-2">
-                <button type="button" onclick="hapusMemori()" class="text-danger text-xs font-semibold hover:underline">Hapus Memori Urutan</button>
-                <button type="button" onclick="sesuaikanUrutan(false)" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-xs transition-colors">Terapkan Urutan</button>
+            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2">
+                <button type="button" onclick="hapusMemori()" class="text-danger text-xs font-semibold hover:underline py-2 text-center sm:text-left">Hapus Memori Urutan</button>
+                <button type="button" onclick="sesuaikanUrutan(false)" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors min-h-[44px] inline-flex items-center justify-center">Terapkan Urutan</button>
             </div>
             
             <div id="warningBox" class="hidden bg-danger-subtle text-danger text-xs p-3 rounded-lg border border-danger/20 font-medium leading-relaxed"></div>
@@ -153,41 +153,41 @@ require_once '../components/header.php';
                 <thead>
                     <tr class="bg-slate-50 text-text-muted text-[11px] uppercase tracking-wider font-semibold border-b border-border-main">
                         <th class="p-3 border-r border-border-main text-center w-12">No</th>
-                        <th class="p-3 border-r border-border-main min-w-[180px] sticky left-0 z-20 bg-slate-50 shadow-xs">Nama Siswa</th>
+                        <th class="p-3 border-r border-border-main min-w-[140px] md:min-w-[180px] sticky left-0 z-20 bg-slate-50 shadow-xs">Nama Siswa</th>
                         <th class="p-2 border-r border-border-main text-center w-[85px]">
                             <div class="flex items-center justify-center gap-1">
                                 <span>H.UTS</span>
-                                <button type="button" onclick="copyKolom('col-huts')" class="text-text-muted hover:text-primary p-0.5 rounded transition-colors" title="Salin Kolom H.UTS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
+                                <button type="button" onclick="copyKolom('col-huts')" class="w-7 h-7 inline-flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-200 rounded transition-colors" title="Salin Kolom H.UTS" aria-label="Salin Kolom H.UTS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
                             </div>
                         </th>
                         <th class="p-2 border-r border-border-main text-center w-[85px]">
                             <div class="flex items-center justify-center gap-1">
                                 <span>UTS</span>
-                                <button type="button" onclick="copyKolom('col-uts')" class="text-text-muted hover:text-primary p-0.5 rounded transition-colors" title="Salin Kolom UTS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
+                                <button type="button" onclick="copyKolom('col-uts')" class="w-7 h-7 inline-flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-200 rounded transition-colors" title="Salin Kolom UTS" aria-label="Salin Kolom UTS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
                             </div>
                         </th>
                         <th class="p-2 border-r border-border-main text-center w-[85px] bg-primary-subtle/30 text-primary">
                             <div class="flex items-center justify-center gap-1">
                                 <span>T.UTS</span>
-                                <button type="button" onclick="copyKolom('col-tuts')" class="text-text-muted hover:text-primary p-0.5 rounded transition-colors" title="Salin Kolom T.UTS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
+                                <button type="button" onclick="copyKolom('col-tuts')" class="w-7 h-7 inline-flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-200 rounded transition-colors" title="Salin Kolom T.UTS" aria-label="Salin Kolom T.UTS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
                             </div>
                         </th>
                         <th class="p-2 border-r border-border-main text-center w-[85px]">
                             <div class="flex items-center justify-center gap-1">
                                 <span>H.UAS</span>
-                                <button type="button" onclick="copyKolom('col-huas')" class="text-text-muted hover:text-primary p-0.5 rounded transition-colors" title="Salin Kolom H.UAS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
+                                <button type="button" onclick="copyKolom('col-huas')" class="w-7 h-7 inline-flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-200 rounded transition-colors" title="Salin Kolom H.UAS" aria-label="Salin Kolom H.UAS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
                             </div>
                         </th>
                         <th class="p-2 border-r border-border-main text-center w-[85px]">
                             <div class="flex items-center justify-center gap-1">
                                 <span>UAS</span>
-                                <button type="button" onclick="copyKolom('col-uas')" class="text-text-muted hover:text-primary p-0.5 rounded transition-colors" title="Salin Kolom UAS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
+                                <button type="button" onclick="copyKolom('col-uas')" class="w-7 h-7 inline-flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-200 rounded transition-colors" title="Salin Kolom UAS" aria-label="Salin Kolom UAS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
                             </div>
                         </th>
                         <th class="p-2 text-center w-[85px] bg-primary-subtle/30 text-primary">
                             <div class="flex items-center justify-center gap-1">
                                 <span>T.UAS</span>
-                                <button type="button" onclick="copyKolom('col-tuas')" class="text-text-muted hover:text-primary p-0.5 rounded transition-colors" title="Salin Kolom T.UAS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
+                                <button type="button" onclick="copyKolom('col-tuas')" class="w-7 h-7 inline-flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-200 rounded transition-colors" title="Salin Kolom T.UAS" aria-label="Salin Kolom T.UAS"><span class="material-symbols-outlined text-[15px]">content_copy</span></button>
                             </div>
                         </th>
                     </tr>

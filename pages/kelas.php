@@ -34,7 +34,7 @@ require_once '../components/header.php';
 <main class="flex-grow max-w-5xl mx-auto w-full p-4 md:p-8 flex flex-col gap-6">
     
     <!-- Header Section -->
-    <div class="bg-surface-card rounded-xl border border-border-main p-6 shadow-xs flex items-center justify-between gap-4">
+    <div class="bg-surface-card rounded-xl border border-border-main p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-primary-subtle text-primary flex items-center justify-center shrink-0">
                 <span class="material-symbols-outlined text-2xl">folder_open</span>
@@ -48,7 +48,7 @@ require_once '../components/header.php';
             </div>
         </div>
 
-        <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center hidden sm:block">
+        <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center w-full sm:w-auto">
             <span class="text-[11px] font-medium text-text-muted block">Total Rombel</span>
             <span class="text-base font-bold text-text-main tabular-nums"><?= count($daftar_kelas) ?></span>
         </div>
@@ -106,25 +106,25 @@ require_once '../components/header.php';
             Tambah Rombel / Kelas Baru
         </h3>
 
-        <form action="proses_kelas.php" method="POST" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+        <form action="proses_kelas.php" method="POST" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
             <input type="hidden" name="aksi" value="tambah">
             
-            <div class="sm:col-span-3">
+            <div class="sm:col-span-1 lg:col-span-3">
                 <label class="block text-xs font-semibold text-text-main mb-1.5" for="jenjang">Jenjang</label>
-                <select id="jenjang" name="jenjang" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 font-medium cursor-pointer min-h-[42px]" required>
+                <select id="jenjang" name="jenjang" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 font-medium cursor-pointer min-h-[44px]" required>
                     <option value="SMP">SMP</option>
                     <option value="SMA" selected>SMA</option>
                 </select>
             </div>
 
-            <div class="sm:col-span-4">
+            <div class="sm:col-span-1 lg:col-span-4">
                 <label class="block text-xs font-semibold text-text-main mb-1.5" for="nama_kelas">Nama Rombel / Kelas</label>
-                <input id="nama_kelas" type="text" name="nama_kelas" required placeholder="Contoh: 10 IPA 1, 7A, 12..." class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 font-medium min-h-[42px] placeholder:text-slate-400">
+                <input id="nama_kelas" type="text" name="nama_kelas" required placeholder="Contoh: 10 IPA 1, 7A, 12..." class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 font-medium min-h-[44px] placeholder:text-slate-400">
             </div>
 
-            <div class="sm:col-span-3">
+            <div class="sm:col-span-2 lg:col-span-3">
                 <label class="block text-xs font-semibold text-text-main mb-1.5" for="wali_kelas_id">Wali Kelas (Opsional)</label>
-                <select id="wali_kelas_id" name="wali_kelas_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 font-medium cursor-pointer min-h-[42px]">
+                <select id="wali_kelas_id" name="wali_kelas_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 font-medium cursor-pointer min-h-[44px]">
                     <option value="">-- Belum Ditentukan --</option>
                     <?php foreach ($semua_guru as $guru): ?>
                         <?php 
@@ -137,8 +137,8 @@ require_once '../components/header.php';
                 </select>
             </div>
 
-            <div class="sm:col-span-2">
-                <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-xs min-h-[42px]">
+            <div class="sm:col-span-2 lg:col-span-2">
+                <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-xs min-h-[44px]">
                     <span class="material-symbols-outlined text-base">add</span>
                     <span>Simpan</span>
                 </button>
@@ -157,7 +157,59 @@ require_once '../components/header.php';
             </span>
         </div>
 
-        <div class="overflow-x-auto custom-scroll">
+        <!-- Tampilan Kartu untuk Mobile (< md) -->
+        <div class="md:hidden divide-y divide-border-main">
+            <?php if (empty($daftar_kelas)): ?>
+                <div class="px-6 py-10 text-center text-text-muted text-xs">Belum ada data kelas yang didaftarkan.</div>
+            <?php else: ?>
+                <?php foreach ($daftar_kelas as $kelas): ?>
+                    <div class="p-4 flex flex-col gap-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold <?= $kelas['jenjang'] == 'SMA' ? 'bg-primary-subtle text-primary border border-primary/20' : 'bg-amber-50 text-amber-800 border border-amber-200' ?>">
+                                    <?= htmlspecialchars($kelas['jenjang']); ?>
+                                </span>
+                                <h4 class="font-bold text-sm text-text-main mt-1.5"><?= htmlspecialchars($kelas['nama_kelas']); ?></h4>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button type="button" 
+                                        onclick="bukaModalEdit(<?= htmlspecialchars(json_encode($kelas)) ?>)" 
+                                        class="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 transition-colors" 
+                                        title="Edit Kelas & Wali Kelas">
+                                    <span class="material-symbols-outlined text-lg">edit</span>
+                                </button>
+                                <a href="proses_kelas.php?hapus=<?= $kelas['id']; ?>" 
+                                   onclick="konfirmasiLink(event, this.href, 'Hapus rombel kelas <?= htmlspecialchars($kelas['nama_kelas']); ?>?')" 
+                                   class="w-10 h-10 flex items-center justify-center rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors" 
+                                   title="Hapus Kelas">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-100 text-xs">
+                            <?php if (!empty($kelas['nama_wali'])): ?>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-emerald-600 text-base">verified_user</span>
+                                    <div>
+                                        <span class="font-semibold text-text-main block"><?= htmlspecialchars($kelas['nama_wali']) ?></span>
+                                        <span class="text-[10px] text-text-muted block">@<?= htmlspecialchars($kelas['username_wali']) ?></span>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                    <span class="material-symbols-outlined text-[14px]">help_outline</span>
+                                    Belum Ada Wali
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+        <!-- Tampilan Tabel untuk Tablet & Desktop (>= md) -->
+        <div class="hidden md:block overflow-x-auto custom-scroll">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="bg-slate-50 text-[11px] uppercase font-semibold text-text-muted border-b border-border-main">
@@ -204,16 +256,16 @@ require_once '../components/header.php';
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-3.5 text-center">
-                                <div class="inline-flex items-center gap-1">
+                                <div class="inline-flex items-center gap-1.5">
                                     <button type="button" 
                                             onclick="bukaModalEdit(<?= htmlspecialchars(json_encode($kelas)) ?>)" 
-                                            class="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 transition-colors" 
+                                            class="w-9 h-9 inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 transition-colors" 
                                             title="Edit Kelas & Wali Kelas">
                                         <span class="material-symbols-outlined text-lg">edit</span>
                                     </button>
                                     <a href="proses_kelas.php?hapus=<?= $kelas['id']; ?>" 
                                        onclick="konfirmasiLink(event, this.href, 'Hapus rombel kelas <?= htmlspecialchars($kelas['nama_kelas']); ?>?')" 
-                                       class="inline-flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors" 
+                                       class="w-9 h-9 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors" 
                                        title="Hapus Kelas">
                                         <span class="material-symbols-outlined text-lg">delete</span>
                                     </a>
@@ -237,7 +289,7 @@ require_once '../components/header.php';
                 <span class="material-symbols-outlined text-primary text-base">edit</span>
                 Edit Kelas & Wali Kelas
             </h3>
-            <button type="button" onclick="tutupModalEdit()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+            <button type="button" onclick="tutupModalEdit()" class="w-10 h-10 inline-flex items-center justify-center text-text-muted hover:text-danger hover:bg-slate-100 rounded-lg transition-colors" aria-label="Tutup modal">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
@@ -248,7 +300,7 @@ require_once '../components/header.php';
 
             <div>
                 <label class="block text-xs font-semibold text-text-main mb-1" for="edit_jenjang">Jenjang</label>
-                <select id="edit_jenjang" name="jenjang" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5" required>
+                <select id="edit_jenjang" name="jenjang" class="w-full bg-white text-xs rounded-lg border border-slate-300 min-h-[44px] px-3" required>
                     <option value="SMP">SMP</option>
                     <option value="SMA">SMA</option>
                 </select>
@@ -256,12 +308,12 @@ require_once '../components/header.php';
 
             <div>
                 <label class="block text-xs font-semibold text-text-main mb-1" for="edit_nama_kelas">Nama Rombel / Kelas</label>
-                <input type="text" id="edit_nama_kelas" name="nama_kelas" required class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5">
+                <input type="text" id="edit_nama_kelas" name="nama_kelas" required class="w-full bg-white text-xs rounded-lg border border-slate-300 min-h-[44px] px-3">
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-text-main mb-1" for="edit_wali_kelas_id">Wali Kelas</label>
-                <select id="edit_wali_kelas_id" name="wali_kelas_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5">
+                <select id="edit_wali_kelas_id" name="wali_kelas_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 min-h-[44px] px-3">
                     <option value="">-- Belum Ada Wali Kelas --</option>
                     <?php foreach ($semua_guru as $guru): ?>
                         <option value="<?= $guru['id'] ?>" id="opt_guru_<?= $guru['id'] ?>">
@@ -272,11 +324,11 @@ require_once '../components/header.php';
                 <span class="text-[11px] text-text-muted mt-1 block">1 Guru hanya boleh menjadi wali kelas untuk 1 kelas.</span>
             </div>
 
-            <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
-                <button type="button" onclick="tutupModalEdit()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors">
+            <div class="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 border-t border-border-main mt-2">
+                <button type="button" onclick="tutupModalEdit()" class="min-h-[44px] px-4 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors text-center inline-flex items-center justify-center">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors">
+                <button type="submit" class="min-h-[44px] px-4 py-2.5 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors text-center inline-flex items-center justify-center">
                     Simpan Perubahan
                 </button>
             </div>

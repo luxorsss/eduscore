@@ -20,7 +20,7 @@ $page_heading = "Data Induk Siswa";
 require_once '../components/header.php'; 
 ?>
 
-<main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-8 flex flex-col gap-6 relative">
+<main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-8 pb-28 md:pb-8 flex flex-col gap-6 relative">
     
     <!-- Header Bagian & Filter Pencarian -->
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-surface-card p-5 rounded-xl border border-border-main shadow-xs">
@@ -99,12 +99,12 @@ require_once '../components/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td class="px-3 md:px-4 py-3 text-center">
-                                    <div class="flex items-center justify-center gap-1">
-                                        <button type="button" onclick="bukaModalEdit(<?= $s['id'] ?>, '<?= addslashes($s['nama']) ?>', '<?= $s['class_id'] ?>')" class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-100 transition-colors" title="Ubah Data">
-                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button type="button" onclick="bukaModalEdit(<?= $s['id'] ?>, '<?= addslashes($s['nama']) ?>', '<?= $s['class_id'] ?>')" class="w-10 h-10 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-slate-100 transition-colors" title="Ubah Data" aria-label="Ubah data siswa <?= htmlspecialchars($s['nama']) ?>">
+                                            <span class="material-symbols-outlined text-lg">edit</span>
                                         </button>
-                                        <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="konfirmasiLink(event, this.href, 'Data siswa <?= addslashes($s['nama']) ?> beserta seluruh riwayat nilainya akan dihapus permanen.')" class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-danger hover:bg-danger-subtle transition-colors" title="Hapus Siswa">
-                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        <a href="proses_bulk_siswa.php?hapus_single=<?= $s['id'] ?>" onclick="konfirmasiLink(event, this.href, 'Data siswa <?= addslashes($s['nama']) ?> beserta seluruh riwayat nilainya akan dihapus permanen.')" class="w-10 h-10 rounded-lg flex items-center justify-center text-text-muted hover:text-danger hover:bg-danger-subtle transition-colors" title="Hapus Siswa" aria-label="Hapus siswa <?= htmlspecialchars($s['nama']) ?>">
+                                            <span class="material-symbols-outlined text-lg">delete</span>
                                         </a>
                                     </div>
                                 </td>
@@ -125,18 +125,18 @@ require_once '../components/header.php';
                 </table>
             </div>
 
-            <div class="p-4 bg-slate-50 flex flex-wrap justify-between items-center gap-3 border-t border-border-main">
-                <button type="button" onclick="tambahBarisInput()" class="flex items-center gap-2 text-primary font-semibold text-xs hover:underline min-h-[44px] px-2">
+            <div class="p-4 bg-slate-50 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-t border-border-main">
+                <button type="button" onclick="tambahBarisInput()" class="flex items-center justify-center sm:justify-start gap-2 text-primary font-semibold text-xs hover:underline min-h-[44px] px-2">
                     <span class="material-symbols-outlined text-lg">add_circle</span> Tambah Baris Siswa Manual
                 </button>
-                <button type="submit" name="aksi" value="simpan_massal" class="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-xs font-semibold transition-colors shadow-xs min-h-[44px]">
+                <button type="submit" name="aksi" value="simpan_massal" class="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-xs font-semibold transition-colors shadow-xs min-h-[44px] inline-flex items-center justify-center">
                     Simpan Siswa Baru
                 </button>
             </div>
         </div>
 
         <!-- Floating Bulk Action Bar -->
-        <div id="bulkActionBar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-surface-card border border-border-main shadow-lg rounded-xl px-5 py-3 flex flex-wrap items-center justify-center gap-4 transition-all duration-200 translate-y-32 opacity-0 z-40 w-[95%] md:w-auto">
+        <div id="bulkActionBar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-surface-card border border-border-main shadow-xl rounded-2xl px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-3 transition-all duration-200 translate-y-32 opacity-0 z-40 w-[92%] max-w-lg sm:w-auto">
             
             <span class="text-xs font-semibold text-text-main whitespace-nowrap">
                 <span id="selectedCount" class="text-primary font-bold">0</span> Siswa Terpilih
@@ -144,23 +144,20 @@ require_once '../components/header.php';
             
             <div class="hidden sm:block w-px h-5 bg-border-main"></div>
 
-            <div class="flex items-center gap-2">
-                <select name="target_class_id" class="text-xs font-medium rounded-lg border border-slate-300 py-1.5 pl-3 pr-8 bg-white text-text-main cursor-pointer min-h-[36px]">
+            <div class="flex flex-wrap items-center justify-center gap-2 w-full sm:w-auto">
+                <select name="target_class_id" class="w-full sm:w-auto text-xs font-medium rounded-lg border border-slate-300 min-h-[44px] px-3 bg-white text-text-main cursor-pointer">
                     <option value="" disabled selected>Pindahkan ke Kelas...</option>
                     <?php foreach($list_kelas as $lk): ?>
                         <option value="<?= $lk['id'] ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <button type="submit" name="aksi" value="pindah_massal" onclick="konfirmasiForm(event, 'Pindahkan seluruh siswa yang dipilih ke kelas tujuan?')" class="px-3 py-1.5 text-xs font-semibold bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors min-h-[36px]">
+                <button type="submit" name="aksi" value="pindah_massal" onclick="konfirmasiForm(event, 'Pindahkan seluruh siswa yang dipilih ke kelas tujuan?')" class="flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors min-h-[44px] inline-flex items-center justify-center">
                     Pindahkan
                 </button>
+                <button type="submit" name="aksi" value="hapus_massal" onclick="konfirmasiForm(event, 'Hapus seluruh siswa terpilih beserta seluruh riwayat nilainya?')" class="flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold text-danger hover:bg-danger-subtle rounded-lg transition-colors min-h-[44px] inline-flex items-center justify-center border border-danger/20 sm:border-transparent">
+                    Hapus Terpilih
+                </button>
             </div>
-
-            <div class="w-px h-5 bg-border-main"></div>
-
-            <button type="submit" name="aksi" value="hapus_massal" onclick="konfirmasiForm(event, 'Hapus seluruh siswa terpilih beserta seluruh riwayat nilainya?')" class="px-3 py-1.5 text-xs font-semibold text-danger hover:bg-danger-subtle rounded-lg transition-colors min-h-[36px]">
-                Hapus Terpilih
-            </button>
         </div>
     </form>
 
@@ -191,7 +188,7 @@ require_once '../components/header.php';
         <div class="bg-surface-card w-full max-w-sm rounded-xl border border-border-main shadow-lg overflow-hidden transform scale-95 transition-transform duration-200" id="modalEditContent">
             <div class="p-4 border-b border-border-main flex justify-between items-center bg-slate-50">
                 <h3 class="font-bold text-sm text-text-main">Perbarui Data Siswa</h3>
-                <button type="button" onclick="tutupModalEdit()" aria-label="Tutup jendela edit" class="text-text-muted hover:text-text-main transition-colors">
+                <button type="button" onclick="tutupModalEdit()" aria-label="Tutup jendela edit" class="w-10 h-10 inline-flex items-center justify-center rounded-lg text-text-muted hover:text-text-main hover:bg-slate-100 transition-colors">
                     <span class="material-symbols-outlined text-lg">close</span>
                 </button>
             </div>
@@ -201,12 +198,12 @@ require_once '../components/header.php';
                 
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-semibold text-text-main" for="edit_nama">Nama Lengkap</label>
-                    <input type="text" id="edit_nama" name="nama_siswa" class="w-full bg-white rounded-lg px-3 py-2 text-xs border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
+                    <input type="text" id="edit_nama" name="nama_siswa" class="w-full bg-white rounded-lg px-3 py-2 text-xs border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[44px]" required>
                 </div>
                 
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-semibold text-text-main" for="edit_kelas">Penempatan Rombel</label>
-                    <select id="edit_kelas" name="class_id" class="w-full bg-white rounded-lg px-3 py-2 text-xs border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer">
+                    <select id="edit_kelas" name="class_id" class="w-full bg-white rounded-lg px-3 py-2 text-xs border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[44px]">
                         <option value="">-- Tanpa Rombel --</option>
                         <?php foreach($list_kelas as $lk): ?>
                             <option value="<?= $lk['id'] ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>
@@ -214,9 +211,9 @@ require_once '../components/header.php';
                     </select>
                 </div>
                 
-                <div class="flex justify-end gap-2 pt-3 border-t border-border-main">
-                    <button type="button" onclick="tutupModalEdit()" class="px-4 py-2 rounded-lg text-xs font-semibold text-text-muted hover:bg-slate-100 transition-colors">Batal</button>
-                    <button type="submit" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors">Simpan Perubahan</button>
+                <div class="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 border-t border-border-main">
+                    <button type="button" onclick="tutupModalEdit()" class="min-h-[44px] px-4 py-2 rounded-lg text-xs font-semibold text-text-muted hover:bg-slate-100 transition-colors inline-flex items-center justify-center">Batal</button>
+                    <button type="submit" class="bg-primary hover:bg-primary-hover text-white min-h-[44px] px-4 py-2 rounded-lg text-xs font-semibold transition-colors inline-flex items-center justify-center">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -267,16 +264,16 @@ require_once '../components/header.php';
         row.className = "bg-primary-subtle/30 border-t border-border-main";
         row.innerHTML = `
             <td class="px-3 md:px-4 py-2.5 text-center">
-                <button type="button" onclick="this.closest('tr').remove()" class="text-danger hover:opacity-80 p-1" title="Batalkan baris">
+                <button type="button" onclick="this.closest('tr').remove()" class="w-10 h-10 inline-flex items-center justify-center text-danger hover:opacity-80 p-1" title="Batalkan baris" aria-label="Batalkan baris">
                     <span class="material-symbols-outlined text-[18px]">remove_circle</span>
                 </button>
             </td>
             <td class="px-3 md:px-4 py-2.5">
-                <input type="text" name="nama_siswa[]" required class="w-full bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Ketik nama siswa baru...">
+                <input type="text" name="nama_siswa[]" required class="w-full bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[40px]" placeholder="Ketik nama siswa baru...">
                 <input type="hidden" name="nis_siswa[]" value="AUTO"> 
             </td>
             <td class="px-3 md:px-4 py-2.5">
-                <select name="class_id_siswa[]" class="w-full bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary" required>
+                <select name="class_id_siswa[]" class="w-full bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[40px]" required>
                     <option value="" disabled selected>Pilih Kelas</option>
                     <?php foreach($list_kelas as $lk): ?>
                         <option value="<?= $lk['id'] ?>"><?= htmlspecialchars($lk['nama_kelas']) ?></option>

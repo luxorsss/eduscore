@@ -66,7 +66,7 @@ require_once '../components/header.php';
             </div>
         </div>
 
-        <button type="button" onclick="bukaModalTambah()" class="px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors cursor-pointer shrink-0">
+        <button type="button" onclick="bukaModalTambah()" class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0 min-h-[44px]">
             <span class="material-symbols-outlined text-base">person_add</span>
             <span>Tambah Guru Baru</span>
         </button>
@@ -150,7 +150,84 @@ require_once '../components/header.php';
             <span class="text-xs text-text-muted tabular-nums"><?= count($daftar_guru) ?> akun</span>
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- Tampilan Kartu untuk Mobile (< md) -->
+        <div class="md:hidden divide-y divide-border-main">
+            <?php if (empty($daftar_guru)): ?>
+                <div class="p-8 text-center text-text-muted text-xs">Belum ada akun guru yang terdaftar.</div>
+            <?php else: ?>
+                <?php foreach ($daftar_guru as $u): ?>
+                    <div class="p-4 flex flex-col gap-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-full bg-primary-subtle text-primary font-bold text-xs flex items-center justify-center shrink-0">
+                                    <?= strtoupper(substr($u['nama_lengkap'], 0, 2)) ?>
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-xs sm:text-sm text-text-main truncate"><?= htmlspecialchars($u['nama_lengkap']) ?></h4>
+                                    <span class="text-[11px] text-text-muted font-mono block">@<?= htmlspecialchars($u['username']) ?></span>
+                                </div>
+                            </div>
+                            <?php if ($u['role'] === 'admin'): ?>
+                                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+                                    <span class="material-symbols-outlined text-[12px]">security</span> Admin
+                                </span>
+                            <?php else: ?>
+                                <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
+                                    Guru
+                                </span>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <?php if (!empty($u['nama_kelas'])): ?>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary-subtle px-2 py-1 rounded">
+                                    <span class="material-symbols-outlined text-[13px]">assignment_ind</span>
+                                    Wali Kelas <?= htmlspecialchars($u['jenjang']) ?> - <?= htmlspecialchars($u['nama_kelas']) ?>
+                                </span>
+                            <?php endif; ?>
+
+                            <?php if ((int)$u['total_jadwal'] > 0): ?>
+                                <a href="jadwal.php?filter_guru=<?= $u['id'] ?>" class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-slate-100 px-2.5 py-1 rounded hover:underline">
+                                    <span class="material-symbols-outlined text-[13px]">calendar_month</span>
+                                    <?= $u['total_jadwal'] ?> Mapel Diampu
+                                </a>
+                            <?php else: ?>
+                                <span class="text-text-muted text-[11px] py-1">0 Mapel Diampu</span>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Baris Aksi Touch-Friendly (min 44px) -->
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                            <button type="button" 
+                                    onclick="bukaModalEdit(<?= htmlspecialchars(json_encode($u)) ?>)" 
+                                    class="flex-1 min-h-[44px] px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-text-main text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors" 
+                                    title="Edit Profil Guru">
+                                <span class="material-symbols-outlined text-base text-primary">edit</span>
+                                <span>Edit</span>
+                            </button>
+                            <button type="button" 
+                                    onclick="bukaModalResetPwd(<?= htmlspecialchars(json_encode($u)) ?>)" 
+                                    class="flex-1 min-h-[44px] px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold flex items-center justify-center gap-1.5 border border-amber-200 transition-colors" 
+                                    title="Reset Password Guru">
+                                <span class="material-symbols-outlined text-base">key</span>
+                                <span>Reset Pass</span>
+                            </button>
+                            <?php if ($u['id'] != $current_user_id && $u['id'] != 1): ?>
+                                <button type="button" 
+                                        onclick="bukaModalHapus(<?= htmlspecialchars(json_encode($u)) ?>)" 
+                                        class="min-h-[44px] w-11 px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-danger text-xs font-semibold flex items-center justify-center gap-1 border border-rose-200 transition-colors" 
+                                        title="Hapus Akun Guru">
+                                    <span class="material-symbols-outlined text-base">delete</span>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+        <!-- Tampilan Tabel untuk Tablet & Desktop (>= md) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="border-b border-border-main bg-slate-50/70 text-text-muted font-bold text-[11px] uppercase tracking-wider">
@@ -200,7 +277,7 @@ require_once '../components/header.php';
                                 </td>
                                 <td class="p-3.5 text-center">
                                     <?php if ((int)$u['total_jadwal'] > 0): ?>
-                                        <a href="jadwal.php?filter_guru=<?= $u['id'] ?>" class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition-colors" title="Lihat Jadwal Guru Ini">
+                                        <a href="jadwal.php?filter_guru=<?= $u['id'] ?>" class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition-colors min-h-[36px]" title="Lihat Jadwal Guru Ini">
                                             <span class="material-symbols-outlined text-sm">calendar_month</span>
                                             <span class="tabular-nums"><?= $u['total_jadwal'] ?> Mapel</span>
                                         </a>
@@ -209,12 +286,12 @@ require_once '../components/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td class="p-3.5 pr-6 text-center">
-                                    <div class="flex items-center justify-center gap-1">
+                                    <div class="flex items-center justify-center gap-1.5">
                                         
                                         <!-- Tombol Edit Profil -->
                                         <button type="button" 
                                                 onclick="bukaModalEdit(<?= htmlspecialchars(json_encode($u)) ?>)" 
-                                                class="p-1.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 transition-colors cursor-pointer" 
+                                                class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 transition-colors cursor-pointer" 
                                                 title="Edit Profil Guru">
                                             <span class="material-symbols-outlined text-base">edit</span>
                                         </button>
@@ -222,20 +299,20 @@ require_once '../components/header.php';
                                         <!-- Tombol Reset Password -->
                                         <button type="button" 
                                                 onclick="bukaModalResetPwd(<?= htmlspecialchars(json_encode($u)) ?>)" 
-                                                class="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer" 
+                                                class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer" 
                                                 title="Reset Password Guru">
                                             <span class="material-symbols-outlined text-base">key</span>
                                         </button>
 
                                         <!-- Tombol Hapus Akun -->
                                         <?php if ($u['id'] == $current_user_id || $u['id'] == 1): ?>
-                                            <span class="p-1.5 text-slate-300 cursor-not-allowed" title="Akun utama / akun sendiri tidak dapat dihapus">
+                                            <span class="w-9 h-9 flex items-center justify-center text-slate-300 cursor-not-allowed" title="Akun utama / akun sendiri tidak dapat dihapus">
                                                 <span class="material-symbols-outlined text-base">delete</span>
                                             </span>
                                         <?php else: ?>
                                             <button type="button" 
                                                     onclick="bukaModalHapus(<?= htmlspecialchars(json_encode($u)) ?>)" 
-                                                    class="p-1.5 rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors cursor-pointer" 
+                                                    class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors cursor-pointer" 
                                                     title="Hapus Akun Guru">
                                                 <span class="material-symbols-outlined text-base">delete</span>
                                             </button>
@@ -261,7 +338,7 @@ require_once '../components/header.php';
                 <span class="material-symbols-outlined text-primary text-base">person_add</span>
                 Tambah Akun Guru Baru
             </h3>
-            <button type="button" onclick="tutupModalTambah()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+            <button type="button" onclick="tutupModalTambah()" aria-label="Tutup modal" class="w-10 h-10 flex items-center justify-center text-text-muted hover:text-danger hover:bg-slate-100 rounded-lg transition-colors">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
@@ -271,32 +348,32 @@ require_once '../components/header.php';
 
             <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-semibold text-text-main" for="tambah_nama_lengkap">Nama Lengkap & Gelar</label>
-                <input type="text" id="tambah_nama_lengkap" name="nama_lengkap" placeholder="Contoh: Ustadz Ahmad Fauzi, Lc." class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium" required>
+                <input type="text" id="tambah_nama_lengkap" name="nama_lengkap" placeholder="Contoh: Ustadz Ahmad Fauzi, Lc." class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium min-h-[42px]" required>
             </div>
 
             <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-semibold text-text-main" for="tambah_username">Username Login</label>
-                <input type="text" id="tambah_username" name="username" placeholder="Contoh: ahmad.fauzi" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-mono" required>
+                <input type="text" id="tambah_username" name="username" placeholder="Contoh: ahmad.fauzi" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-mono min-h-[42px]" required>
             </div>
 
             <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-semibold text-text-main" for="tambah_password">Password Awal</label>
-                <input type="password" id="tambah_password" name="password" placeholder="Minimal 6 karakter..." class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5" required>
+                <input type="password" id="tambah_password" name="password" placeholder="Minimal 6 karakter..." class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 min-h-[42px]" required>
             </div>
 
             <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-semibold text-text-main" for="tambah_role">Peran / Hak Akses</label>
-                <select id="tambah_role" name="role" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
+                <select id="tambah_role" name="role" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer min-h-[42px]" required>
                     <option value="guru" selected>Guru Pengajar</option>
                     <option value="admin">Administrator</option>
                 </select>
             </div>
 
             <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
-                <button type="button" onclick="tutupModalTambah()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
+                <button type="button" onclick="tutupModalTambah()" class="min-h-[44px] px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer">
+                <button type="submit" class="min-h-[44px] px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer">
                     Simpan Guru Baru
                 </button>
             </div>
@@ -312,7 +389,7 @@ require_once '../components/header.php';
                 <span class="material-symbols-outlined text-primary text-base">edit</span>
                 Edit Profil Akun
             </h3>
-            <button type="button" onclick="tutupModalEdit()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+            <button type="button" onclick="tutupModalEdit()" aria-label="Tutup modal" class="w-10 h-10 flex items-center justify-center text-text-muted hover:text-danger hover:bg-slate-100 rounded-lg transition-colors">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
@@ -323,27 +400,27 @@ require_once '../components/header.php';
 
             <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-semibold text-text-main" for="edit_nama_lengkap">Nama Lengkap & Gelar</label>
-                <input type="text" id="edit_nama_lengkap" name="nama_lengkap" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium" required>
+                <input type="text" id="edit_nama_lengkap" name="nama_lengkap" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium min-h-[42px]" required>
             </div>
 
             <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-semibold text-text-main" for="edit_username">Username</label>
-                <input type="text" id="edit_username" name="username" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-mono" required>
+                <input type="text" id="edit_username" name="username" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-mono min-h-[42px]" required>
             </div>
 
             <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-semibold text-text-main" for="edit_role">Peran / Hak Akses</label>
-                <select id="edit_role" name="role" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
+                <select id="edit_role" name="role" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer min-h-[42px]" required>
                     <option value="guru">Guru Pengajar</option>
                     <option value="admin">Administrator</option>
                 </select>
             </div>
 
             <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
-                <button type="button" onclick="tutupModalEdit()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
+                <button type="button" onclick="tutupModalEdit()" class="min-h-[44px] px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer">
+                <button type="submit" class="min-h-[44px] px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer">
                     Simpan Perubahan
                 </button>
             </div>
@@ -359,7 +436,7 @@ require_once '../components/header.php';
                 <span class="material-symbols-outlined text-amber-600 text-base">key</span>
                 Reset Password Akun
             </h3>
-            <button type="button" onclick="tutupModalResetPwd()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+            <button type="button" onclick="tutupModalResetPwd()" aria-label="Tutup modal" class="w-10 h-10 flex items-center justify-center text-text-muted hover:text-danger hover:bg-slate-100 rounded-lg transition-colors">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
@@ -376,14 +453,14 @@ require_once '../components/header.php';
 
             <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-semibold text-text-main" for="reset_pwd_input">Password Baru</label>
-                <input type="password" id="reset_pwd_input" name="password_baru" placeholder="Masukkan password baru..." class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5" required>
+                <input type="password" id="reset_pwd_input" name="password_baru" placeholder="Masukkan password baru..." class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 min-h-[42px]" required>
             </div>
 
             <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
-                <button type="button" onclick="tutupModalResetPwd()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
+                <button type="button" onclick="tutupModalResetPwd()" class="min-h-[44px] px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors cursor-pointer">
+                <button type="submit" class="min-h-[44px] px-4 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors cursor-pointer">
                     Reset Password
                 </button>
             </div>
@@ -399,7 +476,7 @@ require_once '../components/header.php';
                 <span class="material-symbols-outlined text-base">warning</span>
                 Hapus Akun Guru
             </h3>
-            <button type="button" onclick="tutupModalHapus()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+            <button type="button" onclick="tutupModalHapus()" aria-label="Tutup modal" class="w-10 h-10 flex items-center justify-center text-text-muted hover:text-danger hover:bg-slate-100 rounded-lg transition-colors">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
@@ -452,7 +529,7 @@ require_once '../components/header.php';
 
                 <div id="box_guru_lain" class="hidden mt-1">
                     <label class="block text-[11px] font-semibold text-text-main mb-1" for="target_guru_id">Pilih Guru Pengganti</label>
-                    <select id="target_guru_id" name="target_guru_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-medium cursor-pointer">
+                    <select id="target_guru_id" name="target_guru_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-medium cursor-pointer min-h-[42px]">
                         <option value="" disabled selected>-- Pilih Guru Pengganti --</option>
                         <?php foreach ($semua_guru_tujuan as $gt): ?>
                             <option value="<?= $gt['id'] ?>" class="opt-tujuan" data-gid="<?= $gt['id'] ?>">
@@ -464,10 +541,10 @@ require_once '../components/header.php';
             </div>
 
             <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
-                <button type="button" onclick="tutupModalHapus()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
+                <button type="button" onclick="tutupModalHapus()" class="min-h-[44px] px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-danger hover:bg-rose-700 text-white transition-colors cursor-pointer">
+                <button type="submit" class="min-h-[44px] px-4 py-2 text-xs font-semibold rounded-lg bg-danger hover:bg-rose-700 text-white transition-colors cursor-pointer">
                     Ya, Hapus Akun
                 </button>
             </div>

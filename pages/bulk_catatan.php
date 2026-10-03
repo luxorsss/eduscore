@@ -29,10 +29,10 @@ if ($is_admin) {
 require_once '../components/header.php'; 
 ?>
 
-<main class="flex-grow p-4 md:p-8 max-w-5xl mx-auto w-full flex flex-col gap-6">
+<main class="flex-grow p-4 md:p-8 pb-28 md:pb-8 max-w-5xl mx-auto w-full flex flex-col gap-6">
 
     <!-- Header Section -->
-    <div class="bg-surface-card rounded-xl border border-border-main p-6 shadow-xs flex items-center justify-between gap-4">
+    <div class="bg-surface-card rounded-xl border border-border-main p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-primary-subtle text-primary flex items-center justify-center shrink-0">
                 <span class="material-symbols-outlined text-2xl">playlist_add</span>
@@ -46,7 +46,7 @@ require_once '../components/header.php';
             </div>
         </div>
 
-        <a href="summary_catatan.php" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-text-main hover:bg-slate-50 transition-colors">
+        <a href="summary_catatan.php" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 text-xs font-semibold text-text-main hover:bg-slate-50 transition-colors min-h-[44px]">
             <span class="material-symbols-outlined text-base text-text-muted">summarize</span>
             Lihat Summary
         </a>
@@ -225,14 +225,14 @@ function renderStudents() {
                 <div class="flex items-center gap-2">
                     <button
                         type="button"
-                        class="add-student-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-subtle text-primary hover:bg-primary hover:text-white transition-colors text-xs font-semibold"
+                        class="add-student-button inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-subtle text-primary hover:bg-primary hover:text-white transition-colors text-xs font-semibold min-h-[38px]"
                         onclick="event.stopPropagation(); tambahCatatan(${student.id})"
                         title="Tambah baris catatan"
                     >
                         <span class="material-symbols-outlined text-[18px]">add</span>
                         <span class="hidden sm:inline">Tambah</span>
                     </button>
-                    <span class="material-symbols-outlined text-text-muted text-lg transition-transform expand-icon">
+                    <span class="material-symbols-outlined text-text-muted text-lg transition-transform expand-icon p-1">
                         expand_more
                     </span>
                 </div>
@@ -284,7 +284,7 @@ function tambahCatatan(studentId) {
             </label>
             <input
                 type="date"
-                class="note-date w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 font-medium"
+                class="note-date w-full px-3 py-2.5 text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 font-medium min-h-[44px]"
                 value="<?= date('Y-m-d') ?>"
             >
         </div>
@@ -310,10 +310,11 @@ function tambahCatatan(studentId) {
             <button
                 type="button"
                 onclick="hapusBarisCatatan(this)"
-                class="p-2 rounded-lg text-danger hover:bg-danger-subtle transition-colors flex items-center justify-center border border-transparent hover:border-danger/20"
+                class="w-10 h-10 rounded-lg text-danger hover:bg-danger-subtle transition-colors flex items-center justify-center border border-transparent hover:border-danger/20"
                 title="Hapus baris catatan ini"
+                aria-label="Hapus baris catatan"
             >
-                <span class="material-symbols-outlined text-[18px]">delete</span>
+                <span class="material-symbols-outlined text-[20px]">delete</span>
             </button>
         </div>
     `;

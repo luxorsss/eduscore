@@ -154,36 +154,36 @@ require_once '../components/header.php';
     <?php if ($class_id && !empty($students) && !empty($subjects)): ?>
     
     <!-- Kontrol Tampilan & KKM -->
-    <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface-card p-4 rounded-xl border border-border-main shadow-xs">
-        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-surface-card p-4 rounded-xl border border-border-main shadow-xs">
+        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 w-full md:w-auto">
             <!-- Orientasi Baris -->
-            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-                <button type="button" onclick="setMode('siswa')" id="btnModeSiswa" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors">
-                    Orientasi Baris Siswa
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-full sm:w-auto">
+                <button type="button" onclick="setMode('siswa')" id="btnModeSiswa" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors min-h-[38px] text-center">
+                    Baris Siswa
                 </button>
-                <button type="button" onclick="setMode('mapel')" id="btnModeMapel" class="px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors">
-                    Orientasi Baris Mapel
+                <button type="button" onclick="setMode('mapel')" id="btnModeMapel" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors min-h-[38px] text-center">
+                    Baris Mapel
                 </button>
             </div>
 
             <!-- Tipe Nilai (Akhir vs Ujian Murni) -->
-            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-                <button type="button" onclick="setScoreType('akhir')" id="btnScoreAkhir" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors">
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-full sm:w-auto">
+                <button type="button" onclick="setScoreType('akhir')" id="btnScoreAkhir" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors min-h-[38px] text-center">
                     Nilai Akhir
                 </button>
-                <button type="button" onclick="setScoreType('ujian')" id="btnScoreUjian" class="px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors">
+                <button type="button" onclick="setScoreType('ujian')" id="btnScoreUjian" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors min-h-[38px] text-center">
                     Nilai Murni Ujian
                 </button>
             </div>
         </div>
         
-        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-            <div id="kkmContainer" class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-xs">
+        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full md:w-auto justify-between sm:justify-end">
+            <div id="kkmContainer" class="flex items-center justify-between sm:justify-start gap-2 bg-white px-3 py-2 rounded-lg border border-slate-300 shadow-xs min-h-[44px]">
                 <label for="inputKkm" class="text-xs font-semibold text-text-muted">Batas KKM:</label>
-                <input type="number" id="inputKkm" value="60" min="0" max="100" oninput="updateKkm()" class="w-12 bg-transparent text-xs font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none tabular-nums">
+                <input type="number" id="inputKkm" value="60" min="0" max="100" oninput="updateKkm()" class="w-14 bg-transparent text-xs font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none tabular-nums">
             </div>
 
-            <button type="button" onclick="copyHanyaNilai()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors min-h-[38px]">
+            <button type="button" onclick="copyHanyaNilai()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-colors min-h-[44px]">
                 <span class="material-symbols-outlined text-base">content_copy</span> Salin Angka Murni
             </button>
         </div>
@@ -191,10 +191,10 @@ require_once '../components/header.php';
 
     <!-- Sinkronisasi Urutan Kustom -->
     <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden">
-        <button type="button" onclick="document.getElementById('syncAreaWali').classList.toggle('hidden')" class="w-full px-4 py-3 flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors focus-ring">
+        <button type="button" onclick="document.getElementById('syncAreaWali').classList.toggle('hidden')" class="w-full px-4 py-3 min-h-[44px] flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors focus-ring">
             <div class="flex items-center gap-2 text-text-muted">
                 <span class="material-symbols-outlined text-base text-primary">tune</span> 
-                <span>Sesuaikan Urutan Urut Siswa & Mapel (Format Excel)</span>
+                <span>Sesuaikan Urutan Siswa & Mapel (Format Excel)</span>
             </div>
             <span class="material-symbols-outlined text-text-muted text-base">expand_more</span>
         </button>
@@ -207,7 +207,7 @@ require_once '../components/header.php';
                 <textarea id="urutSiswa" rows="4" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Bisa tempel 1 kolom menurun ATAU 1 baris menyamping dari Excel..."></textarea>
                 <div class="flex justify-between items-center mt-1">
                     <span class="text-[10px] text-text-muted">Format menyamping (Tab/Excel) otomatis diubah jadi vertikal.</span>
-                    <button type="button" onclick="formatTranspose('urutSiswa')" class="text-[10px] font-semibold text-primary hover:underline">Rapikan Baris</button>
+                    <button type="button" onclick="formatTranspose('urutSiswa')" class="text-[10px] font-semibold text-primary hover:underline p-1">Rapikan Baris</button>
                 </div>
             </div>
             <div>
@@ -218,14 +218,14 @@ require_once '../components/header.php';
                 <textarea id="urutMapel" rows="4" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Bisa tempel 1 kolom menurun ATAU 1 baris menyamping dari Excel..."></textarea>
                 <div class="flex justify-between items-center mt-1">
                     <span class="text-[10px] text-text-muted">Format menyamping (Tab/Excel) otomatis diubah jadi vertikal.</span>
-                    <button type="button" onclick="formatTranspose('urutMapel')" class="text-[10px] font-semibold text-primary hover:underline">Rapikan Baris</button>
+                    <button type="button" onclick="formatTranspose('urutMapel')" class="text-[10px] font-semibold text-primary hover:underline p-1">Rapikan Baris</button>
                 </div>
             </div>
-            <div class="md:col-span-2 flex flex-wrap justify-between items-center gap-3 mt-1 pt-2 border-t border-slate-200">
+            <div class="md:col-span-2 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-1 pt-2 border-t border-slate-200">
                 <span class="text-[11px] text-text-muted">💡 <strong>Tips:</strong> Langsung blok deret nama/mapel horizontal di Excel lalu Ctrl+C dan Ctrl+V di sini, sistem langsung memisahkannya otomatis.</span>
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="resetUrutan()" class="text-danger text-xs font-semibold hover:underline px-3 py-1.5">Reset Urutan Asli</button>
-                    <button type="button" onclick="terapkanUrutan()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-xs transition-colors">Terapkan Urutan</button>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <button type="button" onclick="resetUrutan()" class="text-danger text-xs font-semibold hover:underline py-2 text-center">Reset Urutan Asli</button>
+                    <button type="button" onclick="terapkanUrutan()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors min-h-[44px] inline-flex items-center justify-center">Terapkan Urutan</button>
                 </div>
             </div>
         </div>

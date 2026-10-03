@@ -351,7 +351,7 @@ require_once '../components/header.php';
                                 <form action="input_data.php" method="POST" class="shrink-0">
                                     <input type="hidden" name="kelas" value="<?= $jdw['class_id'] ?>">
                                     <input type="hidden" name="mapel" value="<?= $jdw['subject_id'] ?>">
-                                    <button type="submit" class="px-3 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-primary hover:bg-slate-50 transition-colors">
+                                    <button type="submit" class="px-3.5 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-primary hover:bg-slate-50 transition-colors min-h-[38px] inline-flex items-center justify-center">
                                         Isi Nilai
                                     </button>
                                 </form>
@@ -375,7 +375,7 @@ require_once '../components/header.php';
                             <input type="hidden" name="reset_semua_nilai" value="1">
                             <button type="submit" 
                                 onclick="konfirmasiForm(event, 'Semua data nilai semester ini akan dikosongkan. Data siswa dan kelas tidak akan terhapus. Lanjutkan?')"
-                                class="bg-slate-50 text-danger hover:bg-danger hover:text-white px-3.5 py-2 rounded-lg text-xs font-semibold border border-danger/30 transition-colors">
+                                class="bg-slate-50 text-danger hover:bg-danger hover:text-white px-4 py-2.5 rounded-lg text-xs font-semibold border border-danger/30 transition-colors min-h-[44px] inline-flex items-center justify-center">
                                 Kosongkan Data Nilai
                             </button>
                         </form>
@@ -499,18 +499,18 @@ require_once '../components/header.php';
                     <p class="text-[11px] text-text-muted">Petunjuk langkah awal untuk Guru Pengajar dan Wali Kelas</p>
                 </div>
             </div>
-            <button type="button" onclick="tutupModalPanduan()" class="text-text-muted hover:text-danger p-1.5 rounded-lg transition-colors cursor-pointer">
+            <button type="button" onclick="tutupModalPanduan()" class="w-10 h-10 inline-flex items-center justify-center text-text-muted hover:text-danger hover:bg-slate-100 rounded-lg transition-colors cursor-pointer" aria-label="Tutup panduan">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
 
         <!-- Tab Selector -->
         <div class="flex border-b border-border-main bg-white">
-            <button type="button" id="btnTabGuru" onclick="gantiTabPanduan('guru')" class="flex-1 py-2.5 px-4 text-xs font-bold border-b-2 border-primary text-primary bg-primary-subtle/30 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+            <button type="button" id="btnTabGuru" onclick="gantiTabPanduan('guru')" class="flex-1 py-3 px-4 text-xs font-bold border-b-2 border-primary text-primary bg-primary-subtle/30 transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]">
                 <span class="material-symbols-outlined text-base">school</span>
                 <span>Alur Guru Mapel</span>
             </button>
-            <button type="button" id="btnTabWali" onclick="gantiTabPanduan('wali')" class="flex-1 py-2.5 px-4 text-xs font-semibold border-b-2 border-transparent text-text-muted hover:text-text-main transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+            <button type="button" id="btnTabWali" onclick="gantiTabPanduan('wali')" class="flex-1 py-3 px-4 text-xs font-semibold border-b-2 border-transparent text-text-muted hover:text-text-main transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]">
                 <span class="material-symbols-outlined text-base">assignment_ind</span>
                 <span>Khusus Wali Kelas</span>
             </button>
@@ -611,13 +611,13 @@ require_once '../components/header.php';
         </div>
 
         <!-- Footer Modal -->
-        <div class="p-4 border-t border-border-main bg-slate-50/70 flex items-center justify-between gap-3">
-            <span class="text-[11px] text-text-muted">Butuh bantuan lain? Hubungi Admin sekolah.</span>
-            <div class="flex items-center gap-2">
-                <button type="button" onclick="tutupModalPanduan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-200 hover:bg-slate-300 text-text-main transition-colors cursor-pointer">
+        <div class="p-4 border-t border-border-main bg-slate-50/70 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span class="text-[11px] text-text-muted text-center sm:text-left">Butuh bantuan lain? Hubungi Admin sekolah.</span>
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button type="button" onclick="tutupModalPanduan()" class="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-semibold rounded-lg bg-slate-200 hover:bg-slate-300 text-text-main transition-colors cursor-pointer min-h-[44px] inline-flex items-center justify-center">
                     Tutup
                 </button>
-                <a href="jadwal.php" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer flex items-center gap-1">
+                <a href="jadwal.php" class="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer inline-flex items-center justify-center gap-1 min-h-[44px]">
                     <span>Atur Jadwal</span>
                     <span class="material-symbols-outlined text-sm">arrow_forward</span>
                 </a>

@@ -117,12 +117,12 @@ require_once '../components/header.php';
     <div class="bg-surface-card p-4 rounded-xl border border-border-main shadow-xs flex flex-col md:flex-row gap-3 items-stretch md:items-center">
         <div class="relative flex-1">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-base">search</span>
-            <input type="text" id="cariSiswa" autofocus class="w-full bg-white border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-lg pl-9 pr-3.5 py-2 text-xs font-medium placeholder:text-slate-400 min-h-[40px]" placeholder="Ketik nama siswa lalu Enter untuk fokus...">
+            <input type="text" id="cariSiswa" autofocus class="w-full bg-white border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-lg pl-9 pr-3.5 py-2.5 text-xs font-medium placeholder:text-slate-400 min-h-[44px]" placeholder="Ketik nama siswa lalu Enter untuk fokus...">
         </div>
         
         <div class="flex items-center gap-2 flex-1 md:max-w-xs">
             <label for="targetKolom" class="text-xs font-semibold text-text-muted whitespace-nowrap">Target:</label>
-            <select id="targetKolom" class="w-full bg-white border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-lg px-3 py-2 text-xs font-semibold text-text-main cursor-pointer min-h-[40px]">
+            <select id="targetKolom" class="w-full bg-white border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-lg px-3 py-2 text-xs font-semibold text-text-main cursor-pointer min-h-[44px]">
                 <option value="h_uts" <?= $target_kategori === 'h_uts' ? 'selected' : '' ?>>Harian UTS (H.UTS)</option>
                 <option value="uts" <?= $target_kategori === 'uts' ? 'selected' : '' ?>>Ujian Tengah Semester (UTS)</option>
                 <option value="t_uts" <?= $target_kategori === 't_uts' ? 'selected' : '' ?>>Tambahan / Remedial UTS</option>
@@ -133,13 +133,13 @@ require_once '../components/header.php';
         </div>
 
         <div class="flex-1 md:max-w-xs relative">
-            <textarea id="pasteBox" rows="1" class="w-full bg-slate-50 border-dashed border border-slate-300 focus:border-primary focus:bg-white rounded-lg text-xs p-2 text-center font-mono placeholder:text-slate-400 min-h-[40px] resize-none" placeholder="Klik & Tempel (Ctrl+V) deret nilai..."></textarea>
+            <textarea id="pasteBox" rows="1" class="w-full bg-slate-50 border-dashed border border-slate-300 focus:border-primary focus:bg-white rounded-lg text-xs p-2 text-center font-mono placeholder:text-slate-400 min-h-[44px] resize-none" placeholder="Klik & Tempel (Ctrl+V) deret nilai..."></textarea>
         </div>
     </div>
 
     <!-- Opsi Penyesuaian Urutan Excel -->
     <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden">
-        <button type="button" onclick="document.getElementById('syncArea').classList.toggle('hidden')" class="w-full px-4 py-3 flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors border-b border-transparent focus-ring">
+        <button type="button" onclick="document.getElementById('syncArea').classList.toggle('hidden')" class="w-full px-4 py-3 min-h-[44px] flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors border-b border-transparent focus-ring">
             <div class="flex items-center gap-2 text-text-muted">
                 <span class="material-symbols-outlined text-base text-primary">sync_alt</span> 
                 <span>Sinkronisasi Urutan Siswa dengan Lembar Excel</span>
@@ -149,9 +149,9 @@ require_once '../components/header.php';
         <div id="syncArea" class="hidden p-4 bg-slate-50/50 border-t border-border-main flex flex-col gap-3">
             <label for="excelNames" class="text-xs font-semibold text-text-muted">Tempel daftar nama siswa dari kolom Excel di bawah:</label>
             <textarea id="excelNames" rows="3" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Budi Santoso&#10;Citra Lestari&#10;Dewi Anggraeni..."></textarea>
-            <div class="flex flex-wrap justify-between items-center gap-2">
-                <button type="button" onclick="hapusMemori()" class="text-danger text-xs font-semibold hover:underline">Reset Urutan Abjad Asli</button>
-                <button type="button" onclick="sesuaikanUrutan(false)" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-xs transition-colors">Sesuaikan Urutan Tabel</button>
+            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2">
+                <button type="button" onclick="hapusMemori()" class="text-danger text-xs font-semibold hover:underline py-2 text-center sm:text-left">Reset Urutan Abjad Asli</button>
+                <button type="button" onclick="sesuaikanUrutan(false)" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors min-h-[44px] inline-flex items-center justify-center">Sesuaikan Urutan Tabel</button>
             </div>
             <div id="warningBox" class="hidden bg-danger-subtle text-danger text-xs p-3 rounded-lg border border-danger/20 font-medium"></div>
         </div>
@@ -217,9 +217,9 @@ require_once '../components/header.php';
             </table>
         </div>
 
-        <div class="p-4 bg-slate-50 border-t border-border-main flex justify-between items-center">
-            <span class="text-xs text-text-muted">Gunakan tombol panah keyboard atau Enter untuk berpindah baris nilai.</span>
-            <button type="submit" class="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors min-h-[40px]">
+        <div class="p-4 bg-slate-50 border-t border-border-main flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+            <span class="text-xs text-text-muted text-center sm:text-left">Gunakan tombol panah keyboard atau Enter untuk berpindah baris nilai.</span>
+            <button type="submit" class="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors min-h-[44px] inline-flex items-center justify-center">
                 Simpan Semua Nilai
             </button>
         </div>
