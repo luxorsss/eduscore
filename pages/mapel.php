@@ -3,7 +3,6 @@ session_start();
 require_once '../config/auth.php';
 require_admin();
 
-// Ambil Data Mapel
 $stmt = $pdo->query("SELECT * FROM subjects ORDER BY nama_mapel ASC");
 $daftar_mapel = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -339,11 +338,9 @@ function bukaPratinjauBulk() {
         }
     });
 
-    // Render Stats
     document.getElementById('badgeCountBaru').textContent = newMapels.length;
     document.getElementById('badgeCountDobel').textContent = duplicateMapels.length;
 
-    // Render Mapel Baru
     const containerBaru = document.getElementById('containerMapelBaru');
     if (newMapels.length === 0) {
         containerBaru.innerHTML = `
@@ -364,7 +361,6 @@ function bukaPratinjauBulk() {
         containerBaru.innerHTML = htmlBaru;
     }
 
-    // Render Mapel Dobel
     const wrapperDobel = document.getElementById('wrapperMapelDobel');
     const containerDobel = document.getElementById('containerMapelDobel');
     if (duplicateMapels.length > 0) {

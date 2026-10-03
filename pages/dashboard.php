@@ -19,7 +19,7 @@ if ($is_admin) {
     $admin_stats['total_mapel'] = $pdo->query("SELECT COUNT(*) FROM subjects")->fetchColumn();
 }
 
-// 2. Tarik Data Jadwal & Kelas yang berhak diisi nilainya
+// Jadwal & kelas yang berhak diisi nilainya
 if ($is_admin) {
     $stmt_kelas = $pdo->query("
         SELECT DISTINCT c.id, c.nama_kelas, c.jenjang 
@@ -59,7 +59,7 @@ if ($is_admin) {
     $stmt_jadwal->execute($params);
     $jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
 
-    // Ambil daftar kelas unik
+    // Daftar kelas unik dari jadwal
     $kelas_map = [];
     foreach ($jadwal_list as $row) {
         $kelas_map[$row['class_id']] = [

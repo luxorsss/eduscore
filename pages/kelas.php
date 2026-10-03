@@ -5,7 +5,7 @@ require_once '../config/auth.php';
 // Proteksi Login & Admin
 require_admin();
 
-// Ambil Data Kelas dari Database beserta info Wali Kelas
+// Data kelas dari database beserta info wali kelas
 $stmt = $pdo->query("
     SELECT c.*, u.nama_lengkap as nama_wali, u.username as username_wali 
     FROM classes c
@@ -14,7 +14,7 @@ $stmt = $pdo->query("
 ");
 $daftar_kelas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Ambil Semua Guru untuk Dropdown Wali Kelas
+// Daftar guru untuk dropdown wali kelas
 $stmt_guru = $pdo->query("SELECT id, nama_lengkap, username FROM users WHERE role = 'guru' ORDER BY nama_lengkap ASC");
 $semua_guru = $stmt_guru->fetchAll(PDO::FETCH_ASSOC);
 

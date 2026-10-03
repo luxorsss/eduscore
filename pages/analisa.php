@@ -28,7 +28,6 @@ $user_id = $_SESSION['user_id'];
 $class_id = $_GET['kelas'] ?? null;
 $mapel_id = $_GET['mapel'] ?? null;
 
-// 1. Ambil Data Kelas & Mapel 
 $stmt_kelas = $pdo->prepare("SELECT DISTINCT c.id, c.nama_kelas, c.jenjang FROM teaching_schedules ts JOIN classes c ON ts.class_id = c.id WHERE ts.user_id = ? ORDER BY c.jenjang, c.nama_kelas");
 $stmt_kelas->execute([$user_id]);
 $kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
@@ -47,7 +46,6 @@ $mapel_json = json_encode($mapel_per_kelas);
 $students = [];
 $info = null;
 
-// 2. Tarik Data Nilai
 if ($class_id && $mapel_id) {
     $stmt_info = $pdo->prepare("SELECT c.nama_kelas, s.nama_mapel FROM classes c, subjects s WHERE c.id = ? AND s.id = ?");
     $stmt_info->execute([$class_id, $mapel_id]);
@@ -339,7 +337,7 @@ require_once '../components/header.php';
 
         sessionStorage.setItem(STORAGE_KEY, teks);
 
-        const excelArray = teks.split(/\r?\n/).map(n => n.trim().toLowerCase()).filter(n => n);
+        const excelArray = teks.split(/[\r\n\t]+/).map(n => n.trim().toLowerCase()).filter(n => n);
         const tbody = document.getElementById('tabelNilai');
         if (!tbody) return;
         

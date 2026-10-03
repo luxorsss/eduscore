@@ -9,6 +9,12 @@ check_login();
 $user_id = $_SESSION['user_id'];
 $class_id = $_POST['kelas'] ?? $_GET['kelas'] ?? null;
 $mapel_id = $_POST['mapel'] ?? $_GET['mapel'] ?? null;
+$target_kategori = $_POST['kategori'] ?? $_GET['kategori'] ?? 'uts';
+if ($target_kategori === 'tambahan_uts') $target_kategori = 't_uts';
+if ($target_kategori === 'tambahan_uas') $target_kategori = 't_uas';
+if (!in_array($target_kategori, ['h_uts', 'uts', 't_uts', 'h_uas', 'uas', 't_uas'])) {
+    $target_kategori = 'uts';
+}
 
 if (!$class_id || !$mapel_id) {
     header("Location: dashboard.php");
@@ -48,7 +54,12 @@ if (!can_edit_schedule_grades($pdo, $user_id, $schedule_id)) {
     exit();
 }
 
-// Ambil Daftar Siswa BESERTA Seluruh Nilainya saat ini
+// Cek apakah jadwal ini sudah pernah diisi nilai sebelumnya
+$stmt_check_grades = $pdo->prepare("SELECT COUNT(*) FROM grades WHERE schedule_id = ?");
+$stmt_check_grades->execute([$schedule_id]);
+$has_saved_grades = ((int)$stmt_check_grades->fetchColumn() > 0);
+
+// Ambil daftar siswa beserta nilai saat ini
 $stmt_siswa = $pdo->prepare("
     SELECT st.id, st.nis, st.nama, 
            g.h_uts, g.uts, g.tambahan_uts, g.h_uas, g.uas, g.tambahan_uas
@@ -106,18 +117,18 @@ require_once '../components/header.php';
     <div class="bg-surface-card p-4 rounded-xl border border-border-main shadow-xs flex flex-col md:flex-row gap-3 items-stretch md:items-center">
         <div class="relative flex-1">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-base">search</span>
-            <input type="text" id="cariSiswa" class="w-full bg-white border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-lg pl-9 pr-3.5 py-2 text-xs font-medium placeholder:text-slate-400 min-h-[40px]" placeholder="Ketik nama siswa lalu Enter untuk fokus...">
+            <input type="text" id="cariSiswa" autofocus class="w-full bg-white border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-lg pl-9 pr-3.5 py-2 text-xs font-medium placeholder:text-slate-400 min-h-[40px]" placeholder="Ketik nama siswa lalu Enter untuk fokus...">
         </div>
         
         <div class="flex items-center gap-2 flex-1 md:max-w-xs">
             <label for="targetKolom" class="text-xs font-semibold text-text-muted whitespace-nowrap">Target:</label>
             <select id="targetKolom" class="w-full bg-white border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-lg px-3 py-2 text-xs font-semibold text-text-main cursor-pointer min-h-[40px]">
-                <option value="h_uts">Harian UTS (H.UTS)</option>
-                <option value="uts">Ujian Tengah Semester (UTS)</option>
-                <option value="t_uts">Tambahan / Remedial UTS</option>
-                <option value="h_uas">Harian UAS (H.UAS)</option>
-                <option value="uas">Ujian Akhir Semester (UAS)</option>
-                <option value="t_uas">Tambahan / Remedial UAS</option>
+                <option value="h_uts" <?= $target_kategori === 'h_uts' ? 'selected' : '' ?>>Harian UTS (H.UTS)</option>
+                <option value="uts" <?= $target_kategori === 'uts' ? 'selected' : '' ?>>Ujian Tengah Semester (UTS)</option>
+                <option value="t_uts" <?= $target_kategori === 't_uts' ? 'selected' : '' ?>>Tambahan / Remedial UTS</option>
+                <option value="h_uas" <?= $target_kategori === 'h_uas' ? 'selected' : '' ?>>Harian UAS (H.UAS)</option>
+                <option value="uas" <?= $target_kategori === 'uas' ? 'selected' : '' ?>>Ujian Akhir Semester (UAS)</option>
+                <option value="t_uas" <?= $target_kategori === 't_uas' ? 'selected' : '' ?>>Tambahan / Remedial UAS</option>
             </select>
         </div>
 
@@ -181,7 +192,7 @@ require_once '../components/header.php';
                             </td>
                             
                             <td class="kolom-dinamis kolom-h_uts p-1 border-r border-border-main">
-                                <input type="number" step="any" min="0" max="100" name="n_h_uts[<?= $s['id'] ?>]" value="<?= $s['h_uts'] ?>" data-col="h_uts" data-row="<?= $index ?>" class="nilai-input input-h_uts w-full p-2 bg-transparent text-center font-semibold text-text-main border-0 focus:ring-2 focus:ring-primary/20 focus:bg-white rounded tabular-nums" placeholder="-">
+                                <input type="number" step="any" min="0" max="100" name="n_h_uts[<?= $s['id'] ?>]" value="<?= ($s['h_uts'] !== null && $s['h_uts'] !== '') ? htmlspecialchars($s['h_uts']) : (!$has_saved_grades ? '100' : '') ?>" data-col="h_uts" data-row="<?= $index ?>" class="nilai-input input-h_uts w-full p-2 bg-transparent text-center font-semibold text-text-main border-0 focus:ring-2 focus:ring-primary/20 focus:bg-white rounded tabular-nums" placeholder="-">
                             </td>
                             <td class="kolom-dinamis kolom-uts p-1 border-r border-border-main">
                                 <input type="number" step="any" min="0" max="100" name="n_uts[<?= $s['id'] ?>]" value="<?= $s['uts'] ?>" data-col="uts" data-row="<?= $index ?>" class="nilai-input input-uts w-full p-2 bg-transparent text-center font-semibold text-text-main border-0 focus:ring-2 focus:ring-primary/20 focus:bg-white rounded tabular-nums" placeholder="-">
@@ -191,7 +202,7 @@ require_once '../components/header.php';
                             </td>
                             
                             <td class="kolom-dinamis kolom-h_uas p-1 border-r border-border-main">
-                                <input type="number" step="any" min="0" max="100" name="n_h_uas[<?= $s['id'] ?>]" value="<?= $s['h_uas'] ?>" data-col="h_uas" data-row="<?= $index ?>" class="nilai-input input-h_uas w-full p-2 bg-transparent text-center font-semibold text-text-main border-0 focus:ring-2 focus:ring-primary/20 focus:bg-white rounded tabular-nums" placeholder="-">
+                                <input type="number" step="any" min="0" max="100" name="n_h_uas[<?= $s['id'] ?>]" value="<?= ($s['h_uas'] !== null && $s['h_uas'] !== '') ? htmlspecialchars($s['h_uas']) : (!$has_saved_grades ? '100' : '') ?>" data-col="h_uas" data-row="<?= $index ?>" class="nilai-input input-h_uas w-full p-2 bg-transparent text-center font-semibold text-text-main border-0 focus:ring-2 focus:ring-primary/20 focus:bg-white rounded tabular-nums" placeholder="-">
                             </td>
                             <td class="kolom-dinamis kolom-uas p-1 border-r border-border-main">
                                 <input type="number" step="any" min="0" max="100" name="n_uas[<?= $s['id'] ?>]" value="<?= $s['uas'] ?>" data-col="uas" data-row="<?= $index ?>" class="nilai-input input-uas w-full p-2 bg-transparent text-center font-semibold text-text-main border-0 focus:ring-2 focus:ring-primary/20 focus:bg-white rounded tabular-nums" placeholder="-">
@@ -216,7 +227,6 @@ require_once '../components/header.php';
 </main>
 
 <script>
-    // 1. FILTER PENCARIAN SISWA
     const kolomPencarian = document.getElementById('cariSiswa');
     if (kolomPencarian) {
         kolomPencarian.addEventListener('input', function() {
@@ -229,14 +239,10 @@ require_once '../components/header.php';
         });
     }
 
-    // 2. SIKLUS ENTER & NAVIGASI KEYBOARD (R-32)
     const targetDropdown = document.getElementById('targetKolom');
     const colsOrder = ['h_uts', 'uts', 't_uts', 'h_uas', 'uas', 't_uas'];
 
-    // A. Navigasi keyboard pada input nilai:
-    // - Enter: Lompat kembali ke kolom pencarian nama siswa (Siklus Enter cepat)
-    // - Panah Bawah/Atas: Pindah baris pada kolom yang sama
-    // - Panah Kanan/Kiri: Pindah antar kolom nilai
+    // Enter returns to student search; arrow keys navigate the grid
     document.querySelectorAll('.nilai-input').forEach(input => {
         input.addEventListener('keydown', function(e) {
             const currentRow = parseInt(this.getAttribute('data-row'));
@@ -286,7 +292,7 @@ require_once '../components/header.php';
         });
     });
 
-    // B. Saat Tekan Enter di Kolom Pencarian Nama Siswa -> Tembak kursor ke kolom nilai target
+    // Enter in search box focuses the target column of the first matched student
     if (kolomPencarian) {
         kolomPencarian.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
@@ -304,18 +310,17 @@ require_once '../components/header.php';
             }
         });
 
-        // Fitur Auto-select Search saat fokus
         kolomPencarian.addEventListener('focus', function() { this.select(); });
         kolomPencarian.addEventListener('mouseup', function(e) { e.preventDefault(); }, { once: true });
     }
 
-    // 3. FITUR SMART PASTE
+    // Direct clipboard paste into active target column
     const pasteBox = document.getElementById('pasteBox');
     if (pasteBox) {
         pasteBox.addEventListener('paste', (e) => {
             e.preventDefault();
             const text = (e.clipboardData || window.clipboardData).getData('text');
-            const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
+            const rows = text.split(/[\r\n\t]+/).filter(r => r.trim() !== "");
             
             const targetClass = targetDropdown.value;
             const barisTerlihat = Array.from(document.querySelectorAll('tr.data-row'))
@@ -344,10 +349,15 @@ require_once '../components/header.php';
         });
     }
 
-    // 4. CHAMELEON SORT
+    // Match and reorder student rows based on external roster
     const STORAGE_KEY = 'memori_input_eduscore';
 
     document.addEventListener('DOMContentLoaded', () => {
+        if (kolomPencarian) {
+            kolomPencarian.focus();
+            kolomPencarian.select();
+        }
+
         const memori = sessionStorage.getItem(STORAGE_KEY);
         if (memori) {
             const excelEl = document.getElementById('excelNames');
@@ -377,7 +387,7 @@ require_once '../components/header.php';
 
         sessionStorage.setItem(STORAGE_KEY, teks);
 
-        const excelArray = teks.split(/\r?\n/).map(n => n.trim().toLowerCase()).filter(n => n);
+        const excelArray = teks.split(/[\r\n\t]+/).map(n => n.trim().toLowerCase()).filter(n => n);
         const tbody = document.getElementById('tabelNilai');
         const rows = Array.from(tbody.querySelectorAll('tr.data-row'));
         
@@ -410,10 +420,10 @@ require_once '../components/header.php';
         }
     }
 
-    // 5. FITUR RESPONSIF MOBILE
+    // Responsiveness: display only the target column on mobile
     function sesuaikanKolomMobile() {
         const isMobile = window.innerWidth < 768;
-        const targetClass = targetDropdown ? targetDropdown.value : 'h_uts';
+        const targetClass = targetDropdown ? targetDropdown.value : 'uts';
         const semuaKolom = document.querySelectorAll('.kolom-dinamis');
 
         semuaKolom.forEach(kolom => {

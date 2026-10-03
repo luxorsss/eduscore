@@ -7,7 +7,7 @@
     </div> <!-- Penutup .flex-1 dari header.php -->
 
     <script>
-        // 1. Fungsi Pop-up Konfirmasi untuk Tautan Hapus (Tombol <a>)
+        // Konfirmasi tautan hapus
         function konfirmasiLink(event, url, pesan) {
             event.preventDefault();
             Swal.fire({
@@ -32,7 +32,7 @@
             });
         }
 
-        // 2. Fungsi Pop-up Konfirmasi untuk Form (Tombol Submit)
+        // Konfirmasi submit form
         function konfirmasiForm(event, pesan) {
             event.preventDefault();
             const form = event.target.closest('form');

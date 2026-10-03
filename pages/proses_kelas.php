@@ -5,14 +5,13 @@ require_once '../config/auth.php';
 // Hanya Admin yang berhak mengelola kelas & penugasan wali kelas
 require_admin();
 
-// 1. Tambah Kelas
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'tambah') {
     $jenjang = $_POST['jenjang'] ?? 'SMA';
     $nama_kelas = trim($_POST['nama_kelas'] ?? '');
     $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? (int)$_POST['wali_kelas_id'] : null;
 
     if (!empty($nama_kelas)) {
-        // Cek jika wali_kelas_id dipilih, pastikan belum membina kelas lain
+        // Pastikan guru belum membina kelas lain
         if ($wali_kelas_id) {
             $stmt_check = $pdo->prepare("SELECT id, nama_kelas FROM classes WHERE wali_kelas_id = ?");
             $stmt_check->execute([$wali_kelas_id]);
@@ -32,7 +31,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     exit();
 }
 
-// 2. Edit / Perbarui Wali Kelas & Data Kelas
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'edit') {
     $class_id = (int)($_POST['class_id'] ?? 0);
     $jenjang = $_POST['jenjang'] ?? 'SMA';
@@ -40,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     $wali_kelas_id = !empty($_POST['wali_kelas_id']) ? (int)$_POST['wali_kelas_id'] : null;
 
     if ($class_id > 0 && !empty($nama_kelas)) {
-        // Cek jika wali_kelas_id dipilih, pastikan belum membina kelas LAIN
+        // Pastikan guru belum membina kelas lain
         if ($wali_kelas_id) {
             $stmt_check = $pdo->prepare("SELECT id, nama_kelas FROM classes WHERE wali_kelas_id = ? AND id != ?");
             $stmt_check->execute([$wali_kelas_id, $class_id]);
@@ -60,12 +58,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     exit();
 }
 
-// 3. Hapus Kelas (Validasi keterkaitan)
 if (isset($_GET['hapus'])) {
     $class_id = (int)$_GET['hapus'];
 
     try {
-        // 1. Cek keterkaitan dengan tabel students
+        // Validasi keterkaitan data sebelum hapus
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM students WHERE class_id = ?");
         $stmt->execute([$class_id]);
         if ($stmt->fetchColumn() > 0) {
@@ -73,7 +70,6 @@ if (isset($_GET['hapus'])) {
             exit();
         }
 
-        // 2. Cek keterkaitan dengan tabel teaching_schedules (jadwal mengajar)
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM teaching_schedules WHERE class_id = ?");
         $stmt->execute([$class_id]);
         if ($stmt->fetchColumn() > 0) {
@@ -81,7 +77,6 @@ if (isset($_GET['hapus'])) {
             exit();
         }
 
-        // 3. Jika bersih, hapus kelas
         $stmt = $pdo->prepare("DELETE FROM classes WHERE id = ?");
         $stmt->execute([$class_id]);
 

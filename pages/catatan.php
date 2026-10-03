@@ -175,9 +175,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('catatanForm');
     const saveButton = document.getElementById('saveButton');
 
-    // ==========================================
-    // Load siswa berdasarkan kelas
-    // ==========================================
     kelasSelect.addEventListener('change', function () {
         const classId = this.value;
         studentSelect.innerHTML = '';
@@ -263,9 +260,6 @@ document.addEventListener('DOMContentLoaded', function () {
         kelasSelect.dispatchEvent(new Event('change'));
     }
 
-    // ==========================================
-    // Character counter
-    // ==========================================
     function updateCharCount() {
         const length = catatanInput.value.length;
         charCount.textContent = length + ' / 2000';
@@ -274,9 +268,6 @@ document.addEventListener('DOMContentLoaded', function () {
     catatanInput.addEventListener('input', updateCharCount);
     updateCharCount();
 
-    // ==========================================
-    // Cegah double submit
-    // ==========================================
     form.addEventListener('submit', function () {
         saveButton.disabled = true;
         saveButton.innerHTML = `
@@ -285,9 +276,6 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     });
 
-    // ==========================================
-    // SweetAlert status
-    // ==========================================
     const status = <?= json_encode($status) ?>;
 
     if (typeof Swal !== 'undefined' && status) {

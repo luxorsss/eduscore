@@ -5,18 +5,15 @@ require_once '../config/auth.php';
 // Proteksi: Hanya Admin yang bisa mengelola data mapel
 require_admin();
 
-// 1. PROSES TAMBAH & EDIT MAPEL (Metode POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
     $action = $_POST['action'];
 
-    // --- PROSES BULK TAMBAH ---
     if ($action === 'bulk_tambah') {
         $mapel_list = $_POST['nama_mapel_bulk'] ?? [];
         if (!is_array($mapel_list)) {
             $mapel_list = [];
         }
 
-        // Ambil mapel yang sudah ada untuk validasi sisi server
         $stmt_existing = $pdo->query("SELECT LOWER(TRIM(nama_mapel)) FROM subjects");
         $existing = $stmt_existing->fetchAll(PDO::FETCH_COLUMN);
         $existing_set = array_flip($existing);
@@ -66,7 +63,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
     if (!empty($nama_mapel)) {
         try {
             if ($action === 'tambah') {
-                // --- PROSES TAMBAH ---
                 $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM subjects WHERE LOWER(nama_mapel) = LOWER(?)");
                 $stmt_check->execute([$nama_mapel]);
                 $is_exists = $stmt_check->fetchColumn();
@@ -84,10 +80,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 $stmt->execute([$nama_mapel]);
 
             } elseif ($action === 'edit' && isset($_POST['id_mapel'])) {
-                // --- PROSES EDIT ---
                 $id_mapel = $_POST['id_mapel'];
 
-                // Cek duplikat, tapi kecualikan ID mapel yang sedang diedit ini
+                // Cegah duplikat nama, abaikan ID mapel saat ini
                 $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM subjects WHERE LOWER(nama_mapel) = LOWER(?) AND id != ?");
                 $stmt_check->execute([$nama_mapel, $id_mapel]);
                 $is_exists = $stmt_check->fetchColumn();
@@ -114,24 +109,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
     }
 }
 
-// 2. PROSES HAPUS MAPEL (Metode GET)
 if (isset($_GET['hapus'])) {
     $id_mapel = $_GET['hapus'];
 
     try {
-        // Cek dulu apakah mapel ini sedang digunakan di jadwal (teaching_schedules)
+        // Cek apakah mapel terdaftar di jadwal penugasan
         $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM teaching_schedules WHERE subject_id = ?");
         $stmt_check->execute([$id_mapel]);
         $is_used = $stmt_check->fetchColumn();
 
         if ($is_used > 0) {
-            // Jika masih dipakai, jangan dihapus agar data nilai tidak error/berantakan
             echo "<script>
                     alert('Gagal menghapus! Mata pelajaran ini masih digunakan dalam jadwal mengajar Anda.');
                     window.location.href = 'mapel.php';
                   </script>";
         } else {
-            // Jika aman, eksekusi penghapusan
             $stmt_delete = $pdo->prepare("DELETE FROM subjects WHERE id = ?");
             $stmt_delete->execute([$id_mapel]);
 
@@ -146,7 +138,6 @@ if (isset($_GET['hapus'])) {
     exit();
 }
 
-// Jika file ini diakses langsung tanpa parameter, kembalikan ke dashboard
 header("Location: dashboard.php");
 exit();
 ?>

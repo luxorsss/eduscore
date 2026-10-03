@@ -7,26 +7,21 @@ check_login();
 $user_id = (int)$_SESSION['user_id'];
 $is_admin = is_admin();
 
-// 1. Ambil Semua Data Kelas untuk Dropdown
 $stmt_kelas = $pdo->query("SELECT * FROM classes ORDER BY jenjang, nama_kelas");
 $semua_kelas = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
 
-// 2. Ambil Semua Data Mapel untuk Dropdown
 $stmt_mapel = $pdo->query("SELECT * FROM subjects ORDER BY nama_mapel");
 $semua_mapel = $stmt_mapel->fetchAll(PDO::FETCH_ASSOC);
 
-// 3. Ambil Semua Guru (untuk filter & form Admin)
 $semua_guru = [];
 if ($is_admin) {
     $stmt_guru = $pdo->query("SELECT id, nama_lengkap, username, role FROM users ORDER BY nama_lengkap ASC");
     $semua_guru = $stmt_guru->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// 4. Filter Kelas & Filter Guru (via GET)
 $filter_kelas = isset($_GET['filter_kelas']) && $_GET['filter_kelas'] !== '' ? (int)$_GET['filter_kelas'] : null;
 $filter_guru = ($is_admin && isset($_GET['filter_guru']) && $_GET['filter_guru'] !== '') ? $_GET['filter_guru'] : null;
 
-// 5. Query Jadwal Aktif
 $sql_jadwal = "
     SELECT ts.id as jadwal_id, ts.class_id, ts.subject_id, ts.user_id, ts.is_manual,
            u.nama_lengkap as nama_guru, u.username as username_guru, u.role as guru_role,
@@ -62,7 +57,7 @@ $stmt_jadwal = $pdo->prepare($sql_jadwal);
 $stmt_jadwal->execute($params);
 $jadwal_aktif = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
 
-// 6. Ambil seluruh pemetaan yang sudah diambil oleh guru lain (untuk mencegah bentrok & disable pilihan)
+// Pemetaan penugasan yang sudah diambil untuk disable pilihan bentrok
 $stmt_taken = $pdo->query("
     SELECT ts.class_id, ts.subject_id, ts.user_id, u.nama_lengkap 
     FROM teaching_schedules ts 
@@ -180,10 +175,22 @@ require_once '../components/header.php';
         <?php endif; ?>
     <?php endif; ?>
 
+    <!-- Tab Switcher Khusus Mobile -->
+    <div class="lg:hidden flex rounded-xl bg-slate-100 p-1 border border-border-main shadow-xs">
+        <button type="button" id="mobileTabDaftar" onclick="switchMobileView('daftar')" class="flex-1 py-2.5 rounded-lg bg-white text-primary font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]">
+            <span class="material-symbols-outlined text-base">format_list_bulleted</span>
+            <span>Daftar Jadwal (<?= count($jadwal_aktif) ?>)</span>
+        </button>
+        <button type="button" id="mobileTabTambah" onclick="switchMobileView('tambah')" class="flex-1 py-2.5 rounded-lg text-text-muted hover:text-text-main font-semibold text-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]">
+            <span class="material-symbols-outlined text-base">add_circle</span>
+            <span>+ Tambah Jadwal</span>
+        </button>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         <!-- Form Tambah Jadwal (Bulk Support) -->
-        <div class="lg:col-span-4 sticky top-20">
+        <div id="kolomTambahJadwal" class="hidden lg:block lg:col-span-4 lg:sticky lg:top-20">
             <div class="bg-surface-card rounded-xl border border-border-main shadow-xs p-6">
                 <h3 class="font-bold text-sm text-text-main mb-3 flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary text-base">add_circle</span>
@@ -341,7 +348,7 @@ require_once '../components/header.php';
         </div>
 
         <!-- Daftar Jadwal + Filter + Bulk Delete -->
-        <div class="lg:col-span-8">
+        <div id="kolomDaftarJadwal" class="block lg:block lg:col-span-8">
             <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden">
                 
                 <!-- Filter Toolbar -->
@@ -432,7 +439,11 @@ require_once '../components/header.php';
                             <div class="flex flex-col items-center justify-center py-12 text-center">
                                 <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">calendar_add_on</span>
                                 <p class="text-sm font-semibold text-text-main">Belum Ada Jadwal Mengajar<?= $filter_kelas ? ' untuk Kriteria Ini' : '' ?></p>
-                                <p class="text-xs text-text-muted mt-1 max-w-sm">Gunakan formulir di samping untuk menambahkan penugasan mata pelajaran ke kelas yang diampu.</p>
+                                <p class="text-xs text-text-muted mt-1 max-w-sm">Gunakan formulir penugasan untuk menambahkan penugasan mata pelajaran ke kelas yang diampu.</p>
+                                <button type="button" onclick="switchMobileView('tambah')" class="lg:hidden mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold shadow-xs transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add_circle</span>
+                                    <span>Buka Form Tambah Jadwal</span>
+                                </button>
                             </div>
                         <?php else: ?>
                             <?php foreach($jadwal_aktif as $jadwal): ?>
@@ -524,6 +535,31 @@ require_once '../components/header.php';
 </main>
 
 <script>
+function switchMobileView(view) {
+    const colTambah = document.getElementById('kolomTambahJadwal');
+    const colDaftar = document.getElementById('kolomDaftarJadwal');
+    const tabTambah = document.getElementById('mobileTabTambah');
+    const tabDaftar = document.getElementById('mobileTabDaftar');
+
+    if (!colTambah || !colDaftar || !tabTambah || !tabDaftar) return;
+
+    if (view === 'tambah') {
+        colTambah.classList.remove('hidden');
+        colDaftar.classList.add('hidden');
+        
+        tabTambah.className = "flex-1 py-2.5 rounded-lg bg-white text-primary font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]";
+        tabDaftar.className = "flex-1 py-2.5 rounded-lg text-text-muted hover:text-text-main font-semibold text-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]";
+        window.scrollTo({ top: tabTambah.offsetTop - 80, behavior: 'smooth' });
+    } else {
+        colDaftar.classList.remove('hidden');
+        colTambah.classList.add('hidden');
+
+        tabDaftar.className = "flex-1 py-2.5 rounded-lg bg-white text-primary font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]";
+        tabTambah.className = "flex-1 py-2.5 rounded-lg text-text-muted hover:text-text-main font-semibold text-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]";
+        window.scrollTo({ top: tabDaftar.offsetTop - 80, behavior: 'smooth' });
+    }
+}
+
 const takenMap = <?= json_encode($taken_map) ?>;
 const currentUserId = <?= (int)$user_id ?>;
 const isAdmin = <?= $is_admin ? 'true' : 'false' ?>;

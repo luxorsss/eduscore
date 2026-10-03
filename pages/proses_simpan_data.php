@@ -31,7 +31,6 @@ try {
     $pdo->beginTransaction();
 
     foreach ($n_uts as $student_id => $val) {
-        // Ambil nilai, jadikan null jika kosong
         $val_h_uts = ($n_h_uts[$student_id] !== '') ? str_replace(',', '.', $n_h_uts[$student_id]) : null;
         $val_uts   = ($n_uts[$student_id] !== '') ? str_replace(',', '.', $n_uts[$student_id]) : null;
         $val_t_uts = ($n_t_uts[$student_id] !== '') ? str_replace(',', '.', $n_t_uts[$student_id]) : null;
@@ -39,17 +38,14 @@ try {
         $val_uas   = ($n_uas[$student_id] !== '') ? str_replace(',', '.', $n_uas[$student_id]) : null;
         $val_t_uas = ($n_t_uas[$student_id] !== '') ? str_replace(',', '.', $n_t_uas[$student_id]) : null;
 
-        // Cek apakah data nilai siswa ini di mapel ini sudah ada
         $stmt_check = $pdo->prepare("SELECT id FROM grades WHERE student_id = ? AND schedule_id = ?");
         $stmt_check->execute([$student_id, $schedule_id]);
         $exists = $stmt_check->fetchColumn();
 
         if ($exists) {
-            // Update jika sudah ada
             $stmt_update = $pdo->prepare("UPDATE grades SET h_uts=?, uts=?, tambahan_uts=?, h_uas=?, uas=?, tambahan_uas=? WHERE student_id=? AND schedule_id=?");
             $stmt_update->execute([$val_h_uts, $val_uts, $val_t_uts, $val_h_uas, $val_uas, $val_t_uas, $student_id, $schedule_id]);
         } else {
-            // Jika belum pernah ada nilainya sama sekali tapi ada kotak yang diisi
             if ($val_h_uts !== null || $val_uts !== null || $val_t_uts !== null || $val_h_uas !== null || $val_uas !== null || $val_t_uas !== null) {
                 $stmt_insert = $pdo->prepare("INSERT INTO grades (student_id, schedule_id, h_uts, uts, tambahan_uts, h_uas, uas, tambahan_uas) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt_insert->execute([$student_id, $schedule_id, $val_h_uts, $val_uts, $val_t_uts, $val_h_uas, $val_uas, $val_t_uas]);
@@ -66,7 +62,7 @@ try {
                 title: 'Berhasil!', 
                 text: 'Data nilai $berhasil siswa telah disimpan.', 
                 showConfirmButton: false, 
-                timer: 1500 // Pop-up otomatis hilang dalam 1,5 detik
+                timer: 1500
             }).then(() => { 
                 window.location.href = 'dashboard.php'; 
             });

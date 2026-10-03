@@ -129,9 +129,6 @@ const totalInfo = document.getElementById('totalInfo');
 
 let studentsData = [];
 
-// =====================================================
-// PILIH KELAS
-// =====================================================
 kelasSelect.addEventListener('change', function () {
     const classId = this.value;
     studentsContainer.innerHTML = '';
@@ -184,9 +181,6 @@ if (kelasSelect && kelasSelect.value) {
     kelasSelect.dispatchEvent(new Event('change'));
 }
 
-// =====================================================
-// RENDER SISWA
-// =====================================================
 function renderStudents() {
     studentsContainer.innerHTML = '';
 
@@ -255,9 +249,6 @@ function renderStudents() {
     });
 }
 
-// =====================================================
-// TOGGLE SISWA
-// =====================================================
 function toggleStudent(studentId) {
     const card = document.querySelector(`.student-card[data-student-id="${studentId}"]`);
     if (!card) return;
@@ -271,9 +262,6 @@ function toggleStudent(studentId) {
     }
 }
 
-// =====================================================
-// TAMBAH CATATAN
-// =====================================================
 function tambahCatatan(studentId) {
     const card = document.querySelector(`.student-card[data-student-id="${studentId}"]`);
     if (!card) return;
@@ -345,9 +333,6 @@ function tambahCatatan(studentId) {
     textarea.focus();
 }
 
-// =====================================================
-// HAPUS BARIS CATATAN
-// =====================================================
 function hapusBarisCatatan(button) {
     const row = button.closest('.note-row');
     if (!row) return;
@@ -366,9 +351,6 @@ function hapusBarisCatatan(button) {
     }
 }
 
-// =====================================================
-// STATUS SISWA
-// =====================================================
 function updateStudentStatus(card) {
     if (!card) return;
     const rows = card.querySelectorAll('.note-row');
@@ -383,9 +365,6 @@ function updateStudentStatus(card) {
     }
 }
 
-// =====================================================
-// TOTAL CATATAN
-// =====================================================
 function updateTotalInfo() {
     const rows = document.querySelectorAll('.note-row');
     let total = 0;
@@ -406,9 +385,6 @@ function updateTotalInfo() {
     }
 }
 
-// =====================================================
-// SIMPAN SEMUA
-// =====================================================
 function simpanSemuaCatatan() {
     const rows = document.querySelectorAll('.note-row');
 
@@ -502,9 +478,6 @@ function escapeHtml(string) {
     return div.innerHTML;
 }
 
-// =====================================================
-// STATUS FEEDBACK
-// =====================================================
 const bulkStatus = <?= json_encode($status) ?>;
 const bulkTotal = <?= $total ?>;
 

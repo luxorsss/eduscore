@@ -7,7 +7,7 @@ require_admin();
 
 $current_user_id = (int)$_SESSION['user_id'];
 
-// 1. Ambil Semua Pengguna beserta info kelas binaan dan jumlah jadwal mengajar
+// Data pengguna beserta info kelas binaan dan jumlah jadwal mengajar
 $stmt_users = $pdo->query("
     SELECT u.id, u.nama_lengkap, u.username, u.role,
            c.id as class_id, c.nama_kelas, c.jenjang,
@@ -18,7 +18,7 @@ $stmt_users = $pdo->query("
 ");
 $daftar_guru = $stmt_users->fetchAll(PDO::FETCH_ASSOC);
 
-// 2. Guru-guru untuk target pengalihan saat hapus akun
+// Target pengalihan jadwal saat hapus akun
 $semua_guru_tujuan = [];
 foreach ($daftar_guru as $dg) {
     $semua_guru_tujuan[] = [
@@ -28,7 +28,7 @@ foreach ($daftar_guru as $dg) {
     ];
 }
 
-// 3. Statistik Ringkas
+// Ringkasan statistik
 $total_semua_guru = 0;
 $total_wali_kelas = 0;
 $total_admin = 0;

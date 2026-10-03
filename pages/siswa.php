@@ -2,10 +2,8 @@
 session_start();
 require_once '../config/auth.php';
 
-// Penjaga Pintu: Hanya Admin yang bisa mengelola siswa
 require_admin();
 
-// Ambil Data Siswa (LEFT JOIN agar yang tidak punya kelas tetap muncul)
 $sql = "SELECT s.*, c.nama_kelas 
         FROM students s 
         LEFT JOIN classes c ON s.class_id = c.id 
@@ -13,7 +11,7 @@ $sql = "SELECT s.*, c.nama_kelas
 $stmt = $pdo->query($sql);
 $daftar_siswa = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Ambil Data Kelas untuk Dropdown
+// Data kelas untuk dropdown
 $stmt_kelas = $pdo->query("SELECT * FROM classes ORDER BY nama_kelas ASC");
 $list_kelas = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
 
@@ -226,7 +224,6 @@ require_once '../components/header.php';
 </main>
 
 <script>
-    // 1. LIVE SEARCH & FILTER KELAS
     const searchInput = document.getElementById('searchInput');
     const filterKelas = document.getElementById('filterKelas');
     const studentRows = document.querySelectorAll('.student-row');
@@ -264,7 +261,6 @@ require_once '../components/header.php';
     if (searchInput) searchInput.addEventListener('input', filterData);
     if (filterKelas) filterKelas.addEventListener('change', filterData);
 
-    // 2. TAMBAH BARIS MANUAL
     function tambahBarisInput() {
         const container = document.getElementById('containerInputSiswa');
         const row = document.createElement('tr');
@@ -295,7 +291,6 @@ require_once '../components/header.php';
         if (tableContainer) tableContainer.scrollTop = tableContainer.scrollHeight;
     }
 
-    // 3. LOGIKA FLOATING ACTION BAR 
     const checkAll = document.getElementById('checkAll');
     const checkboxes = document.querySelectorAll('.cb-siswa');
     const actionBar = document.getElementById('bulkActionBar');
@@ -333,7 +328,6 @@ require_once '../components/header.php';
 
     checkboxes.forEach(cb => cb.addEventListener('change', updateActionBar));
 
-    // 4. MODAL EDIT & ESCAPE KEY (R-32)
     const modalEdit = document.getElementById('modalEditSiswa');
     const modalEditContent = document.getElementById('modalEditContent');
     const inputEditId = document.getElementById('edit_id');
@@ -362,7 +356,6 @@ require_once '../components/header.php';
         }, 200);
     }
 
-    // Keyboard Accessibility: Escape key menutup modal (R-32)
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape' && modalEdit && !modalEdit.classList.contains('hidden')) {
             tutupModalEdit();

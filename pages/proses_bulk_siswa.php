@@ -7,7 +7,6 @@ require_admin();
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $aksi = $_POST['aksi'] ?? '';
 
-    // --- FITUR BARU: Edit Single ---
     if ($aksi == 'edit_single') {
         $id_siswa = $_POST['id_siswa'] ?? 0;
         $nama_siswa = trim($_POST['nama_siswa'] ?? '');
@@ -29,11 +28,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // A. FITUR BULK DELETE (Hapus Massal)
+    // Hapus massal siswa beserta data nilainya
     if ($aksi === 'hapus_massal') {
         $raw_ids = $_POST['id_hapus'] ?? [];
 
-        // Pastikan input berupa array dan bersihkan hanya ID angka
         if (!is_array($raw_ids)) {
             $raw_ids = [$raw_ids];
         }
@@ -43,15 +41,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             try {
                 $pdo->beginTransaction(); 
                 
-                // Buat placeholder ?,?,? sesuai jumlah array
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
                 
-                // 1. HAPUS ANAK (Data Nilai di tabel grades) TERLEBIH DAHULU
+                // Hapus nilai terkait terlebih dahulu sebelum data siswa
                 $sql_nilai = "DELETE FROM grades WHERE student_id IN ($placeholders)";
                 $stmt_nilai = $pdo->prepare($sql_nilai);
                 $stmt_nilai->execute($ids);
 
-                // 2. BARU HAPUS INDUK (Data Siswa di tabel students)
                 $sql_siswa = "DELETE FROM students WHERE id IN ($placeholders)";
                 $stmt_siswa = $pdo->prepare($sql_siswa);
                 $stmt_siswa->execute($ids);
@@ -69,19 +65,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // B. FITUR BULK INPUT (Tambah Banyak Sekaligus)
+    // Tambah siswa massal
     if ($aksi === 'simpan_massal') {
         $namas = $_POST['nama_siswa'] ?? [];
         $niss = $_POST['nis_siswa'] ?? [];
         $class_ids = $_POST['class_id_siswa'] ?? [];
 
         try {
-            $pdo->beginTransaction(); // Mulai transaksi agar data aman
+            $pdo->beginTransaction();
             $sql = "INSERT INTO students (nama, nis, class_id) VALUES (?, ?, ?)";
             $stmt = $pdo->prepare($sql);
 
             foreach ($namas as $i => $nama) {
-                if (!empty($nama)) { // Hanya simpan jika nama tidak kosong
+                if (!empty($nama)) {
                     $stmt->execute([$nama, $niss[$i], $class_ids[$i]]);
                 }
             }
@@ -94,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // C. FITUR COPAS DARI EXCEL (Tanpa NIS)
+    // Impor data siswa dari teks berpemisah koma (Nama, Kelas)
     if ($aksi === 'copas_massal') {
         $data_copas = $_POST['data_copas'] ?? '';
         if (empty(trim($data_copas))) {
@@ -102,7 +98,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         }
 
-        // Ambil data kelas untuk verifikasi
         $stmt_kelas = $pdo->query("SELECT id, nama_kelas FROM classes");
         $kelas_map = [];
         while ($row = $stmt_kelas->fetch(PDO::FETCH_ASSOC)) {
@@ -121,17 +116,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             foreach ($lines as $line) {
                 if (empty(trim($line))) continue;
 
-                // PEMISAH KOMA: Memecah data berdasarkan tanda koma saja
                 $cols = explode(',', trim($line));
 
                 if (count($cols) >= 2) {
-                    $nama = trim($cols[0]); // Bagian sebelum koma
-                    $nama_kelas_input = strtolower(trim($cols[1])); // Bagian setelah koma
+                    $nama = trim($cols[0]);
+                    $nama_kelas_input = strtolower(trim($cols[1]));
 
                     if (isset($kelas_map[$nama_kelas_input])) {
                         $class_id = $kelas_map[$nama_kelas_input];
                         
-                        // NIS Otomatis agar database tidak error
                         $nis_otomatis = 'S' . rand(100000, 999999);
                         
                         $stmt->execute([$nis_otomatis, $nama, $class_id]);
@@ -159,20 +152,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // D. FITUR BULK MOVE (Pindah Kelas Massal)
+    // Pindah kelas massal
     if ($aksi === 'pindah_massal') {
-        $ids = $_POST['id_hapus'] ?? []; // Mengambil ID siswa yang dicentang
-        $target_class = $_POST['target_class_id'] ?? ''; // Mengambil kelas tujuan
+        $ids = $_POST['id_hapus'] ?? [];
+        $target_class = $_POST['target_class_id'] ?? '';
 
         if (!empty($ids) && !empty($target_class)) {
             try {
-                // Membuat tanda tanya sebanyak jumlah ID yang dicentang (?,?,?)
                 $placeholders = str_repeat('?,', count($ids) - 1) . '?';
-                
-                // Siapkan SQL untuk Update (Ubah) class_id
                 $sql = "UPDATE students SET class_id = ? WHERE id IN ($placeholders)";
-                
-                // Susun data yang mau dimasukkan: [ID Kelas Tujuan, ID Siswa 1, ID Siswa 2, ...]
                 $params = array_merge([$target_class], $ids);
 
                 $stmt = $pdo->prepare($sql);
@@ -191,18 +179,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// D. HAPUS SINGLE (Via tombol tong sampah)
+// Hapus siswa tunggal
 if (isset($_GET['hapus_single'])) {
     $id_siswa = $_GET['hapus_single'];
     
     try {
         $pdo->beginTransaction();
 
-        // 1. Hapus nilai (Anak)
         $stmt_hapus_nilai = $pdo->prepare("DELETE FROM grades WHERE student_id = ?");
         $stmt_hapus_nilai->execute([$id_siswa]);
 
-        // 2. Hapus siswa (Induk)
         $stmt_hapus_siswa = $pdo->prepare("DELETE FROM students WHERE id = ?");
         $stmt_hapus_siswa->execute([$id_siswa]);
 

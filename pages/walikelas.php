@@ -16,9 +16,9 @@ if (!$is_admin && $wali_kelas) {
 } else {
     $class_id = isset($_GET['kelas']) && $_GET['kelas'] !== '' ? (int)$_GET['kelas'] : null;
 }
-$tipe_ujian = $_GET['tipe'] ?? 'UTS'; // Default UTS
+$tipe_ujian = $_GET['tipe'] ?? 'UTS';
 
-// 1. Ambil Data Kelas untuk Dropdown
+// Data kelas untuk dropdown
 if ($is_admin) {
     $stmt_kelas = $pdo->query("SELECT id, nama_kelas, jenjang FROM classes ORDER BY jenjang, nama_kelas");
     $kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
@@ -169,7 +169,7 @@ require_once '../components/header.php';
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
             <div id="kkmContainer" class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-xs">
                 <label for="inputKkm" class="text-xs font-semibold text-text-muted">Batas KKM:</label>
-                <input type="number" id="inputKkm" value="75" min="0" max="100" oninput="updateKkm()" class="w-12 bg-transparent text-xs font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none tabular-nums">
+                <input type="number" id="inputKkm" value="60" min="0" max="100" oninput="updateKkm()" class="w-12 bg-transparent text-xs font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none tabular-nums">
             </div>
 
             <button type="button" onclick="copyHanyaNilai()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors min-h-[38px]">
@@ -189,16 +189,33 @@ require_once '../components/header.php';
         </button>
         <div id="syncAreaWali" class="hidden p-4 bg-slate-50/50 border-t border-border-main grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label for="urutSiswa" class="text-xs font-semibold text-text-muted mb-1 block">Urutan Siswa (Tempel dari Excel):</label>
-                <textarea id="urutSiswa" rows="4" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
+                <div class="flex justify-between items-center mb-1">
+                    <label for="urutSiswa" class="text-xs font-semibold text-text-muted">Urutan Siswa (Bebas Kolom / Baris Excel):</label>
+                    <span id="badgeTransposeSiswa" class="text-[10px] text-text-muted">Mendukung tempel horizontal</span>
+                </div>
+                <textarea id="urutSiswa" rows="4" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Bisa tempel 1 kolom menurun ATAU 1 baris menyamping dari Excel..."></textarea>
+                <div class="flex justify-between items-center mt-1">
+                    <span class="text-[10px] text-text-muted">Format menyamping (Tab/Excel) otomatis diubah jadi vertikal.</span>
+                    <button type="button" onclick="formatTranspose('urutSiswa')" class="text-[10px] font-semibold text-primary hover:underline">Rapikan Baris</button>
+                </div>
             </div>
             <div>
-                <label for="urutMapel" class="text-xs font-semibold text-text-muted mb-1 block">Urutan Mapel (Tempel dari Excel):</label>
-                <textarea id="urutMapel" rows="4" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary"></textarea>
+                <div class="flex justify-between items-center mb-1">
+                    <label for="urutMapel" class="text-xs font-semibold text-text-muted">Urutan Mapel (Bebas Kolom / Baris Excel):</label>
+                    <span id="badgeTransposeMapel" class="text-[10px] text-text-muted">Mendukung tempel horizontal</span>
+                </div>
+                <textarea id="urutMapel" rows="4" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2 font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Bisa tempel 1 kolom menurun ATAU 1 baris menyamping dari Excel..."></textarea>
+                <div class="flex justify-between items-center mt-1">
+                    <span class="text-[10px] text-text-muted">Format menyamping (Tab/Excel) otomatis diubah jadi vertikal.</span>
+                    <button type="button" onclick="formatTranspose('urutMapel')" class="text-[10px] font-semibold text-primary hover:underline">Rapikan Baris</button>
+                </div>
             </div>
-            <div class="md:col-span-2 flex justify-end gap-3 mt-1">
-                <button type="button" onclick="resetUrutan()" class="text-danger text-xs font-semibold hover:underline px-3 py-1.5">Reset Urutan Asli</button>
-                <button type="button" onclick="terapkanUrutan()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors">Terapkan Urutan</button>
+            <div class="md:col-span-2 flex flex-wrap justify-between items-center gap-3 mt-1 pt-2 border-t border-slate-200">
+                <span class="text-[11px] text-text-muted">💡 <strong>Tips:</strong> Langsung blok deret nama/mapel horizontal di Excel lalu Ctrl+C dan Ctrl+V di sini, sistem langsung memisahkannya otomatis.</span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="resetUrutan()" class="text-danger text-xs font-semibold hover:underline px-3 py-1.5">Reset Urutan Asli</button>
+                    <button type="button" onclick="terapkanUrutan()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-xs transition-colors">Terapkan Urutan</button>
+                </div>
             </div>
         </div>
     </div>
@@ -212,7 +229,7 @@ require_once '../components/header.php';
             </div>
             <span class="material-symbols-outlined text-text-muted text-base">expand_more</span>
         </button>
-        <div id="areaAksiMapel" class="p-4 bg-slate-50/50 border-t border-border-main grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div id="areaAksiMapel" class="hidden p-4 bg-slate-50/50 border-t border-border-main grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <?php foreach ($subjects as $s): ?>
                 <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between gap-3">
                     <div class="min-w-0">
@@ -297,7 +314,7 @@ require_once '../components/header.php';
     let currentStudents = [...rawStudents];
     let currentSubjects = [...rawSubjects];
     
-    let kkmValue = 75;
+    let kkmValue = 60;
 
     function updateKkm() {
         let val = parseInt(document.getElementById('inputKkm').value);
@@ -486,21 +503,35 @@ require_once '../components/header.php';
             .replace(/\(\s*\d+\s*\)/g, '')
             // Hapus pemisah dan angka di akhir nama, misal: " 1", " - 2", ".3"
             .replace(/[\s\-_.]+\d+[\s\-_.]*$/g, '')
-            // Rapikan spasi berlebih
             .replace(/\s+/g, ' ')
             .trim();
     }
 
+    function parseDelimitedList(textInput) {
+        if (!textInput) return [];
+        // Support vertical newlines and horizontal Excel tabs
+        return textInput
+            .split(/[\r\n\t]+/)
+            .map(n => n.trim())
+            .filter(n => n.length > 0);
+    }
+
+    function formatTranspose(textareaId) {
+        const el = document.getElementById(textareaId);
+        if (!el || !el.value.trim()) return;
+        const items = parseDelimitedList(el.value);
+        el.value = items.join('\n');
+    }
+
     function customSort(originalArray, textInput, fieldName, isMapel = false) {
-        const lines = textInput.split(/\r?\n/).map(n => n.trim().toLowerCase()).filter(n => n);
+        const lines = parseDelimitedList(textInput).map(n => n.toLowerCase());
         if (lines.length === 0) return [...originalArray];
         let matched = [];
         let remaining = [...originalArray];
         lines.forEach(line => {
-            // 1. Coba exact match terlebih dahulu
             let index = remaining.findIndex(item => item[fieldName].toLowerCase() === line);
 
-            // 2. Jika mapel dan belum cocok, coba bandingkan setelah angka/format dibersihkan
+            // Fallback for subjects with grade level suffixes
             if (index === -1 && isMapel) {
                 const cleanedLine = cleanMapelName(line);
                 index = remaining.findIndex(item => {
@@ -515,8 +546,14 @@ require_once '../components/header.php';
     }
 
     function terapkanUrutan() {
-        const valSiswa = document.getElementById('urutSiswa').value;
-        const valMapel = document.getElementById('urutMapel').value;
+        const elSiswa = document.getElementById('urutSiswa');
+        const elMapel = document.getElementById('urutMapel');
+
+        if (elSiswa && elSiswa.value.includes('\t')) formatTranspose('urutSiswa');
+        if (elMapel && elMapel.value.includes('\t')) formatTranspose('urutMapel');
+
+        const valSiswa = elSiswa ? elSiswa.value : '';
+        const valMapel = elMapel ? elMapel.value : '';
         currentStudents = customSort(rawStudents, valSiswa, 'nama', false);
         currentSubjects = customSort(rawSubjects, valMapel, 'nama_mapel', true);
         renderTable();
@@ -536,6 +573,38 @@ require_once '../components/header.php';
         currentSubjects = [...rawSubjects];
         renderTable();
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        ['urutSiswa', 'urutMapel'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('paste', function(e) {
+                const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+                if (pasteData && pasteData.includes('\t')) {
+                    e.preventDefault();
+                    const items = parseDelimitedList(pasteData);
+                    const transposed = items.join('\n');
+                    
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const val = this.value;
+                    this.value = val.substring(0, start) + transposed + val.substring(end);
+                    this.selectionStart = this.selectionEnd = start + transposed.length;
+
+                    const badgeId = (id === 'urutSiswa') ? 'badgeTransposeSiswa' : 'badgeTransposeMapel';
+                    const badge = document.getElementById(badgeId);
+                    if (badge) {
+                        badge.textContent = `✓ ${items.length} data otomatis ditranspose ke bawah!`;
+                        badge.className = 'text-[10px] font-bold text-emerald-600';
+                        setTimeout(() => {
+                            badge.textContent = 'Mendukung tempel horizontal';
+                            badge.className = 'text-[10px] text-text-muted';
+                        }, 3000);
+                    }
+                }
+            });
+        });
+    });
 
     function copyHanyaNilai() {
         const table = document.getElementById('rekapTable');

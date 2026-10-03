@@ -7,8 +7,6 @@ require_admin();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['reset_semua_nilai'])) {
     try {
-        // TRUNCATE akan mengosongkan seluruh isi tabel grades dalam sepersekian detik
-        // dan mereset auto-increment ID-nya kembali ke 1.
         $pdo->exec("TRUNCATE TABLE grades");
 
         echo "<script>

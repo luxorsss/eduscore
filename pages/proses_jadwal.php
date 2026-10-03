@@ -26,7 +26,7 @@ function getRedirectUrl($filter_kelas = null, $filter_guru = null, $pesan = null
     return $url;
 }
 
-// -1. TOGGLE STATUS MANUAL / DIAJAR SENDIRI (Khusus Admin)
+// Toggle status manual pengampu
 if (isset($_GET['toggle_manual'])) {
     require_admin();
     $jadwal_id = (int)$_GET['toggle_manual'];
@@ -43,7 +43,7 @@ if (isset($_GET['toggle_manual'])) {
     exit();
 }
 
-// 0. ALIKHAN PENGAMPU (Khusus Admin: Transfer Jadwal & Nilai ke Guru Baru atau Kosongkan)
+// Alihkan pengampu jadwal
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'alihkan_pengampu') {
     require_admin();
     $jadwal_id = (int)($_POST['jadwal_id'] ?? 0);
@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     exit();
 }
 
-// 0.1 BULK ALIKHAN PENGAMPU (Khusus Admin: Alihkan Banyak Jadwal Sekaligus / Kosongkan)
+// Alihkan banyak jadwal sekaligus
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'bulk_alihkan') {
     require_admin();
     $jadwal_ids = isset($_POST['jadwal_ids']) && is_array($_POST['jadwal_ids']) ? array_map('intval', $_POST['jadwal_ids']) : [];
@@ -88,7 +88,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     if (!empty($jadwal_ids)) {
         $inClause = implode(',', array_fill(0, count($jadwal_ids), '?'));
         if ($new_user_raw === 'kosong' || $new_user_raw === '') {
-            // Kosongkan semua pengampu terpilih
             $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = NULL, is_manual = 1 WHERE id IN ($inClause)");
             $stmt->execute($jadwal_ids);
             header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_bulk_kosong'));
@@ -114,7 +113,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     exit();
 }
 
-// 0.2 ALIKHAN SEMUA JADWAL DARI GURU TERTENTU (Kosongkan Jadwal Guru Agar Bisa Dihapus atau Diambil Guru Lain)
+// Alihkan semua jadwal milik guru tertentu
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'alihkan_semua_guru') {
     require_admin();
     $from_user_id = (int)($_POST['from_user_id'] ?? 0);
@@ -123,7 +122,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
 
     if ($from_user_id > 0) {
         if ($new_user_raw === 'kosong' || $new_user_raw === '') {
-            // Kosongkan semua jadwal guru tersebut
             $stmt = $pdo->prepare("UPDATE teaching_schedules SET user_id = NULL, is_manual = 1 WHERE user_id = ?");
             $stmt->execute([$from_user_id]);
             header("Location: " . getRedirectUrl($redirect_filter_kelas, null, 'sukses_semua_kosong'));
@@ -148,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     exit();
 }
 
-// 1. TAMBAH / KLAIM JADWAL (Single, Bulk Mapel per Kelas, & Bulk Kelas per Mapel)
+// Tambah atau klaim penugasan jadwal
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'tambah') {
     $mode = $_POST['mode'] ?? 'kelas_to_mapel';
     $pairs = []; // Array kumpulan [class_id, subject_id]
@@ -235,7 +233,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     }
 }
 
-// 2. BULK DELETE JADWAL (Via POST)
+// Hapus banyak jadwal sekaligus
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aksi'] == 'bulk_delete') {
     $redirect_filter_kelas = !empty($_POST['redirect_filter_kelas']) ? $_POST['redirect_filter_kelas'] : null;
     $redirect_filter_guru = !empty($_POST['redirect_filter_guru']) ? $_POST['redirect_filter_guru'] : null;
@@ -288,7 +286,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     exit();
 }
 
-// 3. SINGLE DELETE JADWAL (Via GET)
+// Hapus satu jadwal
 if (isset($_GET['hapus'])) {
     $jadwal_id = (int)$_GET['hapus'];
     $redirect_filter_kelas = isset($_GET['redirect_filter_kelas']) ? $_GET['redirect_filter_kelas'] : null;
@@ -318,6 +316,5 @@ if (isset($_GET['hapus'])) {
     }
 }
 
-// Default fallback
 header("Location: jadwal.php");
 exit();
