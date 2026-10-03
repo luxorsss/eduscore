@@ -308,7 +308,7 @@ require_once '../components/header.php';
     const STORAGE_KEY = 'memori_excel_eduscore';
 
     document.addEventListener('DOMContentLoaded', () => {
-        const memoriTersimpan = sessionStorage.getItem(STORAGE_KEY);
+        const memoriTersimpan = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
         if (memoriTersimpan && document.getElementById('tabelNilai')) {
             const excelEl = document.getElementById('excelNames');
             if (excelEl) excelEl.value = memoriTersimpan;
@@ -319,6 +319,7 @@ require_once '../components/header.php';
     });
 
     function hapusMemori() {
+        localStorage.removeItem(STORAGE_KEY);
         sessionStorage.removeItem(STORAGE_KEY);
         const excelEl = document.getElementById('excelNames');
         if (excelEl) excelEl.value = '';
@@ -335,7 +336,7 @@ require_once '../components/header.php';
             return;
         }
 
-        sessionStorage.setItem(STORAGE_KEY, teks);
+        localStorage.setItem(STORAGE_KEY, teks);
 
         const excelArray = teks.split(/[\r\n\t]+/).map(n => n.trim().toLowerCase()).filter(n => n);
         const tbody = document.getElementById('tabelNilai');

@@ -80,19 +80,19 @@ require_once '../components/header.php';
 <main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-8 flex flex-col gap-6">
     
     <!-- Header Section -->
-    <div class="bg-surface-card rounded-xl border border-border-main p-6 shadow-xs flex items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-primary-subtle text-primary flex items-center justify-center shrink-0">
+    <div class="bg-surface-card rounded-xl border border-border-main p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start sm:items-center gap-3.5 sm:gap-4">
+            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-primary-subtle text-primary flex items-center justify-center shrink-0">
                 <span class="material-symbols-outlined text-2xl">calendar_month</span>
             </div>
             <div>
-                <span class="text-xs font-semibold text-text-muted uppercase tracking-wider block">
+                <span class="text-[11px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider block">
                     <?= $is_admin ? 'Master Jadwal Kurikulum' : 'Pemetaan Penugasan Mengajar' ?>
                 </span>
-                <h2 class="text-lg md:text-xl font-bold text-text-main mt-0.5">
+                <h2 class="text-base sm:text-lg md:text-xl font-bold text-text-main mt-0.5">
                     <?= $is_admin ? 'Pengaturan Penugasan Guru & Jadwal' : 'Jadwal Mengajar Pengajar' ?>
                 </h2>
-                <p class="text-xs text-text-muted mt-0.5">
+                <p class="text-xs text-text-muted mt-0.5 leading-relaxed">
                     <?= $is_admin 
                         ? 'Pantau dan kelola pemetaan mata pelajaran di tiap kelas untuk seluruh dewan guru.' 
                         : 'Tentukan mata pelajaran dan kelas yang Anda ampu (1 mapel di 1 kelas diampu oleh 1 pengajar).' ?>
@@ -100,9 +100,9 @@ require_once '../components/header.php';
             </div>
         </div>
 
-        <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-center hidden sm:block">
-            <span class="text-[11px] font-medium text-text-muted block">Total Penugasan</span>
-            <span class="text-base font-bold text-text-main tabular-nums"><?= count($jadwal_aktif) ?></span>
+        <div class="bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-center self-start sm:self-auto flex items-center sm:flex-col gap-2 sm:gap-0 shrink-0">
+            <span class="text-[11px] font-medium text-text-muted">Total Penugasan:</span>
+            <span class="text-sm sm:text-base font-bold text-text-main tabular-nums"><?= count($jadwal_aktif) ?></span>
         </div>
     </div>
 
@@ -177,11 +177,11 @@ require_once '../components/header.php';
 
     <!-- Tab Switcher Khusus Mobile -->
     <div class="lg:hidden flex rounded-xl bg-slate-100 p-1 border border-border-main shadow-xs">
-        <button type="button" id="mobileTabDaftar" onclick="switchMobileView('daftar')" class="flex-1 py-2.5 rounded-lg bg-white text-primary font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]">
+        <button type="button" id="mobileTabDaftar" onclick="switchMobileView('daftar')" class="flex-1 py-2.5 px-3 rounded-lg bg-white text-primary font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 min-h-[44px]">
             <span class="material-symbols-outlined text-base">format_list_bulleted</span>
             <span>Daftar Jadwal (<?= count($jadwal_aktif) ?>)</span>
         </button>
-        <button type="button" id="mobileTabTambah" onclick="switchMobileView('tambah')" class="flex-1 py-2.5 rounded-lg text-text-muted hover:text-text-main font-semibold text-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]">
+        <button type="button" id="mobileTabTambah" onclick="switchMobileView('tambah')" class="flex-1 py-2.5 px-3 rounded-lg text-text-muted hover:text-text-main font-semibold text-xs transition-all flex items-center justify-center gap-1.5 min-h-[44px]">
             <span class="material-symbols-outlined text-base">add_circle</span>
             <span>+ Tambah Jadwal</span>
         </button>
@@ -199,10 +199,10 @@ require_once '../components/header.php';
 
                 <!-- Tab Segmented Control -->
                 <div class="grid grid-cols-2 rounded-lg bg-slate-100 p-1 mb-4 text-xs font-semibold">
-                    <button type="button" id="tabBtnKelas" onclick="switchTab('kelas')" class="py-1.5 rounded-md bg-white text-primary shadow-xs transition-colors text-center">
+                    <button type="button" id="tabBtnKelas" onclick="switchTab('kelas')" class="min-h-[40px] py-2 rounded-md bg-white text-primary font-bold shadow-xs transition-colors text-center flex items-center justify-center">
                         Per Kelas
                     </button>
-                    <button type="button" id="tabBtnMapel" onclick="switchTab('mapel')" class="py-1.5 rounded-md text-text-muted hover:text-text-main transition-colors text-center">
+                    <button type="button" id="tabBtnMapel" onclick="switchTab('mapel')" class="min-h-[40px] py-2 rounded-md text-text-muted hover:text-text-main font-semibold transition-colors text-center flex items-center justify-center">
                         Per Mapel
                     </button>
                 </div>
@@ -215,7 +215,7 @@ require_once '../components/header.php';
                     <?php if ($is_admin): ?>
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-semibold text-text-main">Pilih Guru Pengajar</label>
-                        <select name="target_user_id" id="target_user_kelas" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateSubjectCheckboxes()">
+                        <select name="target_user_id" id="target_user_kelas" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[44px]" required onchange="updateSubjectCheckboxes()">
                             <option value="kosong" <?= ($filter_guru === 'kosong') ? 'selected' : '' ?>>-- Belum Ada Guru / Titipan (Diisi Wali Kelas) --</option>
                             <?php foreach($semua_guru as $g): ?>
                                 <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id'] || ($filter_guru === null && $g['id'] == $user_id)) ? 'selected' : '' ?>>
@@ -230,13 +230,13 @@ require_once '../components/header.php';
                         <div class="grid grid-cols-2 gap-2">
                             <label class="cursor-pointer">
                                 <input type="radio" name="is_manual" value="0" checked class="peer sr-only">
-                                <div class="p-2 rounded-lg border border-slate-300 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-800 text-[11px] font-semibold transition-colors">
+                                <div class="min-h-[44px] p-2.5 rounded-lg border border-slate-300 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-800 text-[11px] font-semibold transition-colors flex items-center justify-center">
                                     Diajar Sendiri
                                 </div>
                             </label>
                             <label class="cursor-pointer">
                                 <input type="radio" name="is_manual" value="1" class="peer sr-only">
-                                <div class="p-2 rounded-lg border border-slate-300 text-center peer-checked:border-amber-600 peer-checked:bg-amber-50 peer-checked:text-amber-800 text-[11px] font-semibold transition-colors">
+                                <div class="min-h-[44px] p-2.5 rounded-lg border border-slate-300 text-center peer-checked:border-amber-600 peer-checked:bg-amber-50 peer-checked:text-amber-800 text-[11px] font-semibold transition-colors flex items-center justify-center">
                                     Titipan Manual
                                 </div>
                             </label>
@@ -246,7 +246,7 @@ require_once '../components/header.php';
 
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-semibold text-text-main">Pilih Kelas</label>
-                        <select name="class_id" id="select_class_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateSubjectCheckboxes()">
+                        <select name="class_id" id="select_class_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[44px]" required onchange="updateSubjectCheckboxes()">
                             <option value="" disabled selected>-- Pilih Kelas --</option>
                             <?php foreach($semua_kelas as $k): ?>
                                 <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['jenjang']) ?> - <?= htmlspecialchars($k['nama_kelas']) ?></option>
@@ -257,22 +257,22 @@ require_once '../components/header.php';
                     <div class="flex flex-col gap-1.5">
                         <div class="flex justify-between items-center">
                             <label class="text-xs font-semibold text-text-main">Pilih Mata Pelajaran</label>
-                            <button type="button" onclick="toggleCheckAllGroup('cb-mapel')" class="text-[11px] text-primary font-semibold hover:underline">Pilih Semua Tersedia</button>
+                            <button type="button" onclick="toggleCheckAllGroup('cb-mapel')" class="text-[11px] text-primary font-semibold hover:underline py-1">Pilih Semua Tersedia</button>
                         </div>
-                        <div class="max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50/50 divide-y divide-slate-100 p-2 custom-scroll" id="containerMapel">
+                        <div class="max-h-52 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50/50 divide-y divide-slate-100 p-1.5 custom-scroll" id="containerMapel">
                             <?php foreach($semua_mapel as $m): ?>
-                                <label id="label_mapel_<?= $m['id'] ?>" class="flex items-center justify-between p-1.5 hover:bg-white rounded cursor-pointer text-xs font-medium text-text-main select-none transition-colors">
+                                <label id="label_mapel_<?= $m['id'] ?>" class="flex items-center justify-between min-h-[40px] py-2 px-2.5 hover:bg-white rounded-lg cursor-pointer text-xs font-medium text-text-main select-none transition-colors">
                                     <div class="flex items-center gap-2.5 min-w-0">
-                                        <input type="checkbox" name="subject_ids[]" value="<?= $m['id'] ?>" data-mid="<?= $m['id'] ?>" class="cb-mapel rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
+                                        <input type="checkbox" name="subject_ids[]" value="<?= $m['id'] ?>" data-mid="<?= $m['id'] ?>" class="cb-mapel rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0">
                                         <span class="truncate"><?= htmlspecialchars($m['nama_mapel']) ?></span>
                                     </div>
-                                    <span id="badge_mapel_<?= $m['id'] ?>" class="hidden text-[10px] px-1.5 py-0.5 rounded font-medium"></span>
+                                    <span id="badge_mapel_<?= $m['id'] ?>" class="hidden text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ml-2"></span>
                                 </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors mt-1 min-h-[42px]">
+                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors mt-1 min-h-[44px] flex items-center justify-center">
                         Simpan Penugasan Mapel
                     </button>
                 </form>
@@ -285,7 +285,7 @@ require_once '../components/header.php';
                     <?php if ($is_admin): ?>
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-semibold text-text-main">Pilih Guru Pengajar</label>
-                        <select name="target_user_id" id="target_user_mapel" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateClassCheckboxes()">
+                        <select name="target_user_id" id="target_user_mapel" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[44px]" required onchange="updateClassCheckboxes()">
                             <option value="kosong" <?= ($filter_guru === 'kosong') ? 'selected' : '' ?>>-- Belum Ada Guru / Titipan (Diisi Wali Kelas) --</option>
                             <?php foreach($semua_guru as $g): ?>
                                 <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id'] || ($filter_guru === null && $g['id'] == $user_id)) ? 'selected' : '' ?>>
@@ -300,13 +300,13 @@ require_once '../components/header.php';
                         <div class="grid grid-cols-2 gap-2">
                             <label class="cursor-pointer">
                                 <input type="radio" name="is_manual" value="0" checked class="peer sr-only">
-                                <div class="p-2 rounded-lg border border-slate-300 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-800 text-[11px] font-semibold transition-colors">
+                                <div class="min-h-[44px] p-2.5 rounded-lg border border-slate-300 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-800 text-[11px] font-semibold transition-colors flex items-center justify-center">
                                     Diajar Sendiri
                                 </div>
                             </label>
                             <label class="cursor-pointer">
                                 <input type="radio" name="is_manual" value="1" class="peer sr-only">
-                                <div class="p-2 rounded-lg border border-slate-300 text-center peer-checked:border-amber-600 peer-checked:bg-amber-50 peer-checked:text-amber-800 text-[11px] font-semibold transition-colors">
+                                <div class="min-h-[44px] p-2.5 rounded-lg border border-slate-300 text-center peer-checked:border-amber-600 peer-checked:bg-amber-50 peer-checked:text-amber-800 text-[11px] font-semibold transition-colors flex items-center justify-center">
                                     Titipan Manual
                                 </div>
                             </label>
@@ -316,7 +316,7 @@ require_once '../components/header.php';
 
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-semibold text-text-main">Pilih Mata Pelajaran</label>
-                        <select name="subject_id" id="select_subject_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateClassCheckboxes()">
+                        <select name="subject_id" id="select_subject_id" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[44px]" required onchange="updateClassCheckboxes()">
                             <option value="" disabled selected>-- Pilih Mapel --</option>
                             <?php foreach($semua_mapel as $m): ?>
                                 <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['nama_mapel']) ?></option>
@@ -327,22 +327,22 @@ require_once '../components/header.php';
                     <div class="flex flex-col gap-1.5">
                         <div class="flex justify-between items-center">
                             <label class="text-xs font-semibold text-text-main">Pilih Kelas</label>
-                            <button type="button" onclick="toggleCheckAllGroup('cb-kelas')" class="text-[11px] text-primary font-semibold hover:underline">Pilih Semua Tersedia</button>
+                            <button type="button" onclick="toggleCheckAllGroup('cb-kelas')" class="text-[11px] text-primary font-semibold hover:underline py-1">Pilih Semua Tersedia</button>
                         </div>
-                        <div class="max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50/50 divide-y divide-slate-100 p-2 custom-scroll" id="containerKelas">
+                        <div class="max-h-52 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50/50 divide-y divide-slate-100 p-1.5 custom-scroll" id="containerKelas">
                             <?php foreach($semua_kelas as $k): ?>
-                                <label id="label_kelas_<?= $k['id'] ?>" class="flex items-center justify-between p-1.5 hover:bg-white rounded cursor-pointer text-xs font-medium text-text-main select-none transition-colors">
+                                <label id="label_kelas_<?= $k['id'] ?>" class="flex items-center justify-between min-h-[40px] py-2 px-2.5 hover:bg-white rounded-lg cursor-pointer text-xs font-medium text-text-main select-none transition-colors">
                                     <div class="flex items-center gap-2.5 min-w-0">
-                                        <input type="checkbox" name="class_ids[]" value="<?= $k['id'] ?>" data-cid="<?= $k['id'] ?>" class="cb-kelas rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
+                                        <input type="checkbox" name="class_ids[]" value="<?= $k['id'] ?>" data-cid="<?= $k['id'] ?>" class="cb-kelas rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0">
                                         <span class="truncate"><?= htmlspecialchars($k['jenjang']) ?> - <?= htmlspecialchars($k['nama_kelas']) ?></span>
                                     </div>
-                                    <span id="badge_kelas_<?= $k['id'] ?>" class="hidden text-[10px] px-1.5 py-0.5 rounded font-medium"></span>
+                                    <span id="badge_kelas_<?= $k['id'] ?>" class="hidden text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ml-2"></span>
                                 </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors mt-1 min-h-[42px]">
+                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors mt-1 min-h-[44px] flex items-center justify-center">
                         Simpan Penugasan Kelas
                     </button>
                 </form>
@@ -354,7 +354,7 @@ require_once '../components/header.php';
             <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden">
                 
                 <!-- Filter Toolbar -->
-                <div class="p-5 border-b border-border-main bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="p-4 sm:p-5 border-b border-border-main bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
                     <div>
                         <h3 class="font-bold text-xs md:text-sm text-text-main">
                             <?= $is_admin ? 'Daftar Jadwal Mengajar Terdaftar' : 'Daftar Jadwal Mengajar Anda' ?>
@@ -362,9 +362,9 @@ require_once '../components/header.php';
                         <span class="text-xs text-text-muted tabular-nums"><?= count($jadwal_aktif) ?> jadwal terdaftar</span>
                     </div>
 
-                    <form method="GET" action="jadwal.php" class="flex flex-wrap items-center gap-2">
+                    <form method="GET" action="jadwal.php" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
                         <?php if ($is_admin): ?>
-                            <select name="filter_guru" onchange="this.form.submit()" class="text-xs font-medium rounded-lg border border-slate-300 bg-white text-text-main px-3 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[38px]">
+                            <select name="filter_guru" onchange="this.form.submit()" class="w-full sm:w-auto text-xs font-medium rounded-lg border border-slate-300 bg-white text-text-main px-3 py-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[44px]">
                                 <option value="">Semua Guru</option>
                                 <option value="kosong" <?= ($filter_guru === 'kosong') ? 'selected' : '' ?>>🟡 Belum Ada Pengampu (Kosong)</option>
                                 <?php foreach($semua_guru as $g): ?>
@@ -375,7 +375,7 @@ require_once '../components/header.php';
                             </select>
                         <?php endif; ?>
 
-                        <select name="filter_kelas" onchange="this.form.submit()" class="text-xs font-medium rounded-lg border border-slate-300 bg-white text-text-main px-3 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[38px]">
+                        <select name="filter_kelas" onchange="this.form.submit()" class="w-full sm:w-auto text-xs font-medium rounded-lg border border-slate-300 bg-white text-text-main px-3 py-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[44px]">
                             <option value="">Semua Kelas</option>
                             <?php foreach($semua_kelas as $k): ?>
                                 <option value="<?= $k['id'] ?>" <?= ($filter_kelas == $k['id']) ? 'selected' : '' ?>>
@@ -385,7 +385,7 @@ require_once '../components/header.php';
                         </select>
 
                         <?php if ($filter_kelas || $filter_guru): ?>
-                            <a href="jadwal.php" class="text-xs text-primary hover:underline font-semibold ml-1">Reset</a>
+                            <a href="jadwal.php" class="inline-flex items-center justify-center text-xs text-primary hover:underline font-semibold px-2 py-2 min-h-[36px] self-center sm:self-auto">Reset Filter</a>
                         <?php endif; ?>
                     </form>
                 </div>
@@ -402,7 +402,7 @@ require_once '../components/header.php';
                             <span class="material-symbols-outlined text-amber-700 text-lg shrink-0">info</span>
                             <span>Menampilkan <strong><?= count($jadwal_aktif) ?></strong> jadwal milik <strong><?= htmlspecialchars($target_guru_name) ?></strong>.</span>
                         </div>
-                        <button type="button" onclick="bukaModalAlihkanSemuaGuru(<?= (int)$filter_guru ?>, '<?= htmlspecialchars(addslashes($target_guru_name)) ?>', <?= count($jadwal_aktif) ?>)" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer">
+                        <button type="button" onclick="bukaModalAlihkanSemuaGuru(<?= (int)$filter_guru ?>, '<?= htmlspecialchars(addslashes($target_guru_name)) ?>', <?= count($jadwal_aktif) ?>)" class="w-full sm:w-auto px-3.5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer min-h-[40px]">
                             <span class="material-symbols-outlined text-sm">swap_horiz</span>
                             <span>Kosongkan / Alihkan Semua Jadwal Guru Ini</span>
                         </button>
@@ -416,62 +416,64 @@ require_once '../components/header.php';
                     <input type="hidden" name="redirect_filter_guru" value="<?= htmlspecialchars((string)$filter_guru) ?>">
 
                     <?php if(!empty($jadwal_aktif)): ?>
-                        <div class="px-5 py-3 bg-slate-50/60 border-b border-border-main flex items-center justify-between">
-                            <label class="inline-flex items-center gap-2 text-xs font-semibold text-text-muted cursor-pointer select-none">
+                        <div class="px-4 sm:px-5 py-3 bg-slate-50/70 border-b border-border-main flex flex-wrap items-center justify-between gap-2.5">
+                            <label class="inline-flex items-center gap-2.5 text-xs font-semibold text-text-muted cursor-pointer select-none py-1">
                                 <input type="checkbox" id="checkAll" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer">
                                 <span>Pilih Semua</span>
                             </label>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2 ml-auto">
                                 <?php if ($is_admin): ?>
-                                    <button type="button" id="btnBulkAlihkan" onclick="bukaModalBulkAlihkan()" class="hidden items-center gap-1.5 text-xs font-semibold text-primary hover:bg-primary-subtle px-3 py-1.5 rounded-lg border border-primary/20 transition-colors cursor-pointer">
-                                        <span class="material-symbols-outlined text-sm">swap_horiz</span>
+                                    <button type="button" id="btnBulkAlihkan" onclick="bukaModalBulkAlihkan()" class="hidden items-center gap-1.5 text-xs font-semibold text-primary hover:bg-primary-subtle px-3 py-2 rounded-lg border border-primary/20 transition-colors cursor-pointer min-h-[38px]">
+                                        <span class="material-symbols-outlined text-base">swap_horiz</span>
                                         <span>Alihkan Terpilih</span>
                                     </button>
                                 <?php endif; ?>
-                                <button type="submit" id="btnBulkDelete" onclick="konfirmasiForm(event, 'Hapus seluruh jadwal penugasan yang dicentang?<br><br><div class=\'text-rose-600 font-medium text-xs bg-rose-50 border border-rose-200 p-3 rounded-lg text-left leading-relaxed\'>⚠️ <strong>Peringatan Penting:</strong><br>Seluruh data nilai siswa yang terkait dengan jadwal terpilih akan <u>ikut terhapus permanen</u>!</div>')" class="hidden items-center gap-1.5 text-xs font-semibold text-danger hover:bg-danger-subtle px-3 py-1.5 rounded-lg border border-danger/20 transition-colors cursor-pointer">
-                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                <button type="submit" id="btnBulkDelete" onclick="konfirmasiForm(event, 'Hapus seluruh jadwal penugasan yang dicentang?<br><br><div class=\'text-rose-600 font-medium text-xs bg-rose-50 border border-rose-200 p-3 rounded-lg text-left leading-relaxed\'>⚠️ <strong>Peringatan Penting:</strong><br>Seluruh data nilai siswa yang terkait dengan jadwal terpilih akan <u>ikut terhapus permanen</u>!</div>')" class="hidden items-center gap-1.5 text-xs font-semibold text-danger hover:bg-danger-subtle px-3 py-2 rounded-lg border border-danger/20 transition-colors cursor-pointer min-h-[38px]">
+                                    <span class="material-symbols-outlined text-base">delete</span>
                                     <span id="countSelected">Hapus Terpilih</span>
                                 </button>
                             </div>
                         </div>
                     <?php endif; ?>
 
-                    <div class="p-5 flex flex-col gap-3">
+                    <div class="p-3 sm:p-5 flex flex-col gap-3">
                         <?php if(empty($jadwal_aktif)): ?>
-                            <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <div class="flex flex-col items-center justify-center py-12 text-center px-4">
                                 <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">calendar_add_on</span>
                                 <p class="text-sm font-semibold text-text-main">Belum Ada Jadwal Mengajar<?= $filter_kelas ? ' untuk Kriteria Ini' : '' ?></p>
                                 <p class="text-xs text-text-muted mt-1 max-w-sm">Gunakan formulir penugasan untuk menambahkan penugasan mata pelajaran ke kelas yang diampu.</p>
-                                <button type="button" onclick="switchMobileView('tambah')" class="lg:hidden mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold shadow-xs transition-colors">
+                                <button type="button" onclick="switchMobileView('tambah')" class="lg:hidden mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold shadow-xs transition-colors min-h-[44px]">
                                     <span class="material-symbols-outlined text-sm">add_circle</span>
                                     <span>Buka Form Tambah Jadwal</span>
                                 </button>
                             </div>
                         <?php else: ?>
                             <?php foreach($jadwal_aktif as $jadwal): ?>
-                                <div class="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 transition-colors bg-white">
-                                    <div class="flex items-center gap-3.5 min-w-0">
-                                        <input type="checkbox" name="jadwal_ids[]" value="<?= $jadwal['jadwal_id'] ?>" class="item-checkbox rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0">
-                                        
-                                        <div class="w-9 h-9 rounded-lg bg-primary-subtle text-primary flex items-center justify-center shrink-0">
-                                            <span class="material-symbols-outlined text-lg">book</span>
+                                <div class="p-3.5 sm:p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 transition-colors bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="flex items-start sm:items-center gap-3 min-w-0">
+                                        <div class="pt-0.5 sm:pt-0 shrink-0">
+                                            <input type="checkbox" name="jadwal_ids[]" value="<?= $jadwal['jadwal_id'] ?>" class="item-checkbox rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0">
                                         </div>
-                                        <div class="min-w-0">
-                                            <h4 class="font-bold text-xs md:text-sm text-text-main truncate"><?= htmlspecialchars($jadwal['nama_mapel']) ?></h4>
-                                            <p class="text-[11px] text-text-muted flex flex-wrap items-center gap-1.5 mt-0.5">
+                                        
+                                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-subtle text-primary flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-lg sm:text-xl">book</span>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <h4 class="font-bold text-xs sm:text-sm text-text-main leading-snug"><?= htmlspecialchars($jadwal['nama_mapel']) ?></h4>
                                                 <span class="badge-grade-neutral px-2 py-0.5 rounded font-semibold text-[10px]">
                                                     <?= htmlspecialchars($jadwal['nama_kelas']) ?> (<?= htmlspecialchars($jadwal['jenjang']) ?>)
                                                 </span>
+                                            </div>
+                                            <div class="text-[11px] text-text-muted flex flex-wrap items-center gap-1.5 mt-1.5">
                                                 <?php if ($jadwal['user_id'] === null): ?>
-                                                    <span class="text-slate-300">•</span>
                                                     <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300">
                                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                                         <span>Belum Ada Guru (Slot Terbuka)</span>
                                                     </span>
                                                 <?php elseif ($is_admin): ?>
-                                                    <span class="text-slate-300">•</span>
-                                                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700">
-                                                        <span class="material-symbols-outlined text-[13px]">person</span>
+                                                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 bg-slate-100 sm:bg-transparent px-1.5 py-0.5 sm:p-0 rounded">
+                                                        <span class="material-symbols-outlined text-[13px] text-slate-500">person</span>
                                                         <?= htmlspecialchars($jadwal['nama_guru']) ?>
                                                     </span>
                                                     <?php if ($jadwal['guru_role'] === 'admin'): ?>
@@ -499,29 +501,39 @@ require_once '../components/header.php';
                                                         </span>
                                                     <?php endif; ?>
                                                 <?php endif; ?>
-                                            </p>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-1.5 shrink-0">
-                                        <a href="input_data.php?kelas=<?= $jadwal['class_id'] ?>&mapel=<?= $jadwal['subject_id'] ?>" class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-slate-100 transition-colors hidden sm:inline-flex" title="Input Nilai">
-                                            <span class="material-symbols-outlined text-lg">edit_square</span>
+
+                                    <!-- Action Buttons -->
+                                    <div class="flex items-center justify-end gap-1.5 pt-2.5 sm:pt-0 border-t border-slate-100 sm:border-t-0 shrink-0">
+                                        <a href="input_data.php?kelas=<?= $jadwal['class_id'] ?>&mapel=<?= $jadwal['subject_id'] ?>" 
+                                           class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-slate-100 hover:bg-primary hover:text-white sm:bg-transparent sm:text-text-muted sm:hover:bg-slate-100 sm:hover:text-primary transition-colors min-h-[38px] sm:min-h-0 sm:p-2" 
+                                           title="Input Nilai">
+                                            <span class="material-symbols-outlined text-base sm:text-lg">edit_square</span>
+                                            <span class="sm:hidden text-[11px] font-semibold">Nilai</span>
                                         </a>
-                                        <a href="analisa.php?kelas=<?= $jadwal['class_id'] ?>&mapel=<?= $jadwal['subject_id'] ?>" class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-slate-100 transition-colors hidden sm:inline-flex" title="Lihat Analisa">
-                                            <span class="material-symbols-outlined text-lg">analytics</span>
+                                        <a href="analisa.php?kelas=<?= $jadwal['class_id'] ?>&mapel=<?= $jadwal['subject_id'] ?>" 
+                                           class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-slate-100 hover:bg-primary hover:text-white sm:bg-transparent sm:text-text-muted sm:hover:bg-slate-100 sm:hover:text-primary transition-colors min-h-[38px] sm:min-h-0 sm:p-2" 
+                                           title="Lihat Analisa">
+                                            <span class="material-symbols-outlined text-base sm:text-lg">analytics</span>
+                                            <span class="sm:hidden text-[11px] font-semibold">Analisa</span>
                                         </a>
                                         <?php if ($is_admin): ?>
                                             <button type="button" 
                                                     onclick="bukaModalAlihkan(<?= htmlspecialchars(json_encode($jadwal)) ?>)"
-                                                    class="p-1.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 transition-colors"
+                                                    class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-slate-100 hover:bg-primary hover:text-white sm:bg-transparent sm:text-slate-500 sm:hover:bg-slate-100 sm:hover:text-primary transition-colors min-h-[38px] sm:min-h-0 sm:p-2 cursor-pointer"
                                                     title="Alihkan Pengampu ke Guru Lain">
-                                                <span class="material-symbols-outlined text-lg">swap_horiz</span>
+                                                <span class="material-symbols-outlined text-base sm:text-lg">swap_horiz</span>
+                                                <span class="sm:hidden text-[11px] font-semibold">Alihkan</span>
                                             </button>
                                         <?php endif; ?>
                                         <a href="proses_jadwal.php?hapus=<?= $jadwal['jadwal_id'] ?>&redirect_filter_kelas=<?= urlencode((string)$filter_kelas) ?>&redirect_filter_guru=<?= urlencode((string)$filter_guru) ?>" 
                                            onclick="konfirmasiLink(event, this.href, 'Hapus jadwal mata pelajaran <strong><?= htmlspecialchars(addslashes($jadwal['nama_mapel'])) ?></strong> di kelas <strong><?= htmlspecialchars(addslashes($jadwal['nama_kelas'])) ?></strong>?<br><br><div class=\'text-rose-600 font-medium text-xs bg-rose-50 border border-rose-200 p-3 rounded-lg text-left leading-relaxed\'>⚠️ <strong>Peringatan Penting:</strong><br>Jika sudah ada data nilai siswa pada jadwal ini, seluruh nilai tersebut akan <u>ikut terhapus permanen</u>!</div>')" 
-                                           class="p-1.5 rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors" 
+                                           class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 sm:bg-transparent sm:text-slate-400 sm:hover:text-danger sm:hover:bg-danger-subtle transition-colors min-h-[38px] sm:min-h-0 sm:p-2 cursor-pointer" 
                                            title="Hapus Jadwal">
-                                            <span class="material-symbols-outlined text-lg">delete</span>
+                                            <span class="material-symbols-outlined text-base sm:text-lg">delete</span>
+                                            <span class="sm:hidden text-[11px] font-semibold">Hapus</span>
                                         </a>
                                     </div>
                                 </div>
@@ -549,15 +561,15 @@ function switchMobileView(view) {
         colTambah.classList.remove('hidden');
         colDaftar.classList.add('hidden');
         
-        tabTambah.className = "flex-1 py-2.5 rounded-lg bg-white text-primary font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]";
-        tabDaftar.className = "flex-1 py-2.5 rounded-lg text-text-muted hover:text-text-main font-semibold text-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]";
+        tabTambah.className = "flex-1 py-2.5 px-3 rounded-lg bg-white text-primary font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 min-h-[44px]";
+        tabDaftar.className = "flex-1 py-2.5 px-3 rounded-lg text-text-muted hover:text-text-main font-semibold text-xs transition-all flex items-center justify-center gap-1.5 min-h-[44px]";
         window.scrollTo({ top: tabTambah.offsetTop - 80, behavior: 'smooth' });
     } else {
         colDaftar.classList.remove('hidden');
         colTambah.classList.add('hidden');
 
-        tabDaftar.className = "flex-1 py-2.5 rounded-lg bg-white text-primary font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]";
-        tabTambah.className = "flex-1 py-2.5 rounded-lg text-text-muted hover:text-text-main font-semibold text-xs transition-all flex items-center justify-center gap-1.5 min-h-[40px]";
+        tabDaftar.className = "flex-1 py-2.5 px-3 rounded-lg bg-white text-primary font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 min-h-[44px]";
+        tabTambah.className = "flex-1 py-2.5 px-3 rounded-lg text-text-muted hover:text-text-main font-semibold text-xs transition-all flex items-center justify-center gap-1.5 min-h-[44px]";
         window.scrollTo({ top: tabDaftar.offsetTop - 80, behavior: 'smooth' });
     }
 }
@@ -736,14 +748,14 @@ function switchTab(mode) {
     if (mode === 'kelas') {
         formKelas.classList.remove('hidden');
         formMapel.classList.add('hidden');
-        btnKelas.className = "py-1.5 rounded-md bg-white text-primary shadow-xs transition-colors text-center";
-        btnMapel.className = "py-1.5 rounded-md text-text-muted hover:text-text-main transition-colors text-center";
+        btnKelas.className = "min-h-[40px] py-2 rounded-md bg-white text-primary font-bold shadow-xs transition-colors text-center flex items-center justify-center";
+        btnMapel.className = "min-h-[40px] py-2 rounded-md text-text-muted hover:text-text-main font-semibold transition-colors text-center flex items-center justify-center";
         updateSubjectCheckboxes();
     } else {
         formMapel.classList.remove('hidden');
         formKelas.classList.add('hidden');
-        btnMapel.className = "py-1.5 rounded-md bg-white text-primary shadow-xs transition-colors text-center";
-        btnKelas.className = "py-1.5 rounded-md text-text-muted hover:text-text-main transition-colors text-center";
+        btnMapel.className = "min-h-[40px] py-2 rounded-md bg-white text-primary font-bold shadow-xs transition-colors text-center flex items-center justify-center";
+        btnKelas.className = "min-h-[40px] py-2 rounded-md text-text-muted hover:text-text-main font-semibold transition-colors text-center flex items-center justify-center";
         updateClassCheckboxes();
     }
 }
@@ -861,13 +873,13 @@ function tutupModalAlihkanSemuaGuru() {
 <?php if ($is_admin): ?>
 <!-- Modal Alihkan Pengampu Tunggal -->
 <div id="modalAlihkanPengampu" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 hidden p-4">
-    <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-6">
+    <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-5 sm:p-6">
         <div class="flex items-center justify-between pb-3 border-b border-border-main mb-4">
             <h3 class="text-sm font-bold text-text-main flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-base">swap_horiz</span>
                 Alihkan Pengampu Jadwal
             </h3>
-            <button type="button" onclick="tutupModalAlihkan()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+            <button type="button" onclick="tutupModalAlihkan()" class="text-text-muted hover:text-danger w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
@@ -889,7 +901,7 @@ function tutupModalAlihkanSemuaGuru() {
 
             <div>
                 <label class="block text-xs font-semibold text-text-main mb-1" for="new_user_id">Pilih Pengampu Baru</label>
-                <select id="new_user_id" name="new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
+                <select id="new_user_id" name="new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 px-3 py-2.5 font-medium cursor-pointer min-h-[44px]" required>
                     <option value="" disabled selected>-- Pilih Pengampu Baru --</option>
                     <option value="kosong" class="font-semibold text-amber-700 bg-amber-50">🟡 Kosongkan Pengampu (Slot Terbuka / Tersedia untuk Diambil Guru)</option>
                     <?php foreach ($semua_guru as $g): ?>
@@ -898,17 +910,17 @@ function tutupModalAlihkanSemuaGuru() {
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <span class="text-[11px] text-text-muted mt-1.5 block">
+                <span class="text-[11px] text-text-muted mt-1.5 block leading-relaxed">
                     <span class="material-symbols-outlined text-[13px] text-emerald-600 align-middle">check_circle</span>
                     Seluruh riwayat nilai siswa yang telah diisi pada jadwal ini akan otomatis dialihkan dan tidak akan hilang.
                 </span>
             </div>
 
-            <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
-                <button type="button" onclick="tutupModalAlihkan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
+            <div class="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-border-main mt-2">
+                <button type="button" onclick="tutupModalAlihkan()" class="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer min-h-[44px] flex items-center justify-center">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer">
+                <button type="submit" class="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer min-h-[44px] flex items-center justify-center">
                     Simpan & Alihkan
                 </button>
             </div>
@@ -918,13 +930,13 @@ function tutupModalAlihkanSemuaGuru() {
 
 <!-- Modal Bulk Alihkan Pengampu Terpilih -->
 <div id="modalBulkAlihkan" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 hidden p-4">
-    <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-6">
+    <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-5 sm:p-6">
         <div class="flex items-center justify-between pb-3 border-b border-border-main mb-4">
             <h3 class="text-sm font-bold text-text-main flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-base">swap_horiz</span>
                 Alihkan Pengampu Terpilih
             </h3>
-            <button type="button" onclick="tutupModalBulkAlihkan()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+            <button type="button" onclick="tutupModalBulkAlihkan()" class="text-text-muted hover:text-danger w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
@@ -942,7 +954,7 @@ function tutupModalAlihkanSemuaGuru() {
 
             <div>
                 <label class="block text-xs font-semibold text-text-main mb-1" for="bulk_target_new_user_id">Pilih Pengampu Baru</label>
-                <select id="bulk_target_new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
+                <select id="bulk_target_new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 px-3 py-2.5 font-medium cursor-pointer min-h-[44px]" required>
                     <option value="" disabled selected>-- Pilih Pengampu Baru / Tindakan --</option>
                     <option value="kosong" class="font-semibold text-amber-700 bg-amber-50">🟡 Kosongkan Pengampu (Slot Terbuka / Tersedia untuk Diambil Guru)</option>
                     <?php foreach ($semua_guru as $g): ?>
@@ -951,17 +963,17 @@ function tutupModalAlihkanSemuaGuru() {
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <span class="text-[11px] text-text-muted mt-1.5 block">
+                <span class="text-[11px] text-text-muted mt-1.5 block leading-relaxed">
                     <span class="material-symbols-outlined text-[13px] text-emerald-600 align-middle">info</span>
                     Pilih <strong>Kosongkan Pengampu</strong> agar jadwal bisa langsung dipilih sendiri oleh guru lain. Jika dialihkan ke Admin, jadwal berstatus Titipan Manual sehingga wali kelas bisa mengisi nilai.
                 </span>
             </div>
 
-            <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
-                <button type="button" onclick="tutupModalBulkAlihkan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
+            <div class="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-border-main mt-2">
+                <button type="button" onclick="tutupModalBulkAlihkan()" class="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer min-h-[44px] flex items-center justify-center">
                     Batal
                 </button>
-                <button type="button" onclick="submitBulkAlihkan()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer">
+                <button type="button" onclick="submitBulkAlihkan()" class="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors cursor-pointer min-h-[44px] flex items-center justify-center">
                     Simpan & Alihkan Semua
                 </button>
             </div>
@@ -971,13 +983,13 @@ function tutupModalAlihkanSemuaGuru() {
 
 <!-- Modal Alihkan Seluruh Jadwal Milik Guru Tertentu -->
 <div id="modalAlihkanSemuaGuru" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 hidden p-4">
-    <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-6">
+    <div class="bg-surface-card rounded-2xl border border-border-main shadow-xl max-w-md w-full p-5 sm:p-6">
         <div class="flex items-center justify-between pb-3 border-b border-border-main mb-4">
             <h3 class="text-sm font-bold text-text-main flex items-center gap-2">
                 <span class="material-symbols-outlined text-amber-600 text-base">swap_horiz</span>
                 Kosongkan / Alihkan Jadwal Guru
             </h3>
-            <button type="button" onclick="tutupModalAlihkanSemuaGuru()" class="text-text-muted hover:text-danger p-1 rounded-lg">
+            <button type="button" onclick="tutupModalAlihkanSemuaGuru()" class="text-text-muted hover:text-danger w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
@@ -991,14 +1003,14 @@ function tutupModalAlihkanSemuaGuru() {
                 <p class="text-xs font-bold text-amber-900">
                     Guru: <span id="semua_nama_guru">-</span>
                 </p>
-                <p class="text-[11px] text-amber-800 mt-1">
+                <p class="text-[11px] text-amber-800 mt-1 leading-relaxed">
                     Total ada <strong id="semua_total_jadwal">0</strong> jadwal mengajar yang diampu oleh guru ini. Tindakan ini akan mengalihkan seluruh jadwal sekaligus agar guru tidak memiliki jadwal mengampu lagi.
                 </p>
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-text-main mb-1" for="semua_new_user_id">Alihkan Semua Jadwal Ke:</label>
-                <select id="semua_new_user_id" name="new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 p-2.5 font-medium cursor-pointer" required>
+                <select id="semua_new_user_id" name="new_user_id" class="w-full bg-white text-xs rounded-lg border border-slate-300 px-3 py-2.5 font-medium cursor-pointer min-h-[44px]" required>
                     <option value="" disabled selected>-- Pilih Guru Tujuan / Tindakan --</option>
                     <option value="kosong" class="font-semibold text-amber-700 bg-amber-50">🟡 Kosongkan Semua (Slot Terbuka / Siap Diambil Guru Lain)</option>
                     <?php foreach ($semua_guru as $g): ?>
@@ -1007,16 +1019,16 @@ function tutupModalAlihkanSemuaGuru() {
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <span class="text-[11px] text-text-muted mt-1.5 block">
+                <span class="text-[11px] text-text-muted mt-1.5 block leading-relaxed">
                     Pilih <strong>Kosongkan Semua</strong> agar jadwal terbuka untuk dipilih oleh guru baru/pengganti, atau pilih <strong>Admin</strong> jika ditampung sementara.
                 </span>
             </div>
 
-            <div class="flex justify-end gap-2 pt-3 border-t border-border-main mt-2">
-                <button type="button" onclick="tutupModalAlihkanSemuaGuru()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer">
+            <div class="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-border-main mt-2">
+                <button type="button" onclick="tutupModalAlihkanSemuaGuru()" class="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-text-muted transition-colors cursor-pointer min-h-[44px] flex items-center justify-center">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors cursor-pointer">
+                <button type="submit" class="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors cursor-pointer min-h-[44px] flex items-center justify-center">
                     Proses Alihkan Semua
                 </button>
             </div>

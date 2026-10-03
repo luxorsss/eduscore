@@ -556,6 +556,9 @@ require_once '../components/header.php';
         return matched.concat(remaining);
     }
 
+    const STORAGE_KEY_SISWA = 'eduscore_wali_siswa_' + currentClassId;
+    const STORAGE_KEY_MAPEL = 'eduscore_wali_mapel_' + currentClassId;
+
     function terapkanUrutan() {
         const elSiswa = document.getElementById('urutSiswa');
         const elMapel = document.getElementById('urutMapel');
@@ -563,29 +566,73 @@ require_once '../components/header.php';
         if (elSiswa && elSiswa.value.includes('\t')) formatTranspose('urutSiswa');
         if (elMapel && elMapel.value.includes('\t')) formatTranspose('urutMapel');
 
-        const valSiswa = elSiswa ? elSiswa.value : '';
-        const valMapel = elMapel ? elMapel.value : '';
+        const valSiswa = elSiswa ? elSiswa.value.trim() : '';
+        const valMapel = elMapel ? elMapel.value.trim() : '';
+
+        if (currentClassId) {
+            if (valSiswa) {
+                localStorage.setItem(STORAGE_KEY_SISWA, valSiswa);
+            } else {
+                localStorage.removeItem(STORAGE_KEY_SISWA);
+            }
+            if (valMapel) {
+                localStorage.setItem(STORAGE_KEY_MAPEL, valMapel);
+            } else {
+                localStorage.removeItem(STORAGE_KEY_MAPEL);
+            }
+        }
+
         currentStudents = customSort(rawStudents, valSiswa, 'nama', false);
         currentSubjects = customSort(rawSubjects, valMapel, 'nama_mapel', true);
         renderTable();
         Swal.fire({
             icon: 'success',
-            title: 'Urutan Disesuaikan',
-            text: 'Urutan tabel berhasil disesuaikan dengan daftar Excel.',
+            title: 'Urutan Disesuaikan & Disimpan',
+            text: 'Urutan tabel berhasil disesuaikan dan tersimpan permanen di peramban ini.',
             timer: 1500,
             showConfirmButton: false
         });
     }
 
     function resetUrutan() {
-        document.getElementById('urutSiswa').value = '';
-        document.getElementById('urutMapel').value = '';
+        if (currentClassId) {
+            localStorage.removeItem(STORAGE_KEY_SISWA);
+            localStorage.removeItem(STORAGE_KEY_MAPEL);
+        }
+        const elSiswa = document.getElementById('urutSiswa');
+        const elMapel = document.getElementById('urutMapel');
+        if (elSiswa) elSiswa.value = '';
+        if (elMapel) elMapel.value = '';
         currentStudents = [...rawStudents];
         currentSubjects = [...rawSubjects];
         renderTable();
+        Swal.fire({
+            icon: 'info',
+            title: 'Urutan Direset',
+            text: 'Urutan siswa dan mapel dikembalikan ke susunan abjad bawaan.',
+            timer: 1500,
+            showConfirmButton: false
+        });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        // Muat urutan yang tersimpan di localStorage untuk kelas ini
+        if (currentClassId) {
+            const savedSiswa = localStorage.getItem(STORAGE_KEY_SISWA) || '';
+            const savedMapel = localStorage.getItem(STORAGE_KEY_MAPEL) || '';
+
+            const elSiswa = document.getElementById('urutSiswa');
+            const elMapel = document.getElementById('urutMapel');
+            if (elSiswa && savedSiswa) elSiswa.value = savedSiswa;
+            if (elMapel && savedMapel) elMapel.value = savedMapel;
+
+            if (savedSiswa || savedMapel) {
+                currentStudents = customSort(rawStudents, savedSiswa, 'nama', false);
+                currentSubjects = customSort(rawSubjects, savedMapel, 'nama_mapel', true);
+                renderTable();
+            }
+        }
+
         ['urutSiswa', 'urutMapel'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;

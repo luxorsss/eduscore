@@ -358,7 +358,7 @@ require_once '../components/header.php';
             kolomPencarian.select();
         }
 
-        const memori = sessionStorage.getItem(STORAGE_KEY);
+        const memori = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
         if (memori) {
             const excelEl = document.getElementById('excelNames');
             if (excelEl) excelEl.value = memori;
@@ -369,6 +369,7 @@ require_once '../components/header.php';
     });
 
     function hapusMemori() {
+        localStorage.removeItem(STORAGE_KEY);
         sessionStorage.removeItem(STORAGE_KEY);
         const excelEl = document.getElementById('excelNames');
         if (excelEl) excelEl.value = '';
@@ -385,7 +386,7 @@ require_once '../components/header.php';
             return;
         }
 
-        sessionStorage.setItem(STORAGE_KEY, teks);
+        localStorage.setItem(STORAGE_KEY, teks);
 
         const excelArray = teks.split(/[\r\n\t]+/).map(n => n.trim().toLowerCase()).filter(n => n);
         const tbody = document.getElementById('tabelNilai');
