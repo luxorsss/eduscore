@@ -153,13 +153,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
 
     // Jika Admin, bisa menentukan penugasan untuk guru tertentu
     $assignee_id = $user_id;
-    if ($is_admin && !empty($_POST['target_user_id'])) {
-        $assignee_id = (int)$_POST['target_user_id'];
-    }
-
     $is_manual = 0;
-    if ($is_admin && isset($_POST['is_manual'])) {
-        $is_manual = (int)$_POST['is_manual'] === 1 ? 1 : 0;
+    if ($is_admin) {
+        $raw_target = $_POST['target_user_id'] ?? '';
+        if ($raw_target === 'kosong' || $raw_target === '') {
+            $assignee_id = null;
+            $is_manual = 1;
+        } else {
+            $assignee_id = (int)$raw_target;
+            if (isset($_POST['is_manual'])) {
+                $is_manual = (int)$_POST['is_manual'] === 1 ? 1 : 0;
+            }
+        }
     }
 
     if ($mode === 'kelas_to_mapel') {
@@ -245,40 +250,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['aksi']) && $_POST['aks
     }
 
     $sukses_hapus = 0;
-    $gagal_terkait = 0;
+    $gagal_hapus = 0;
 
-    $stmt_check_grades = $pdo->prepare("SELECT COUNT(*) FROM grades WHERE schedule_id = ?");
-    
-    // Admin bisa hapus semua jadwal; Guru hanya bisa hapus miliknya
+    $stmt_del_grades = $pdo->prepare("DELETE FROM grades WHERE schedule_id = ?");
     if ($is_admin) {
+        $stmt_check_sched = $pdo->prepare("SELECT id FROM teaching_schedules WHERE id = ?");
         $stmt_delete = $pdo->prepare("DELETE FROM teaching_schedules WHERE id = ?");
     } else {
+        $stmt_check_sched = $pdo->prepare("SELECT id FROM teaching_schedules WHERE id = ? AND user_id = ?");
         $stmt_delete = $pdo->prepare("DELETE FROM teaching_schedules WHERE id = ? AND user_id = ?");
     }
 
     foreach ($jadwal_ids as $jid) {
         $id = (int)$jid;
+        if ($id <= 0) continue;
 
-        // Cek apakah jadwal memiliki data nilai siswa
-        $stmt_check_grades->execute([$id]);
-        if ($stmt_check_grades->fetchColumn() > 0) {
-            $gagal_terkait++;
+        if ($is_admin) {
+            $stmt_check_sched->execute([$id]);
+        } else {
+            $stmt_check_sched->execute([$id, $user_id]);
+        }
+        $valid_id = $stmt_check_sched->fetchColumn();
+
+        if (!$valid_id) {
+            $gagal_hapus++;
             continue;
         }
 
         try {
+            $pdo->beginTransaction();
+            // Cascade delete: hapus data nilai siswa yang terkait dengan jadwal ini
+            $stmt_del_grades->execute([$valid_id]);
             if ($is_admin) {
-                $stmt_delete->execute([$id]);
+                $stmt_delete->execute([$valid_id]);
             } else {
-                $stmt_delete->execute([$id, $user_id]);
+                $stmt_delete->execute([$valid_id, $user_id]);
             }
+            $pdo->commit();
             $sukses_hapus++;
         } catch (PDOException $e) {
-            $gagal_terkait++;
+            $pdo->rollBack();
+            $gagal_hapus++;
         }
     }
 
-    if ($gagal_terkait > 0) {
+    if ($gagal_hapus > 0 && $sukses_hapus === 0) {
         header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sebagian_gagal'));
     } else {
         header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_hapus'));
@@ -292,28 +308,41 @@ if (isset($_GET['hapus'])) {
     $redirect_filter_kelas = isset($_GET['redirect_filter_kelas']) ? $_GET['redirect_filter_kelas'] : null;
     $redirect_filter_guru = isset($_GET['redirect_filter_guru']) ? $_GET['redirect_filter_guru'] : null;
 
-    // Cek keterkaitan dengan nilai di tabel grades
-    $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM grades WHERE schedule_id = ?");
-    $stmt_check->execute([$jadwal_id]);
-    if ($stmt_check->fetchColumn() > 0) {
-        header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'gagal_nilai'));
-        exit();
+    if ($is_admin) {
+        $stmt_check_sched = $pdo->prepare("SELECT id FROM teaching_schedules WHERE id = ?");
+        $stmt_check_sched->execute([$jadwal_id]);
+    } else {
+        $stmt_check_sched = $pdo->prepare("SELECT id FROM teaching_schedules WHERE id = ? AND user_id = ?");
+        $stmt_check_sched->execute([$jadwal_id, $user_id]);
+    }
+    $valid_id = $stmt_check_sched->fetchColumn();
+
+    if ($valid_id) {
+        try {
+            $pdo->beginTransaction();
+            // Cascade delete: hapus data nilai siswa yang terkait dengan jadwal ini
+            $stmt_del_grades = $pdo->prepare("DELETE FROM grades WHERE schedule_id = ?");
+            $stmt_del_grades->execute([$valid_id]);
+
+            if ($is_admin) {
+                $stmt = $pdo->prepare("DELETE FROM teaching_schedules WHERE id = ?");
+                $stmt->execute([$valid_id]);
+            } else {
+                $stmt = $pdo->prepare("DELETE FROM teaching_schedules WHERE id = ? AND user_id = ?");
+                $stmt->execute([$valid_id, $user_id]);
+            }
+            $pdo->commit();
+            
+            header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_hapus'));
+            exit();
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            die("Error menghapus jadwal: " . $e->getMessage());
+        }
     }
 
-    try {
-        if ($is_admin) {
-            $stmt = $pdo->prepare("DELETE FROM teaching_schedules WHERE id = ?");
-            $stmt->execute([$jadwal_id]);
-        } else {
-            $stmt = $pdo->prepare("DELETE FROM teaching_schedules WHERE id = ? AND user_id = ?");
-            $stmt->execute([$jadwal_id, $user_id]);
-        }
-        
-        header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sukses_hapus'));
-        exit();
-    } catch (PDOException $e) {
-        die("Error menghapus jadwal: " . $e->getMessage());
-    }
+    header("Location: " . getRedirectUrl($redirect_filter_kelas, $redirect_filter_guru, 'sebagian_gagal'));
+    exit();
 }
 
 header("Location: jadwal.php");

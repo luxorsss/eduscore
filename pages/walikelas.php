@@ -83,21 +83,32 @@ if ($class_id) {
         $subid = $row['subject_id'];
 
         if ($tipe_ujian === 'UTS') {
-            $h = (float)($row['h_uts'] ?? 0);
+            $h_raw = $row['h_uts'];
             $u_raw = $row['uts'];
-            $u = (float)($u_raw ?? 0);
-            $t = (float)($row['tambahan_uts'] ?? 0);
+            $t_raw = $row['tambahan_uts'];
         } else {
-            $h = (float)($row['h_uas'] ?? 0);
+            $h_raw = $row['h_uas'];
             $u_raw = $row['uas'];
-            $u = (float)($u_raw ?? 0);
-            $t = (float)($row['tambahan_uas'] ?? 0);
+            $t_raw = $row['tambahan_uas'];
         }
 
-        $calc = ($h * 0.20) + ($u * 0.80) + $t;
-        $final_score = min(100, $calc); // Limit max 100
+        // Cek apakah ada komponen nilai yang diisi untuk periode ini
+        $has_grade = ($h_raw !== null && $h_raw !== '') || 
+                     ($u_raw !== null && $u_raw !== '') || 
+                     ($t_raw !== null && $t_raw !== '');
 
-        $matrix_akhir[$sid][$subid] = round($final_score, 2);
+        if ($has_grade) {
+            $h = (float)($h_raw ?? 0);
+            $u = (float)($u_raw ?? 0);
+            $t = (float)($t_raw ?? 0);
+
+            $calc = ($h * 0.20) + ($u * 0.80) + $t;
+            $final_score = min(100, $calc); // Limit max 100
+            $matrix_akhir[$sid][$subid] = round($final_score, 2);
+        } else {
+            $matrix_akhir[$sid][$subid] = null;
+        }
+
         $matrix_ujian[$sid][$subid] = ($u_raw !== null && $u_raw !== '') ? round((float)$u_raw, 2) : null;
     }
 

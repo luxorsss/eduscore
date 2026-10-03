@@ -146,12 +146,12 @@ require_once '../components/header.php';
         <?php elseif ($_GET['pesan'] == 'sukses_hapus'): ?>
             <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-emerald-200 bg-success-subtle text-success">
                 <span class="material-symbols-outlined text-base">check_circle</span>
-                <span>Jadwal penugasan yang dipilih berhasil dihapus.</span>
+                <span>Jadwal penugasan yang dipilih beserta seluruh data nilai yang terkait berhasil dihapus.</span>
             </div>
         <?php elseif ($_GET['pesan'] == 'sebagian_gagal' || $_GET['pesan'] == 'gagal_nilai'): ?>
             <div class="flex items-center gap-3 p-4 text-xs font-medium rounded-xl border border-amber-200 bg-warning-subtle text-warning">
                 <span class="material-symbols-outlined text-base">warning</span>
-                <span>Beberapa atau seluruh jadwal tidak dapat dihapus karena sudah memiliki data nilai siswa terkait.</span>
+                <span>Beberapa atau seluruh jadwal tidak dapat dihapus karena terjadi kesalahan atau kendala akses.</span>
             </div>
         <?php elseif ($_GET['pesan'] == 'sukses_tambah'): ?>
             <?php 
@@ -216,8 +216,9 @@ require_once '../components/header.php';
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-semibold text-text-main">Pilih Guru Pengajar</label>
                         <select name="target_user_id" id="target_user_kelas" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateSubjectCheckboxes()">
+                            <option value="kosong" <?= ($filter_guru === 'kosong') ? 'selected' : '' ?>>-- Belum Ada Guru / Titipan (Diisi Wali Kelas) --</option>
                             <?php foreach($semua_guru as $g): ?>
-                                <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id'] || $g['id'] == $user_id) ? 'selected' : '' ?>>
+                                <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id'] || ($filter_guru === null && $g['id'] == $user_id)) ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($g['nama_lengkap']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -285,8 +286,9 @@ require_once '../components/header.php';
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-semibold text-text-main">Pilih Guru Pengajar</label>
                         <select name="target_user_id" id="target_user_mapel" class="w-full bg-white text-text-main text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2.5 transition-colors cursor-pointer font-medium min-h-[42px]" required onchange="updateClassCheckboxes()">
+                            <option value="kosong" <?= ($filter_guru === 'kosong') ? 'selected' : '' ?>>-- Belum Ada Guru / Titipan (Diisi Wali Kelas) --</option>
                             <?php foreach($semua_guru as $g): ?>
-                                <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id'] || $g['id'] == $user_id) ? 'selected' : '' ?>>
+                                <option value="<?= $g['id'] ?>" <?= ($filter_guru == $g['id'] || ($filter_guru === null && $g['id'] == $user_id)) ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($g['nama_lengkap']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -426,7 +428,7 @@ require_once '../components/header.php';
                                         <span>Alihkan Terpilih</span>
                                     </button>
                                 <?php endif; ?>
-                                <button type="submit" id="btnBulkDelete" onclick="konfirmasiForm(event, 'Hapus seluruh jadwal penugasan yang dicentang? Pastikan tidak ada data nilai yang terikat.')" class="hidden items-center gap-1.5 text-xs font-semibold text-danger hover:bg-danger-subtle px-3 py-1.5 rounded-lg border border-danger/20 transition-colors cursor-pointer">
+                                <button type="submit" id="btnBulkDelete" onclick="konfirmasiForm(event, 'Hapus seluruh jadwal penugasan yang dicentang?<br><br><div class=\'text-rose-600 font-medium text-xs bg-rose-50 border border-rose-200 p-3 rounded-lg text-left leading-relaxed\'>⚠️ <strong>Peringatan Penting:</strong><br>Seluruh data nilai siswa yang terkait dengan jadwal terpilih akan <u>ikut terhapus permanen</u>!</div>')" class="hidden items-center gap-1.5 text-xs font-semibold text-danger hover:bg-danger-subtle px-3 py-1.5 rounded-lg border border-danger/20 transition-colors cursor-pointer">
                                     <span class="material-symbols-outlined text-sm">delete</span>
                                     <span id="countSelected">Hapus Terpilih</span>
                                 </button>
@@ -516,7 +518,7 @@ require_once '../components/header.php';
                                             </button>
                                         <?php endif; ?>
                                         <a href="proses_jadwal.php?hapus=<?= $jadwal['jadwal_id'] ?>&redirect_filter_kelas=<?= urlencode((string)$filter_kelas) ?>&redirect_filter_guru=<?= urlencode((string)$filter_guru) ?>" 
-                                           onclick="konfirmasiLink(event, this.href, 'Hapus jadwal mata pelajaran <?= htmlspecialchars($jadwal['nama_mapel']) ?> di kelas <?= htmlspecialchars($jadwal['nama_kelas']) ?>?')" 
+                                           onclick="konfirmasiLink(event, this.href, 'Hapus jadwal mata pelajaran <strong><?= htmlspecialchars(addslashes($jadwal['nama_mapel'])) ?></strong> di kelas <strong><?= htmlspecialchars(addslashes($jadwal['nama_kelas'])) ?></strong>?<br><br><div class=\'text-rose-600 font-medium text-xs bg-rose-50 border border-rose-200 p-3 rounded-lg text-left leading-relaxed\'>⚠️ <strong>Peringatan Penting:</strong><br>Jika sudah ada data nilai siswa pada jadwal ini, seluruh nilai tersebut akan <u>ikut terhapus permanen</u>!</div>')" 
                                            class="p-1.5 rounded-lg text-slate-400 hover:text-danger hover:bg-danger-subtle transition-colors" 
                                            title="Hapus Jadwal">
                                             <span class="material-symbols-outlined text-lg">delete</span>
@@ -567,7 +569,9 @@ const isAdmin = <?= $is_admin ? 'true' : 'false' ?>;
 function getSelectedTeacherId(tab) {
     if (isAdmin) {
         const el = tab === 'kelas' ? document.getElementById('target_user_kelas') : document.getElementById('target_user_mapel');
-        return el ? parseInt(el.value) : currentUserId;
+        if (!el || el.value === 'kosong' || el.value === '') return null;
+        const parsed = parseInt(el.value);
+        return isNaN(parsed) ? null : parsed;
     }
     return currentUserId;
 }
@@ -755,13 +759,13 @@ function toggleCheckAllGroup(className) {
 function konfirmasiForm(event, message) {
     event.preventDefault();
     Swal.fire({
-        title: 'Konfirmasi Tindakan',
-        text: message,
+        title: 'Konfirmasi Hapus Jadwal',
+        html: message,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#be123c',
         cancelButtonColor: '#475569',
-        confirmButtonText: 'Ya, Lanjutkan',
+        confirmButtonText: 'Ya, Hapus Terpilih',
         cancelButtonText: 'Batal'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -773,13 +777,13 @@ function konfirmasiForm(event, message) {
 function konfirmasiLink(event, url, message) {
     event.preventDefault();
     Swal.fire({
-        title: 'Konfirmasi Tindakan',
-        text: message,
+        title: 'Konfirmasi Hapus Jadwal',
+        html: message,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#be123c',
         cancelButtonColor: '#475569',
-        confirmButtonText: 'Ya, Lanjutkan',
+        confirmButtonText: 'Ya, Hapus Jadwal',
         cancelButtonText: 'Batal'
     }).then((result) => {
         if (result.isConfirmed) {
