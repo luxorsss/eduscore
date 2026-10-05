@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once '../config/auth.php';
 
 check_login();
@@ -191,7 +190,7 @@ require_once '../components/header.php';
         
         <!-- Form Tambah Jadwal (Bulk Support) -->
         <div id="kolomTambahJadwal" class="hidden lg:block lg:col-span-4 lg:sticky lg:top-20">
-            <div class="bg-surface-card rounded-xl border border-border-main shadow-xs p-6">
+            <div class="bg-surface-card rounded-xl border border-border-main shadow-xs p-6 lg:max-h-[calc(100vh-6rem)] overflow-y-auto custom-scroll">
                 <h3 class="font-bold text-sm text-text-main mb-3 flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary text-base">add_circle</span>
                     <?= $is_admin ? 'Tetapkan Jadwal Guru' : 'Pilih Jadwal Mengajar Anda' ?>
@@ -272,7 +271,7 @@ require_once '../components/header.php';
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors mt-1 min-h-[44px] flex items-center justify-center">
+                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors mt-1 min-h-[44px] flex items-center justify-center cursor-pointer">
                         Simpan Penugasan Mapel
                     </button>
                 </form>
@@ -342,7 +341,7 @@ require_once '../components/header.php';
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors mt-1 min-h-[44px] flex items-center justify-center">
+                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors mt-1 min-h-[44px] flex items-center justify-center cursor-pointer">
                         Simpan Penugasan Kelas
                     </button>
                 </form>

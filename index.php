@@ -1,6 +1,5 @@
 <?php
-// Mulai sesi (Session) untuk mengecek apakah user sudah login atau belum
-session_start();
+require_once __DIR__ . '/config/session.php';
 
 // Cek apakah ada variabel 'user_id' di dalam sesi
 if (isset($_SESSION['user_id'])) {

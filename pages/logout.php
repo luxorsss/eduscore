@@ -1,5 +1,5 @@
 <?php
-session_start(); // Mulai sesi untuk mengenalinya
+require_once __DIR__ . '/../config/session.php';
 
 // Hapus semua variabel sesi
 session_unset(); 
