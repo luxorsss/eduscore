@@ -373,13 +373,19 @@ require_once '../components/header.php';
         event.preventDefault();
         Swal.fire({
             title: 'Konfirmasi Tindakan',
-            text: message,
+            html: message,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#be123c',
-            cancelButtonColor: '#475569',
+            cancelButtonColor: '#64748b',
             confirmButtonText: 'Ya, Lanjutkan',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
+            background: '#ffffff',
+            customClass: { 
+                popup: 'rounded-xl shadow-md border border-slate-200 text-sm font-sans',
+                confirmButton: 'rounded-lg text-xs font-semibold px-4 py-2.5',
+                cancelButton: 'rounded-lg text-xs font-semibold px-4 py-2.5'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 window.location.href = url;
