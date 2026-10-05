@@ -306,6 +306,25 @@ require_once '../components/header.php';
         </div>
     </div>
 
+    <!-- Banner Info Penyembunyian / Filter Siswa & Mapel Kustom -->
+    <div id="filterUrutanNotice" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4 text-xs shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="flex items-start sm:items-center gap-2.5 min-w-0">
+            <span class="material-symbols-outlined text-amber-600 text-lg sm:text-xl shrink-0 mt-0.5 sm:mt-0">visibility_off</span>
+            <div class="min-w-0">
+                <p id="filterUrutanNoticeText" class="font-medium text-amber-900"></p>
+                <div id="filterUrutanDetailText" class="text-[11px] text-amber-800 mt-1 hidden space-y-1"></div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+            <button type="button" onclick="toggleDetailFilter()" id="btnToggleDetailFilter" class="px-2.5 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-800 text-[11px] font-semibold hover:bg-amber-100 transition-colors cursor-pointer min-h-[36px]">
+                Lihat Detail
+            </button>
+            <button type="button" onclick="resetUrutan()" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-[11px] font-semibold shadow-xs transition-colors cursor-pointer min-h-[36px]">
+                Reset Tampilan Penuh
+            </button>
+        </div>
+    </div>
+
     <!-- Tabel Matriks Rekap Nilai -->
     <div class="bg-surface-card rounded-xl shadow-xs border border-border-main overflow-hidden">
         <div class="p-3.5 sm:p-4 border-b border-border-main bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
@@ -373,34 +392,34 @@ require_once '../components/header.php';
             if (navContainer) navContainer.classList.add('hidden');
         } else {
             if (navContainer) navContainer.classList.remove('hidden');
-            const idx = currentSubjects.findIndex(s => s.id === selectedMapelId);
+            const idx = rawSubjects.findIndex(s => s.id === selectedMapelId);
             if (idx !== -1 && counter) {
-                counter.textContent = `${idx + 1} / ${currentSubjects.length}`;
+                counter.textContent = `${idx + 1} / ${rawSubjects.length}`;
             }
         }
         renderTable();
     }
 
     function prevMapel() {
-        if (currentSubjects.length === 0) return;
-        let idx = currentSubjects.findIndex(s => s.id === selectedMapelId);
+        if (rawSubjects.length === 0) return;
+        let idx = rawSubjects.findIndex(s => s.id === selectedMapelId);
         if (idx <= 0) {
-            idx = currentSubjects.length - 1;
+            idx = rawSubjects.length - 1;
         } else {
             idx--;
         }
-        setFilterMapel(currentSubjects[idx].id);
+        setFilterMapel(rawSubjects[idx].id);
     }
 
     function nextMapel() {
-        if (currentSubjects.length === 0) return;
-        let idx = currentSubjects.findIndex(s => s.id === selectedMapelId);
-        if (idx === -1 || idx >= currentSubjects.length - 1) {
+        if (rawSubjects.length === 0) return;
+        let idx = rawSubjects.findIndex(s => s.id === selectedMapelId);
+        if (idx === -1 || idx >= rawSubjects.length - 1) {
             idx = 0;
         } else {
             idx++;
         }
-        setFilterMapel(currentSubjects[idx].id);
+        setFilterMapel(rawSubjects[idx].id);
     }
 
     function updateSelectFilterOptions() {
@@ -408,7 +427,7 @@ require_once '../components/header.php';
         if (!select) return;
         const currentVal = String(selectedMapelId);
         let html = '<option value="all">📊 Semua Mapel (Tabel Penuh)</option>';
-        currentSubjects.forEach((s, idx) => {
+        rawSubjects.forEach((s, idx) => {
             const isSel = String(s.id) === currentVal ? 'selected' : '';
             html += `<option value="${s.id}" ${isSel}>${idx + 1}. ${s.nama_mapel}</option>`;
         });
@@ -484,10 +503,10 @@ require_once '../components/header.php';
         let subjectsToRender = currentSubjects;
 
         if (isSingleFocus) {
-            subjectsToRender = currentSubjects.filter(s => s.id === selectedMapelId);
-            if (subjectsToRender.length === 0 && currentSubjects.length > 0) {
-                subjectsToRender = [currentSubjects[0]];
-                selectedMapelId = currentSubjects[0].id;
+            subjectsToRender = rawSubjects.filter(s => s.id === selectedMapelId);
+            if (subjectsToRender.length === 0 && rawSubjects.length > 0) {
+                subjectsToRender = [rawSubjects[0]];
+                selectedMapelId = rawSubjects[0].id;
             }
         }
 
@@ -664,11 +683,29 @@ require_once '../components/header.php';
     }
 
     function customSort(originalArray, textInput, fieldName, isMapel = false) {
-        const lines = parseDelimitedList(textInput).map(n => n.toLowerCase());
-        if (lines.length === 0) return [...originalArray];
+        if (!textInput || !textInput.trim()) {
+            return {
+                result: [...originalArray],
+                hidden: [],
+                unmatched: []
+            };
+        }
+
+        const lines = parseDelimitedList(textInput);
+        if (lines.length === 0) {
+            return {
+                result: [...originalArray],
+                hidden: [],
+                unmatched: []
+            };
+        }
+
         let matched = [];
         let remaining = [...originalArray];
-        lines.forEach(line => {
+        let unmatched = [];
+
+        lines.forEach(rawLine => {
+            const line = rawLine.toLowerCase();
             let index = remaining.findIndex(item => item[fieldName].toLowerCase() === line);
 
             // Fallback for subjects with grade level suffixes
@@ -680,9 +717,100 @@ require_once '../components/header.php';
                 });
             }
 
-            if (index > -1) matched.push(remaining.splice(index, 1)[0]);
+            if (index > -1) {
+                matched.push(remaining.splice(index, 1)[0]);
+            } else {
+                // Cek apakah item sudah ter-match sebelumnya agar tidak duplicate di unmatched
+                const alreadyMatched = matched.some(item => {
+                    if (item[fieldName].toLowerCase() === line) return true;
+                    if (isMapel && cleanMapelName(item[fieldName]) === cleanMapelName(line)) return true;
+                    return false;
+                });
+                if (!alreadyMatched && !unmatched.includes(rawLine)) {
+                    unmatched.push(rawLine);
+                }
+            }
         });
-        return matched.concat(remaining);
+
+        // Jika sama sekali tidak ada yang cocok, kembalikan data asli agar tabel tidak kosong mendadak
+        if (matched.length === 0 && originalArray.length > 0) {
+            return {
+                result: [...originalArray],
+                hidden: [],
+                unmatched: unmatched
+            };
+        }
+
+        return {
+            result: matched,
+            hidden: remaining,
+            unmatched: unmatched
+        };
+    }
+
+    function toggleDetailFilter() {
+        const detail = document.getElementById('filterUrutanDetailText');
+        const btn = document.getElementById('btnToggleDetailFilter');
+        if (!detail || !btn) return;
+        const isHidden = detail.classList.contains('hidden');
+        if (isHidden) {
+            detail.classList.remove('hidden');
+            btn.textContent = 'Tutup Detail';
+        } else {
+            detail.classList.add('hidden');
+            btn.textContent = 'Lihat Detail';
+        }
+    }
+
+    function updateFilterNotice(sortSiswa, sortMapel) {
+        const noticeEl = document.getElementById('filterUrutanNotice');
+        const textEl = document.getElementById('filterUrutanNoticeText');
+        const detailEl = document.getElementById('filterUrutanDetailText');
+        const btn = document.getElementById('btnToggleDetailFilter');
+        if (!noticeEl || !textEl || !detailEl) return;
+
+        const hasHiddenSiswa = sortSiswa.hidden && sortSiswa.hidden.length > 0;
+        const hasHiddenMapel = sortMapel.hidden && sortMapel.hidden.length > 0;
+        const hasUnmatchedSiswa = sortSiswa.unmatched && sortSiswa.unmatched.length > 0;
+        const hasUnmatchedMapel = sortMapel.unmatched && sortMapel.unmatched.length > 0;
+
+        if (!hasHiddenSiswa && !hasHiddenMapel && !hasUnmatchedSiswa && !hasUnmatchedMapel) {
+            noticeEl.classList.add('hidden');
+            detailEl.classList.add('hidden');
+            if (btn) btn.textContent = 'Lihat Detail';
+            return;
+        }
+
+        noticeEl.classList.remove('hidden');
+
+        let summaryParts = [];
+        if (hasHiddenMapel) {
+            summaryParts.push(`<b>${sortMapel.hidden.length}</b> mapel disembunyikan (${currentSubjects.length}/${rawSubjects.length} tampil)`);
+        }
+        if (hasHiddenSiswa) {
+            summaryParts.push(`<b>${sortSiswa.hidden.length}</b> siswa disembunyikan (${currentStudents.length}/${rawStudents.length} tampil)`);
+        }
+        if (hasUnmatchedMapel || hasUnmatchedSiswa) {
+            let totalUnmatched = (sortMapel.unmatched ? sortMapel.unmatched.length : 0) + (sortSiswa.unmatched ? sortSiswa.unmatched.length : 0);
+            summaryParts.push(`<b>${totalUnmatched}</b> data tempel tidak cocok di kelas ini`);
+        }
+
+        textEl.innerHTML = `<span class="font-bold">Mode Urutan Kustom:</span> ` + summaryParts.join(' &bull; ');
+
+        let detailHtml = '';
+        if (hasHiddenMapel) {
+            detailHtml += `<p>🙈 <b>Mapel disembunyikan:</b> ${sortMapel.hidden.map(m => m.nama_mapel).join(', ')}</p>`;
+        }
+        if (hasHiddenSiswa) {
+            detailHtml += `<p>🙈 <b>Siswa disembunyikan:</b> ${sortSiswa.hidden.map(s => s.nama).join(', ')}</p>`;
+        }
+        if (hasUnmatchedMapel && sortMapel.unmatched.length > 0) {
+            detailHtml += `<p class="text-rose-700">⚠️ <b>Mapel tidak ditemukan di database:</b> ${sortMapel.unmatched.join(', ')}</p>`;
+        }
+        if (hasUnmatchedSiswa && sortSiswa.unmatched.length > 0) {
+            detailHtml += `<p class="text-rose-700">⚠️ <b>Siswa tidak ditemukan di database:</b> ${sortSiswa.unmatched.join(', ')}</p>`;
+        }
+        detailEl.innerHTML = detailHtml;
     }
 
     const STORAGE_KEY_SISWA = 'eduscore_wali_siswa_' + currentClassId;
@@ -711,17 +839,75 @@ require_once '../components/header.php';
             }
         }
 
-        currentStudents = customSort(rawStudents, valSiswa, 'nama', false);
-        currentSubjects = customSort(rawSubjects, valMapel, 'nama_mapel', true);
+        const sortSiswa = customSort(rawStudents, valSiswa, 'nama', false);
+        const sortMapel = customSort(rawSubjects, valMapel, 'nama_mapel', true);
+
+        currentStudents = sortSiswa.result;
+        currentSubjects = sortMapel.result;
+
         updateSelectFilterOptions();
+        updateFilterNotice(sortSiswa, sortMapel);
         renderTable();
-        Swal.fire({
-            icon: 'success',
-            title: 'Urutan Disesuaikan & Disimpan',
-            text: 'Urutan tabel berhasil disesuaikan dan tersimpan permanen di peramban ini.',
-            timer: 1500,
-            showConfirmButton: false
-        });
+
+        const hasHidden = (sortSiswa.hidden.length > 0) || (sortMapel.hidden.length > 0);
+        const hasUnmatched = (sortSiswa.unmatched.length > 0) || (sortMapel.unmatched.length > 0);
+
+        if (!hasHidden && !hasUnmatched) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Urutan Disesuaikan & Disimpan',
+                text: 'Urutan tabel berhasil disesuaikan dan tersimpan permanen di peramban ini.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } else {
+            let msgHtml = `<div class="text-left text-xs space-y-2 mt-2">`;
+            msgHtml += `<p class="text-text-main font-semibold">Tabel disesuaikan: menampilkan <b>${currentStudents.length}</b> siswa dan <b>${currentSubjects.length}</b> mapel.</p>`;
+            
+            if (sortMapel.hidden.length > 0) {
+                msgHtml += `<div class="bg-amber-50 p-2.5 rounded-lg border border-amber-200 text-amber-900">
+                    <p class="font-bold">🙈 ${sortMapel.hidden.length} Mapel Disembunyikan:</p>
+                    <p class="mt-0.5 text-[11px] leading-relaxed">${sortMapel.hidden.map(m => m.nama_mapel).join(', ')}</p>
+                </div>`;
+            }
+
+            if (sortSiswa.hidden.length > 0) {
+                const listStr = sortSiswa.hidden.length <= 6 
+                    ? sortSiswa.hidden.map(s => s.nama).join(', ')
+                    : sortSiswa.hidden.slice(0, 6).map(s => s.nama).join(', ') + ` <i>dan ${sortSiswa.hidden.length - 6} lainnya</i>`;
+                msgHtml += `<div class="bg-amber-50 p-2.5 rounded-lg border border-amber-200 text-amber-900">
+                    <p class="font-bold">🙈 ${sortSiswa.hidden.length} Siswa Disembunyikan:</p>
+                    <p class="mt-0.5 text-[11px] leading-relaxed">${listStr}</p>
+                </div>`;
+            }
+
+            if (sortMapel.unmatched.length > 0) {
+                msgHtml += `<div class="bg-rose-50 p-2.5 rounded-lg border border-rose-200 text-rose-900">
+                    <p class="font-bold">⚠️ ${sortMapel.unmatched.length} Mapel Tidak Cocok di Database:</p>
+                    <p class="mt-0.5 text-[11px] leading-relaxed">${sortMapel.unmatched.join(', ')}</p>
+                </div>`;
+            }
+
+            if (sortSiswa.unmatched.length > 0) {
+                const unStr = sortSiswa.unmatched.length <= 6 
+                    ? sortSiswa.unmatched.join(', ')
+                    : sortSiswa.unmatched.slice(0, 6).join(', ') + ` <i>dan ${sortSiswa.unmatched.length - 6} lainnya</i>`;
+                msgHtml += `<div class="bg-rose-50 p-2.5 rounded-lg border border-rose-200 text-rose-900">
+                    <p class="font-bold">⚠️ ${sortSiswa.unmatched.length} Siswa Tidak Cocok di Database:</p>
+                    <p class="mt-0.5 text-[11px] leading-relaxed">${unStr}</p>
+                </div>`;
+            }
+
+            msgHtml += `</div>`;
+
+            Swal.fire({
+                icon: 'info',
+                title: 'Urutan Diterapkan & Data Disaring',
+                html: msgHtml,
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#0f2942'
+            });
+        }
     }
 
     function resetUrutan() {
@@ -736,11 +922,12 @@ require_once '../components/header.php';
         currentStudents = [...rawStudents];
         currentSubjects = [...rawSubjects];
         updateSelectFilterOptions();
+        updateFilterNotice({ hidden: [], unmatched: [] }, { hidden: [], unmatched: [] });
         renderTable();
         Swal.fire({
             icon: 'info',
             title: 'Urutan Direset',
-            text: 'Urutan siswa dan mapel dikembalikan ke susunan abjad bawaan.',
+            text: 'Urutan siswa dan mapel dikembalikan ke susunan abjad bawaan (tampilan penuh).',
             timer: 1500,
             showConfirmButton: false
         });
@@ -758,9 +945,12 @@ require_once '../components/header.php';
             if (elMapel && savedMapel) elMapel.value = savedMapel;
 
             if (savedSiswa || savedMapel) {
-                currentStudents = customSort(rawStudents, savedSiswa, 'nama', false);
-                currentSubjects = customSort(rawSubjects, savedMapel, 'nama_mapel', true);
+                const sortSiswa = customSort(rawStudents, savedSiswa, 'nama', false);
+                const sortMapel = customSort(rawSubjects, savedMapel, 'nama_mapel', true);
+                currentStudents = sortSiswa.result;
+                currentSubjects = sortMapel.result;
                 updateSelectFilterOptions();
+                updateFilterNotice(sortSiswa, sortMapel);
                 renderTable();
             }
         }
