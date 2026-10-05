@@ -1,6 +1,7 @@
 <?php
-session_start();
-require_once '../config/koneksi.php';
+require_once '../config/auth.php';
+
+check_login();
 
 // Tentukan KKM (bisa diubah sesuai kebijakan sekolah)
 $kkm = 60;
@@ -19,52 +20,118 @@ function getWarnaNilai($nilai, $kkm) {
     }
 }
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
+$user_id = (int)$_SESSION['user_id'];
+$is_admin = is_admin();
+$wali_kelas = get_user_wali_kelas($pdo, $user_id);
+$wali_kelas_id = $wali_kelas ? (int)$wali_kelas['id'] : null;
+
+$class_id = isset($_GET['kelas']) && $_GET['kelas'] !== '' ? (int)$_GET['kelas'] : null;
+$mapel_id = isset($_GET['mapel']) && $_GET['mapel'] !== '' ? (int)$_GET['mapel'] : null;
+
+// Query daftar kelas
+if ($is_admin) {
+    $stmt_kelas = $pdo->query("SELECT DISTINCT c.id, c.nama_kelas, c.jenjang FROM classes c JOIN teaching_schedules ts ON ts.class_id = c.id ORDER BY c.jenjang, c.nama_kelas");
+    $kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt_jadwal = $pdo->query("
+        SELECT DISTINCT ts.class_id, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru
+        FROM teaching_schedules ts 
+        JOIN subjects s ON ts.subject_id = s.id 
+        LEFT JOIN users u ON ts.user_id = u.id
+        ORDER BY s.nama_mapel ASC
+    ");
+    $jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
+} elseif ($wali_kelas_id) {
+    // Wali kelas: Kelas binaannya + kelas lain yang diajar sendiri
+    $stmt_kelas = $pdo->prepare("
+        SELECT DISTINCT c.id, c.nama_kelas, c.jenjang, 
+               CASE WHEN c.id = ? THEN 1 ELSE 0 END as is_binaan
+        FROM classes c 
+        JOIN teaching_schedules ts ON ts.class_id = c.id 
+        WHERE ts.user_id = ? OR c.id = ? 
+        ORDER BY is_binaan DESC, c.jenjang, c.nama_kelas
+    ");
+    $stmt_kelas->execute([$wali_kelas_id, $user_id, $wali_kelas_id]);
+    $kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
+
+    // Semua mapel di kelas binaannya + mapel yang diajarnya di kelas lain
+    $stmt_jadwal = $pdo->prepare("
+        SELECT DISTINCT ts.class_id, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru
+        FROM teaching_schedules ts 
+        JOIN subjects s ON ts.subject_id = s.id 
+        LEFT JOIN users u ON ts.user_id = u.id
+        WHERE ts.user_id = ? OR ts.class_id = ?
+        ORDER BY s.nama_mapel ASC
+    ");
+    $stmt_jadwal->execute([$user_id, $wali_kelas_id]);
+    $jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    // Guru biasa: hanya jadwal yang diajarnya sendiri
+    $stmt_kelas = $pdo->prepare("SELECT DISTINCT c.id, c.nama_kelas, c.jenjang FROM teaching_schedules ts JOIN classes c ON ts.class_id = c.id WHERE ts.user_id = ? ORDER BY c.jenjang, c.nama_kelas");
+    $stmt_kelas->execute([$user_id]);
+    $kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt_jadwal = $pdo->prepare("
+        SELECT DISTINCT ts.class_id, s.id as subject_id, s.nama_mapel, u.nama_lengkap as nama_guru 
+        FROM teaching_schedules ts 
+        JOIN subjects s ON ts.subject_id = s.id 
+        LEFT JOIN users u ON ts.user_id = u.id
+        WHERE ts.user_id = ? 
+        ORDER BY s.nama_mapel ASC
+    ");
+    $stmt_jadwal->execute([$user_id]);
+    $jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
 }
-
-$user_id = $_SESSION['user_id'];
-$class_id = $_GET['kelas'] ?? null;
-$mapel_id = $_GET['mapel'] ?? null;
-
-$stmt_kelas = $pdo->prepare("SELECT DISTINCT c.id, c.nama_kelas, c.jenjang FROM teaching_schedules ts JOIN classes c ON ts.class_id = c.id WHERE ts.user_id = ? ORDER BY c.jenjang, c.nama_kelas");
-$stmt_kelas->execute([$user_id]);
-$kelas_list = $stmt_kelas->fetchAll(PDO::FETCH_ASSOC);
-
-$stmt_jadwal = $pdo->prepare("SELECT ts.class_id, s.id as subject_id, s.nama_mapel FROM teaching_schedules ts JOIN subjects s ON ts.subject_id = s.id WHERE ts.user_id = ? ORDER BY s.nama_mapel");
-$stmt_jadwal->execute([$user_id]);
-$jadwal_list = $stmt_jadwal->fetchAll(PDO::FETCH_ASSOC);
 
 $kelas_json = json_encode($kelas_list);
 $mapel_per_kelas = [];
 foreach ($jadwal_list as $row) {
-    $mapel_per_kelas[$row['class_id']][] = ['id' => $row['subject_id'], 'nama' => $row['nama_mapel']];
+    $mapel_per_kelas[$row['class_id']][] = [
+        'id' => $row['subject_id'], 
+        'nama' => $row['nama_mapel'],
+        'guru' => $row['nama_guru'] ?? null
+    ];
 }
 $mapel_json = json_encode($mapel_per_kelas);
 
 $students = [];
 $info = null;
+$schedule = null;
+$can_edit = false;
 
 if ($class_id && $mapel_id) {
     $stmt_info = $pdo->prepare("SELECT c.nama_kelas, s.nama_mapel FROM classes c, subjects s WHERE c.id = ? AND s.id = ?");
     $stmt_info->execute([$class_id, $mapel_id]);
     $info = $stmt_info->fetch(PDO::FETCH_ASSOC);
 
-    $stmt_sched = $pdo->prepare("SELECT id FROM teaching_schedules WHERE user_id = ? AND class_id = ? AND subject_id = ?");
-    $stmt_sched->execute([$user_id, $class_id, $mapel_id]);
+    $stmt_sched = $pdo->prepare("
+        SELECT ts.id, ts.user_id, ts.is_manual, u.nama_lengkap as nama_guru, u.role as guru_role
+        FROM teaching_schedules ts
+        LEFT JOIN users u ON ts.user_id = u.id
+        WHERE ts.class_id = ? AND ts.subject_id = ?
+        LIMIT 1
+    ");
+    $stmt_sched->execute([$class_id, $mapel_id]);
     $schedule = $stmt_sched->fetch(PDO::FETCH_ASSOC);
     $schedule_id = $schedule['id'] ?? 0;
 
-    $stmt_siswa = $pdo->prepare("
-        SELECT st.id, st.nama, g.h_uts, g.uts, g.tambahan_uts, g.h_uas, g.uas, g.tambahan_uas 
-        FROM students st 
-        LEFT JOIN grades g ON g.student_id = st.id AND g.schedule_id = ? 
-        WHERE st.class_id = ? 
-        ORDER BY st.nama ASC
-    ");
-    $stmt_siswa->execute([$schedule_id, $class_id]);
-    $students = $stmt_siswa->fetchAll(PDO::FETCH_ASSOC);
+    $is_wali = ($wali_kelas_id && (int)$class_id === $wali_kelas_id);
+    $is_pengampu = ($schedule && (int)$schedule['user_id'] === $user_id);
+    $has_access = $is_admin || $is_wali || $is_pengampu;
+
+    if ($has_access && $schedule_id) {
+        $can_edit = $is_admin || $is_pengampu || ($is_wali && ($schedule['user_id'] === null || (int)$schedule['is_manual'] === 1));
+
+        $stmt_siswa = $pdo->prepare("
+            SELECT st.id, st.nama, g.h_uts, g.uts, g.tambahan_uts, g.h_uas, g.uas, g.tambahan_uas 
+            FROM students st 
+            LEFT JOIN grades g ON g.student_id = st.id AND g.schedule_id = ? 
+            WHERE st.class_id = ? 
+            ORDER BY st.nama ASC
+        ");
+        $stmt_siswa->execute([$schedule_id, $class_id]);
+        $students = $stmt_siswa->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 
 $page_title = "Analisa Nilai - EduScore";
@@ -114,9 +181,15 @@ require_once '../components/header.php';
             </div>
         </div>
 
-        <a href="input_data.php?kelas=<?= $class_id ?>&mapel=<?= $mapel_id ?>" class="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 min-h-[36px]">
-            <span class="material-symbols-outlined text-base">edit_square</span> Ubah Nilai di Kelas Ini
-        </a>
+        <?php if ($can_edit): ?>
+            <a href="input_data.php?kelas=<?= $class_id ?>&mapel=<?= $mapel_id ?>" class="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 min-h-[36px]">
+                <span class="material-symbols-outlined text-base">edit_square</span> Ubah Nilai di Kelas Ini
+            </a>
+        <?php else: ?>
+            <span class="text-xs font-semibold text-text-muted inline-flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                <span class="material-symbols-outlined text-sm text-slate-500">visibility</span> Mode Rekap & Salin (Wali Kelas)
+            </span>
+        <?php endif; ?>
     </div>
 
     <!-- Sinkronisasi Urutan Excel -->
@@ -144,7 +217,14 @@ require_once '../components/header.php';
     <!-- Tabel Rekapitulasi Komponen Nilai -->
     <div class="bg-surface-card rounded-xl shadow-xs border border-border-main overflow-hidden">
         <div class="p-4 border-b border-border-main bg-slate-50 flex flex-wrap justify-between items-center gap-2">
-            <h3 class="font-bold text-xs md:text-sm text-text-main"><?= htmlspecialchars($info['nama_kelas']) ?> — <?= htmlspecialchars($info['nama_mapel']) ?></h3>
+            <div>
+                <h3 class="font-bold text-xs md:text-sm text-text-main"><?= htmlspecialchars($info['nama_kelas']) ?> — <?= htmlspecialchars($info['nama_mapel']) ?></h3>
+                <?php if (!empty($schedule['nama_guru'])): ?>
+                    <span class="text-[11px] text-text-muted">Guru Pengampu: <strong class="text-text-main"><?= htmlspecialchars($schedule['nama_guru']) ?></strong></span>
+                <?php else: ?>
+                    <span class="text-[11px] text-amber-700 font-medium">Pengampu: Belum ada guru pengampu</span>
+                <?php endif; ?>
+            </div>
             <span class="text-xs text-text-muted bg-white border border-slate-200 px-2.5 py-1 rounded-md tabular-nums"><?= count($students) ?> Siswa Terdata</span>
         </div>
         
@@ -266,7 +346,8 @@ require_once '../components/header.php';
         dataKelas.forEach(kelas => {
             const option = document.createElement('option');
             option.value = kelas.id;
-            option.textContent = kelas.jenjang.toUpperCase() + ' - ' + kelas.nama_kelas;
+            let suffix = kelas.is_binaan == 1 ? ' (Kelas Binaan Anda)' : '';
+            option.textContent = kelas.jenjang.toUpperCase() + ' - ' + kelas.nama_kelas + suffix;
             if (kelas.id == "<?= $class_id ?>") option.selected = true;
             selectKelas.appendChild(option);
         });
@@ -281,7 +362,8 @@ require_once '../components/header.php';
             dataMapel[idKelas].forEach(mapel => {
                 const option = document.createElement('option');
                 option.value = mapel.id;
-                option.textContent = mapel.nama;
+                let guruText = mapel.guru ? ` (${mapel.guru})` : '';
+                option.textContent = mapel.nama + guruText;
                 if (mapel.id == "<?= $mapel_id ?>") option.selected = true;
                 selectMapel.appendChild(option);
             });

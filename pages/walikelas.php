@@ -120,10 +120,10 @@ $page_heading = "Rekapitulasi Nilai Wali Kelas";
 require_once '../components/header.php';
 ?>
 
-<main class="max-w-7xl mx-auto w-full p-4 md:p-8 flex flex-col gap-6">
+<main class="max-w-7xl mx-auto w-full p-3.5 sm:p-6 md:p-8 flex flex-col gap-4 sm:gap-6">
 
     <!-- Form Pemilihan Kelas & Ujian -->
-    <div class="bg-surface-card rounded-xl p-5 md:p-6 shadow-xs border border-border-main">
+    <div class="bg-surface-card rounded-xl p-4 sm:p-6 shadow-xs border border-border-main">
         <form action="" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
             <div class="sm:col-span-5">
                 <label class="text-xs font-semibold text-text-main mb-1.5 block" for="selectKelas">Pilih Kelas Binaan</label>
@@ -144,7 +144,7 @@ require_once '../components/header.php';
                 </select>
             </div>
             <div class="sm:col-span-3">
-                <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-2.5 px-4 rounded-lg text-xs shadow-xs transition-colors min-h-[44px]">
+                <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-2.5 px-4 rounded-lg text-xs shadow-xs transition-colors min-h-[44px] active:scale-[0.99]">
                     Tampilkan Rekap
                 </button>
             </div>
@@ -154,37 +154,68 @@ require_once '../components/header.php';
     <?php if ($class_id && !empty($students) && !empty($subjects)): ?>
     
     <!-- Kontrol Tampilan & KKM -->
-    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-surface-card p-4 rounded-xl border border-border-main shadow-xs">
+    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 sm:gap-4 bg-surface-card p-3.5 sm:p-4 rounded-xl border border-border-main shadow-xs">
         <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 w-full md:w-auto">
             <!-- Orientasi Baris -->
             <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-full sm:w-auto">
-                <button type="button" onclick="setMode('siswa')" id="btnModeSiswa" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors min-h-[38px] text-center">
+                <button type="button" onclick="setMode('siswa')" id="btnModeSiswa" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors min-h-[40px] text-center flex items-center justify-center">
                     Baris Siswa
                 </button>
-                <button type="button" onclick="setMode('mapel')" id="btnModeMapel" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors min-h-[38px] text-center">
+                <button type="button" onclick="setMode('mapel')" id="btnModeMapel" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors min-h-[40px] text-center flex items-center justify-center">
                     Baris Mapel
                 </button>
             </div>
 
             <!-- Tipe Nilai (Akhir vs Ujian Murni) -->
             <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-full sm:w-auto">
-                <button type="button" onclick="setScoreType('akhir')" id="btnScoreAkhir" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors min-h-[38px] text-center">
+                <button type="button" onclick="setScoreType('akhir')" id="btnScoreAkhir" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors min-h-[40px] text-center flex items-center justify-center">
                     Nilai Akhir
                 </button>
-                <button type="button" onclick="setScoreType('ujian')" id="btnScoreUjian" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors min-h-[38px] text-center">
+                <button type="button" onclick="setScoreType('ujian')" id="btnScoreUjian" class="flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors min-h-[40px] text-center flex items-center justify-center">
                     Nilai Murni Ujian
                 </button>
             </div>
         </div>
         
-        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full md:w-auto justify-between sm:justify-end">
+        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full md:w-auto justify-between sm:justify-end">
             <div id="kkmContainer" class="flex items-center justify-between sm:justify-start gap-2 bg-white px-3 py-2 rounded-lg border border-slate-300 shadow-xs min-h-[44px]">
                 <label for="inputKkm" class="text-xs font-semibold text-text-muted">Batas KKM:</label>
                 <input type="number" id="inputKkm" value="60" min="0" max="100" oninput="updateKkm()" class="w-14 bg-transparent text-xs font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none tabular-nums">
             </div>
 
-            <button type="button" onclick="copyHanyaNilai()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-colors min-h-[44px]">
+            <button type="button" onclick="copyHanyaNilai()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-colors min-h-[44px] active:scale-[0.99]">
                 <span class="material-symbols-outlined text-base">content_copy</span> Salin Angka Murni
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Pilihan Mapel (Hanya tampil di HP/layar kecil, disembunyikan di PC) -->
+    <div class="md:hidden bg-surface-card p-3.5 sm:p-4 rounded-xl border border-border-main shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-1 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-primary-subtle text-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-base">filter_list</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 flex-1 min-w-0">
+                <label for="selectFilterMapel" class="text-xs font-semibold text-text-muted shrink-0">Fokus Mapel:</label>
+                <select id="selectFilterMapel" onchange="setFilterMapel(this.value)" class="w-full sm:max-w-xs bg-white rounded-lg px-3 py-2 text-xs font-semibold text-text-main border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[44px]">
+                    <option value="all">📊 Semua Mapel (Tabel Penuh)</option>
+                    <?php foreach ($subjects as $idx => $s): ?>
+                        <option value="<?= $s['id'] ?>"><?= ($idx + 1) ?>. <?= htmlspecialchars($s['nama_mapel']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tombol Navigasi Sebelumnya / Selanjutnya di Mode Fokus -->
+        <div id="navMapelContainer" class="hidden flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+            <button type="button" onclick="prevMapel()" class="flex-1 sm:flex-initial px-3 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-text-main text-xs font-semibold flex items-center justify-center gap-1 min-h-[44px] cursor-pointer shadow-2xs transition-colors active:scale-95" title="Lihat Mapel Sebelumnya">
+                <span class="material-symbols-outlined text-base">chevron_left</span>
+                <span>Sebelumnya</span>
+            </button>
+            <span id="navMapelCounter" class="text-xs font-bold text-primary px-2 tabular-nums text-center min-w-[60px]"></span>
+            <button type="button" onclick="nextMapel()" class="flex-1 sm:flex-initial px-3 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-text-main text-xs font-semibold flex items-center justify-center gap-1 min-h-[44px] cursor-pointer shadow-2xs transition-colors active:scale-95" title="Lihat Mapel Selanjutnya">
+                <span>Selanjutnya</span>
+                <span class="material-symbols-outlined text-base">chevron_right</span>
             </button>
         </div>
     </div>
@@ -224,8 +255,8 @@ require_once '../components/header.php';
             <div class="md:col-span-2 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-1 pt-2 border-t border-slate-200">
                 <span class="text-[11px] text-text-muted">💡 <strong>Tips:</strong> Langsung blok deret nama/mapel horizontal di Excel lalu Ctrl+C dan Ctrl+V di sini, sistem langsung memisahkannya otomatis.</span>
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <button type="button" onclick="resetUrutan()" class="text-danger text-xs font-semibold hover:underline py-2 text-center">Reset Urutan Asli</button>
-                    <button type="button" onclick="terapkanUrutan()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors min-h-[44px] inline-flex items-center justify-center">Terapkan Urutan</button>
+                    <button type="button" onclick="resetUrutan()" class="text-danger text-xs font-semibold hover:underline py-2.5 min-h-[44px] flex items-center justify-center text-center cursor-pointer">Reset Urutan Asli</button>
+                    <button type="button" onclick="terapkanUrutan()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors min-h-[44px] inline-flex items-center justify-center active:scale-[0.99] cursor-pointer">Terapkan Urutan</button>
                 </div>
             </div>
         </div>
@@ -233,14 +264,14 @@ require_once '../components/header.php';
 
     <!-- Panel Pintasan Entri Nilai Mapel Kelas Binaan -->
     <div class="bg-surface-card rounded-xl border border-border-main shadow-xs overflow-hidden">
-        <button type="button" onclick="document.getElementById('areaAksiMapel').classList.toggle('hidden')" class="w-full px-4 py-3 flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors focus-ring">
+        <button type="button" onclick="document.getElementById('areaAksiMapel').classList.toggle('hidden')" class="w-full px-4 py-3 min-h-[44px] flex justify-between items-center text-text-main font-semibold text-xs hover:bg-slate-50 transition-colors focus-ring">
             <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-base text-primary">edit_square</span> 
                 <span>Entri Nilai Mapel Kelas Ini (<?= count($subjects) ?> Mapel Terdaftar)</span>
             </div>
             <span class="material-symbols-outlined text-text-muted text-base">expand_more</span>
         </button>
-        <div id="areaAksiMapel" class="hidden p-4 bg-slate-50/50 border-t border-border-main grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div id="areaAksiMapel" class="hidden p-3.5 sm:p-4 bg-slate-50/50 border-t border-border-main grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
             <?php foreach ($subjects as $s): ?>
                 <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between gap-3">
                     <div class="min-w-0">
@@ -262,11 +293,11 @@ require_once '../components/header.php';
                         </div>
                     </div>
                     <?php if ($s['can_edit']): ?>
-                        <a href="input_data.php?kelas=<?= $class_id ?>&mapel=<?= $s['id'] ?>" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-[11px] font-semibold shadow-xs flex items-center gap-1 shrink-0 transition-colors">
-                            <span class="material-symbols-outlined text-[14px]">edit</span> Isi Nilai
+                        <a href="input_data.php?kelas=<?= $class_id ?>&mapel=<?= $s['id'] ?>" class="px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-hover active:bg-primary-hover/90 text-white text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 shrink-0 transition-colors min-h-[40px]">
+                            <span class="material-symbols-outlined text-[15px]">edit</span> Isi Nilai
                         </a>
                     <?php else: ?>
-                        <span class="text-[11px] text-text-muted italic flex items-center gap-1 shrink-0 bg-slate-100 px-2 py-1 rounded">
+                        <span class="text-[11px] text-text-muted italic flex items-center gap-1 shrink-0 bg-slate-100 px-2.5 py-1.5 rounded min-h-[36px]">
                             <span class="material-symbols-outlined text-[13px]">lock</span> Hanya Guru Mapel
                         </span>
                     <?php endif; ?>
@@ -277,13 +308,13 @@ require_once '../components/header.php';
 
     <!-- Tabel Matriks Rekap Nilai -->
     <div class="bg-surface-card rounded-xl shadow-xs border border-border-main overflow-hidden">
-        <div class="p-4 border-b border-border-main bg-slate-50 flex flex-wrap justify-between items-center gap-2">
+        <div class="p-3.5 sm:p-4 border-b border-border-main bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <div>
-                <h3 id="tableTitle" class="font-bold text-xs md:text-sm text-text-main">
+                <h3 id="tableTitle" class="font-bold text-xs sm:text-sm text-text-main">
                     Rekap Nilai Akhir <?= htmlspecialchars($tipe_ujian) ?> — Kelas <?= htmlspecialchars($info_kelas) ?>
                 </h3>
             </div>
-            <span id="tableBadge" class="text-[11px] bg-slate-200 text-text-main px-2.5 py-1 rounded-md font-medium tabular-nums">
+            <span id="tableBadge" class="text-[10px] sm:text-[11px] bg-slate-200 text-text-main px-2.5 py-1 rounded-md font-medium tabular-nums">
                 Rumus: (Harian × 20%) + (Ujian × 80%) + Tambahan
             </span>
         </div>
@@ -324,8 +355,65 @@ require_once '../components/header.php';
     let currentScoreType = 'akhir'; // 'akhir' atau 'ujian'
     let currentStudents = [...rawStudents];
     let currentSubjects = [...rawSubjects];
+    let selectedMapelId = 'all'; // 'all' atau ID mapel
     
     let kkmValue = 60;
+
+    function setFilterMapel(val) {
+        selectedMapelId = val === 'all' ? 'all' : parseInt(val);
+        const select = document.getElementById('selectFilterMapel');
+        if (select && String(select.value) !== String(val)) {
+            select.value = val;
+        }
+
+        const navContainer = document.getElementById('navMapelContainer');
+        const counter = document.getElementById('navMapelCounter');
+
+        if (selectedMapelId === 'all') {
+            if (navContainer) navContainer.classList.add('hidden');
+        } else {
+            if (navContainer) navContainer.classList.remove('hidden');
+            const idx = currentSubjects.findIndex(s => s.id === selectedMapelId);
+            if (idx !== -1 && counter) {
+                counter.textContent = `${idx + 1} / ${currentSubjects.length}`;
+            }
+        }
+        renderTable();
+    }
+
+    function prevMapel() {
+        if (currentSubjects.length === 0) return;
+        let idx = currentSubjects.findIndex(s => s.id === selectedMapelId);
+        if (idx <= 0) {
+            idx = currentSubjects.length - 1;
+        } else {
+            idx--;
+        }
+        setFilterMapel(currentSubjects[idx].id);
+    }
+
+    function nextMapel() {
+        if (currentSubjects.length === 0) return;
+        let idx = currentSubjects.findIndex(s => s.id === selectedMapelId);
+        if (idx === -1 || idx >= currentSubjects.length - 1) {
+            idx = 0;
+        } else {
+            idx++;
+        }
+        setFilterMapel(currentSubjects[idx].id);
+    }
+
+    function updateSelectFilterOptions() {
+        const select = document.getElementById('selectFilterMapel');
+        if (!select) return;
+        const currentVal = String(selectedMapelId);
+        let html = '<option value="all">📊 Semua Mapel (Tabel Penuh)</option>';
+        currentSubjects.forEach((s, idx) => {
+            const isSel = String(s.id) === currentVal ? 'selected' : '';
+            html += `<option value="${s.id}" ${isSel}>${idx + 1}. ${s.nama_mapel}</option>`;
+        });
+        select.innerHTML = html;
+    }
 
     function updateKkm() {
         let val = parseInt(document.getElementById('inputKkm').value);
@@ -351,12 +439,13 @@ require_once '../components/header.php';
         const btnSiswa = document.getElementById('btnModeSiswa');
         const btnMapel = document.getElementById('btnModeMapel');
         
+        const baseClass = 'flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md min-h-[40px] text-center flex items-center justify-center transition-colors cursor-pointer';
         if (mode === 'siswa') {
-            btnSiswa.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
-            btnMapel.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
+            btnSiswa.className = `${baseClass} bg-white text-primary shadow-xs`;
+            btnMapel.className = `${baseClass} text-text-muted hover:text-text-main`;
         } else {
-            btnMapel.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
-            btnSiswa.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
+            btnMapel.className = `${baseClass} bg-white text-primary shadow-xs`;
+            btnSiswa.className = `${baseClass} text-text-muted hover:text-text-main`;
         }
         renderTable();
     }
@@ -369,15 +458,16 @@ require_once '../components/header.php';
         const tableTitle = document.getElementById('tableTitle');
         const tableBadge = document.getElementById('tableBadge');
 
+        const baseClass = 'flex-1 sm:flex-initial px-3 py-2 text-xs font-semibold rounded-md min-h-[40px] text-center flex items-center justify-center transition-colors cursor-pointer';
         if (type === 'akhir') {
-            btnAkhir.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
-            btnUjian.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
+            btnAkhir.className = `${baseClass} bg-white text-primary shadow-xs`;
+            btnUjian.className = `${baseClass} text-text-muted hover:text-text-main`;
             if (kkmContainer) kkmContainer.classList.remove('hidden');
             if (tableTitle) tableTitle.textContent = `Rekap Nilai Akhir ${tipeUjianText} — Kelas ${infoKelasText}`;
             if (tableBadge) tableBadge.textContent = 'Rumus: (Harian × 20%) + (Ujian × 80%) + Tambahan';
         } else {
-            btnUjian.className = 'px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-primary shadow-xs transition-colors';
-            btnAkhir.className = 'px-3 py-1.5 text-xs font-semibold rounded-md text-text-muted hover:text-text-main transition-colors';
+            btnUjian.className = `${baseClass} bg-white text-primary shadow-xs`;
+            btnAkhir.className = `${baseClass} text-text-muted hover:text-text-main`;
             if (kkmContainer) kkmContainer.classList.add('hidden');
             if (tableTitle) tableTitle.textContent = `Rekap Nilai Murni Ujian ${tipeUjianText} — Kelas ${infoKelasText}`;
             if (tableBadge) tableBadge.textContent = `Nilai Murni Ujian (${tipeUjianText}) Tanpa Campuran`;
@@ -390,35 +480,59 @@ require_once '../components/header.php';
         if (!container) return;
 
         const activeMatrix = currentScoreType === 'akhir' ? matrixAkhir : matrixUjian;
+        const isSingleFocus = (selectedMapelId !== 'all');
+        let subjectsToRender = currentSubjects;
+
+        if (isSingleFocus) {
+            subjectsToRender = currentSubjects.filter(s => s.id === selectedMapelId);
+            if (subjectsToRender.length === 0 && currentSubjects.length > 0) {
+                subjectsToRender = [currentSubjects[0]];
+                selectedMapelId = currentSubjects[0].id;
+            }
+        }
+
         let html = '<table class="w-full text-left border-collapse text-xs tabular-nums" id="rekapTable">';
         
         if (currentMode === 'siswa') {
             html += `<thead><tr class="bg-slate-50 text-text-muted text-[11px] uppercase tracking-wider font-semibold border-b border-border-main">
-                        <th class="p-3 border-r border-border-main sticky left-0 z-20 bg-slate-50 min-w-[160px] max-w-[220px] shadow-xs">Nama Siswa</th>`;
+                        <th class="p-2.5 sm:p-3 border-r border-border-main sticky left-0 z-20 bg-slate-50 min-w-[130px] sm:min-w-[140px] max-w-[180px] sm:max-w-[220px] shadow-xs">Nama Siswa</th>`;
             
-            currentSubjects.forEach(sub => {
+            subjectsToRender.forEach(sub => {
                 let actionHtml = '';
                 if (sub.can_edit) {
-                    actionHtml = `<div class="mt-1"><a href="input_data.php?kelas=${currentClassId}&mapel=${sub.id}" class="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-0.5 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs">Isi</a></div>`;
+                    actionHtml = `<div class="mt-1"><a href="input_data.php?kelas=${currentClassId}&mapel=${sub.id}" class="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-0.5 bg-white border border-slate-200 px-2 py-0.5 rounded shadow-2xs min-h-[26px]">Isi</a></div>`;
                 }
-                html += `<th class="p-2.5 border-r border-border-main text-center min-w-[85px] max-w-[120px] whitespace-normal leading-tight" title="${sub.nama_mapel}">
-                    <div class="font-bold truncate">${sub.nama_mapel}</div>
+                html += `<th class="p-2 sm:p-2.5 border-r border-border-main text-center ${isSingleFocus ? 'min-w-[100px]' : 'min-w-[85px] max-w-[120px]'} whitespace-normal leading-tight" title="${sub.nama_mapel}">
+                    <div class="font-bold truncate ${isSingleFocus ? 'text-primary font-bold' : ''}">${sub.nama_mapel}</div>
                     ${actionHtml}
                 </th>`;
             });
-            if (currentScoreType === 'akhir') {
-                html += `<th class="p-2.5 font-bold border-border-main text-center bg-primary-subtle text-primary min-w-[90px]">RATA-RATA</th>`;
+
+            if (isSingleFocus) {
+                if (currentScoreType === 'akhir') {
+                    html += `<th class="p-2 sm:p-2.5 font-bold border-border-main text-center bg-primary-subtle text-primary min-w-[80px]">Status</th>`;
+                }
+            } else {
+                if (currentScoreType === 'akhir') {
+                    html += `<th class="p-2.5 font-bold border-border-main text-center bg-primary-subtle text-primary min-w-[90px]">RATA-RATA</th>`;
+                }
             }
+
             html += `</tr></thead><tbody class="divide-y divide-border-main">`;
             
             // Baris KKM (hanya tampil di mode nilai akhir)
             if (currentScoreType === 'akhir') {
                 html += `<tr class="bg-slate-50/80 text-text-main kkm-row font-semibold">
                             <td class="p-3 border-r border-border-main sticky left-0 z-10 bg-slate-100 shadow-xs font-bold text-primary">BATAS KKM</td>`;
-                currentSubjects.forEach(() => {
+                subjectsToRender.forEach(() => {
                     html += `<td class="p-2.5 border-r border-border-main text-center text-text-muted">${kkmValue}</td>`;
                 });
-                html += `<td class="p-2.5 text-center font-bold text-primary bg-primary-subtle">${kkmValue}</td>`;
+
+                if (isSingleFocus) {
+                    html += `<td class="p-2.5 text-center text-[10px] font-bold text-slate-500 bg-primary-subtle/50">KKM: ${kkmValue}</td>`;
+                } else {
+                    html += `<td class="p-2.5 text-center font-bold text-primary bg-primary-subtle">${kkmValue}</td>`;
+                }
                 html += `</tr>`;
             }
 
@@ -426,26 +540,41 @@ require_once '../components/header.php';
             currentStudents.forEach(stu => {
                 let totalScore = 0;
                 let count = 0;
+                let singleScore = null;
                 
                 html += `<tr class="hover:bg-slate-50 transition-colors">
                             <td class="p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-nowrap truncate max-w-[220px] shadow-xs" title="${stu.nama}">${stu.nama}</td>`;
                 
-                currentSubjects.forEach(sub => {
+                subjectsToRender.forEach(sub => {
                     let score = activeMatrix[stu.id] && activeMatrix[stu.id][sub.id] !== undefined ? activeMatrix[stu.id][sub.id] : null;
                     if (score !== null) {
                         totalScore += parseFloat(score);
                         count++;
                     }
+                    if (isSingleFocus) singleScore = score;
                     html += `<td class="p-2.5 border-r border-border-main text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
 
-                if (currentScoreType === 'akhir') {
-                    let avg = count > 0 ? (totalScore / count) : null;
-                    html += `<td class="p-2.5 text-center font-bold whitespace-nowrap ${getColorClass(avg)} bg-slate-50">${fNum(avg)}</td>`;
+                if (isSingleFocus) {
+                    if (currentScoreType === 'akhir') {
+                        let statusBadge = '<span class="text-slate-400">-</span>';
+                        if (singleScore !== null) {
+                            statusBadge = singleScore < kkmValue 
+                                ? '<span class="badge-grade-danger px-2 py-0.5 rounded font-bold text-[10px]">Remedial</span>' 
+                                : '<span class="badge-grade-pass px-2 py-0.5 rounded font-semibold text-[10px]">Tuntas</span>';
+                        }
+                        html += `<td class="p-2.5 text-center whitespace-nowrap">${statusBadge}</td>`;
+                    }
+                } else {
+                    if (currentScoreType === 'akhir') {
+                        let avg = count > 0 ? (totalScore / count) : null;
+                        html += `<td class="p-2.5 text-center font-bold whitespace-nowrap ${getColorClass(avg)} bg-slate-50">${fNum(avg)}</td>`;
+                    }
                 }
                 html += `</tr>`;
             });
         } else {
+            // Mode Baris Mapel
             html += `<thead><tr class="bg-slate-50 text-text-muted text-[11px] uppercase tracking-wider font-semibold border-b border-border-main">
                         <th class="p-3 border-r border-border-main sticky left-0 z-20 bg-slate-50 min-w-[150px] max-w-[200px] shadow-xs">Mata Pelajaran</th>`;
             
@@ -461,13 +590,13 @@ require_once '../components/header.php';
             let colTotals = {};
             let colCounts = {};
 
-            currentSubjects.forEach(sub => {
+            subjectsToRender.forEach(sub => {
                 let actionHtml = '';
                 if (sub.can_edit) {
-                    actionHtml = `<a href="input_data.php?kelas=${currentClassId}&mapel=${sub.id}" class="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-0.5 bg-slate-100 hover:bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs shrink-0">Isi Nilai</a>`;
+                    actionHtml = `<a href="input_data.php?kelas=${currentClassId}&mapel=${sub.id}" class="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-0.5 bg-slate-100 hover:bg-white border border-slate-200 px-2 py-1 rounded shadow-2xs shrink-0 min-h-[26px]">Isi Nilai</a>`;
                 }
                 html += `<tr class="hover:bg-slate-50 transition-colors">
-                            <td class="p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-normal leading-tight shadow-xs">
+                            <td class="p-2.5 sm:p-3 border-r border-border-main font-semibold text-text-main sticky left-0 z-10 bg-surface-card whitespace-normal leading-tight shadow-xs">
                                 <div class="flex items-center justify-between gap-2">
                                     <span>${sub.nama_mapel}</span>
                                     ${actionHtml}
@@ -489,8 +618,8 @@ require_once '../components/header.php';
                 html += `</tr>`;
             });
 
-            // Baris Rata-rata (hanya tampil di mode nilai akhir)
-            if (currentScoreType === 'akhir') {
+            // Baris Rata-rata (hanya tampil di mode nilai akhir jika bukan single focus)
+            if (currentScoreType === 'akhir' && !isSingleFocus) {
                 html += `<tr class="bg-slate-50/80 font-semibold avg-row">
                             <td class="p-3 border-r border-border-main font-bold text-primary sticky left-0 z-10 bg-slate-100 shadow-xs">RATA-RATA SISWA</td>
                             <td class="p-2.5 border-r border-border-main text-center text-text-muted">${kkmValue}</td>`;
@@ -584,6 +713,7 @@ require_once '../components/header.php';
 
         currentStudents = customSort(rawStudents, valSiswa, 'nama', false);
         currentSubjects = customSort(rawSubjects, valMapel, 'nama_mapel', true);
+        updateSelectFilterOptions();
         renderTable();
         Swal.fire({
             icon: 'success',
@@ -605,6 +735,7 @@ require_once '../components/header.php';
         if (elMapel) elMapel.value = '';
         currentStudents = [...rawStudents];
         currentSubjects = [...rawSubjects];
+        updateSelectFilterOptions();
         renderTable();
         Swal.fire({
             icon: 'info',
@@ -629,6 +760,7 @@ require_once '../components/header.php';
             if (savedSiswa || savedMapel) {
                 currentStudents = customSort(rawStudents, savedSiswa, 'nama', false);
                 currentSubjects = customSort(rawSubjects, savedMapel, 'nama_mapel', true);
+                updateSelectFilterOptions();
                 renderTable();
             }
         }
