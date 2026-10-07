@@ -104,7 +104,7 @@ if ($class_id) {
 
             $calc = ($h * 0.20) + ($u * 0.80) + $t;
             $final_score = min(100, $calc); // Limit max 100
-            $matrix_akhir[$sid][$subid] = round($final_score, 2);
+            $matrix_akhir[$sid][$subid] = (int)round($final_score);
         } else {
             $matrix_akhir[$sid][$subid] = null;
         }
@@ -182,6 +182,11 @@ require_once '../components/header.php';
                 <label for="inputKkm" class="text-xs font-semibold text-text-muted">Batas KKM:</label>
                 <input type="number" id="inputKkm" value="60" min="0" max="100" oninput="updateKkm()" class="w-14 bg-transparent text-xs font-bold text-primary border-none p-0 focus:ring-0 text-center outline-none tabular-nums">
             </div>
+
+            <button type="button" id="btnSortRank" onclick="toggleSortRank()" class="bg-white hover:bg-slate-50 border border-slate-300 text-text-main px-3.5 py-2.5 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-colors min-h-[44px] active:scale-[0.99] cursor-pointer">
+                <span class="material-symbols-outlined text-base text-amber-500">military_tech</span>
+                <span id="btnSortRankText">Urutkan Ranking</span>
+            </button>
 
             <button type="button" onclick="copyHanyaNilai()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-colors min-h-[44px] active:scale-[0.99]">
                 <span class="material-symbols-outlined text-base">content_copy</span> Salin Angka Murni
@@ -377,6 +382,27 @@ require_once '../components/header.php';
     let selectedMapelId = 'all'; // 'all' atau ID mapel
     
     let kkmValue = 60;
+    let isRankSorted = false;
+
+    function toggleSortRank() {
+        isRankSorted = !isRankSorted;
+        updateSortRankButton();
+        renderTable();
+    }
+
+    function updateSortRankButton() {
+        const btn = document.getElementById('btnSortRank');
+        const text = document.getElementById('btnSortRankText');
+        if (!btn || !text) return;
+
+        if (isRankSorted) {
+            btn.className = 'bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 px-3.5 py-2.5 rounded-lg text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition-colors min-h-[44px] active:scale-[0.99] cursor-pointer';
+            text.textContent = 'Kembalikan Urutan Asli';
+        } else {
+            btn.className = 'bg-white hover:bg-slate-50 border border-slate-300 text-text-main px-3.5 py-2.5 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-colors min-h-[44px] active:scale-[0.99] cursor-pointer';
+            text.textContent = 'Urutkan Ranking';
+        }
+    }
 
     function setFilterMapel(val) {
         selectedMapelId = val === 'all' ? 'all' : parseInt(val);
@@ -387,11 +413,14 @@ require_once '../components/header.php';
 
         const navContainer = document.getElementById('navMapelContainer');
         const counter = document.getElementById('navMapelCounter');
+        const btnSortRank = document.getElementById('btnSortRank');
 
         if (selectedMapelId === 'all') {
             if (navContainer) navContainer.classList.add('hidden');
+            if (btnSortRank && currentScoreType === 'akhir') btnSortRank.classList.remove('hidden');
         } else {
             if (navContainer) navContainer.classList.remove('hidden');
+            if (btnSortRank) btnSortRank.classList.add('hidden');
             const idx = rawSubjects.findIndex(s => s.id === selectedMapelId);
             if (idx !== -1 && counter) {
                 counter.textContent = `${idx + 1} / ${rawSubjects.length}`;
@@ -448,9 +477,12 @@ require_once '../components/header.php';
         return score < kkmValue ? 'text-danger font-bold' : 'text-success font-semibold';
     }
 
-    function fNum(num) {
+    function fNum(num, maxDecimals = 2) {
         if (num === null || num === undefined) return '-';
-        return parseFloat(num).toFixed(2).replace('.', ',').replace(',00', '');
+        const val = parseFloat(num);
+        if (isNaN(val)) return '-';
+        if (Number.isInteger(val)) return val.toString();
+        return val.toFixed(maxDecimals).replace('.', ',').replace(/,?0+$/, '');
     }
 
     function setMode(mode) {
@@ -474,6 +506,7 @@ require_once '../components/header.php';
         const btnAkhir = document.getElementById('btnScoreAkhir');
         const btnUjian = document.getElementById('btnScoreUjian');
         const kkmContainer = document.getElementById('kkmContainer');
+        const btnSortRank = document.getElementById('btnSortRank');
         const tableTitle = document.getElementById('tableTitle');
         const tableBadge = document.getElementById('tableBadge');
 
@@ -482,16 +515,67 @@ require_once '../components/header.php';
             btnAkhir.className = `${baseClass} bg-white text-primary shadow-xs`;
             btnUjian.className = `${baseClass} text-text-muted hover:text-text-main`;
             if (kkmContainer) kkmContainer.classList.remove('hidden');
+            if (btnSortRank && selectedMapelId === 'all') btnSortRank.classList.remove('hidden');
             if (tableTitle) tableTitle.textContent = `Rekap Nilai Akhir ${tipeUjianText} — Kelas ${infoKelasText}`;
             if (tableBadge) tableBadge.textContent = 'Rumus: (Harian × 20%) + (Ujian × 80%) + Tambahan';
         } else {
             btnUjian.className = `${baseClass} bg-white text-primary shadow-xs`;
             btnAkhir.className = `${baseClass} text-text-muted hover:text-text-main`;
             if (kkmContainer) kkmContainer.classList.add('hidden');
+            if (btnSortRank) btnSortRank.classList.add('hidden');
             if (tableTitle) tableTitle.textContent = `Rekap Nilai Murni Ujian ${tipeUjianText} — Kelas ${infoKelasText}`;
             if (tableBadge) tableBadge.textContent = `Nilai Murni Ujian (${tipeUjianText}) Tanpa Campuran`;
         }
         renderTable();
+    }
+
+    function computeStudentStats(studentsList, subjectsList) {
+        const stats = {};
+        const rankedList = [];
+
+        studentsList.forEach(stu => {
+            let total = 0;
+            let count = 0;
+            let hasAnyScore = false;
+
+            subjectsList.forEach(sub => {
+                const score = matrixAkhir[stu.id] && matrixAkhir[stu.id][sub.id] !== undefined ? matrixAkhir[stu.id][sub.id] : null;
+                if (score !== null && score !== undefined) {
+                    total += parseFloat(score);
+                    count++;
+                    hasAnyScore = true;
+                }
+            });
+
+            const avg = count > 0 ? (total / count) : null;
+            stats[stu.id] = {
+                total: hasAnyScore ? Math.round(total) : null,
+                count: count,
+                avg: avg,
+                rank: null
+            };
+
+            if (hasAnyScore) {
+                rankedList.push({
+                    studentId: stu.id,
+                    total: Math.round(total)
+                });
+            }
+        });
+
+        // Urutkan siswa dari total nilai tertinggi ke terendah
+        rankedList.sort((a, b) => b.total - a.total);
+
+        // Standard competition ranking (1224)
+        let currentRank = 1;
+        for (let i = 0; i < rankedList.length; i++) {
+            if (i > 0 && rankedList[i].total < rankedList[i - 1].total) {
+                currentRank = i + 1;
+            }
+            stats[rankedList[i].studentId].rank = currentRank;
+        }
+
+        return stats;
     }
 
     function renderTable() {
@@ -508,6 +592,18 @@ require_once '../components/header.php';
                 subjectsToRender = [rawSubjects[0]];
                 selectedMapelId = rawSubjects[0].id;
             }
+        }
+
+        const studentStats = computeStudentStats(currentStudents, subjectsToRender);
+
+        let studentsToRender = [...currentStudents];
+        if (isRankSorted && currentScoreType === 'akhir' && !isSingleFocus) {
+            studentsToRender.sort((a, b) => {
+                const rankA = (studentStats[a.id] && studentStats[a.id].rank !== null) ? studentStats[a.id].rank : 999999;
+                const rankB = (studentStats[b.id] && studentStats[b.id].rank !== null) ? studentStats[b.id].rank : 999999;
+                if (rankA !== rankB) return rankA - rankB;
+                return a.nama.localeCompare(b.nama);
+            });
         }
 
         let html = '<table class="w-full text-left border-collapse text-xs tabular-nums" id="rekapTable">';
@@ -533,7 +629,9 @@ require_once '../components/header.php';
                 }
             } else {
                 if (currentScoreType === 'akhir') {
-                    html += `<th class="p-2.5 font-bold border-border-main text-center bg-primary-subtle text-primary min-w-[90px]">RATA-RATA</th>`;
+                    html += `<th class="p-2.5 font-bold border-r border-border-main text-center bg-primary-subtle text-primary min-w-[80px]">TOTAL</th>`;
+                    html += `<th class="p-2.5 font-bold border-r border-border-main text-center bg-primary-subtle text-primary min-w-[85px]">RATA-RATA</th>`;
+                    html += `<th class="p-2.5 font-bold border-border-main text-center bg-amber-50 text-amber-900 min-w-[85px]">PERINGKAT</th>`;
                 }
             }
 
@@ -550,15 +648,16 @@ require_once '../components/header.php';
                 if (isSingleFocus) {
                     html += `<td class="p-2.5 text-center text-[10px] font-bold text-slate-500 bg-primary-subtle/50">KKM: ${kkmValue}</td>`;
                 } else {
-                    html += `<td class="p-2.5 text-center font-bold text-primary bg-primary-subtle">${kkmValue}</td>`;
+                    const kkmTotal = kkmValue * subjectsToRender.length;
+                    html += `<td class="p-2.5 border-r border-border-main text-center font-bold text-primary bg-primary-subtle">${kkmTotal}</td>`;
+                    html += `<td class="p-2.5 border-r border-border-main text-center font-bold text-primary bg-primary-subtle">${kkmValue}</td>`;
+                    html += `<td class="p-2.5 text-center font-semibold text-text-muted bg-amber-50/50">-</td>`;
                 }
                 html += `</tr>`;
             }
 
             // Baris Data Siswa
-            currentStudents.forEach(stu => {
-                let totalScore = 0;
-                let count = 0;
+            studentsToRender.forEach(stu => {
                 let singleScore = null;
                 
                 html += `<tr class="hover:bg-slate-50 transition-colors">
@@ -566,10 +665,6 @@ require_once '../components/header.php';
                 
                 subjectsToRender.forEach(sub => {
                     let score = activeMatrix[stu.id] && activeMatrix[stu.id][sub.id] !== undefined ? activeMatrix[stu.id][sub.id] : null;
-                    if (score !== null) {
-                        totalScore += parseFloat(score);
-                        count++;
-                    }
                     if (isSingleFocus) singleScore = score;
                     html += `<td class="p-2.5 border-r border-border-main text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
@@ -586,8 +681,26 @@ require_once '../components/header.php';
                     }
                 } else {
                     if (currentScoreType === 'akhir') {
-                        let avg = count > 0 ? (totalScore / count) : null;
-                        html += `<td class="p-2.5 text-center font-bold whitespace-nowrap ${getColorClass(avg)} bg-slate-50">${fNum(avg)}</td>`;
+                        const st = studentStats[stu.id] || { total: null, avg: null, rank: null };
+                        const totalText = st.total !== null ? Math.round(st.total) : '-';
+                        const avgText = st.avg !== null ? fNum(st.avg) : '-';
+                        
+                        let rankBadge = '<span class="text-slate-400 font-normal">-</span>';
+                        if (st.rank !== null) {
+                            if (st.rank === 1) {
+                                rankBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-xs bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs">🥇 1</span>`;
+                            } else if (st.rank === 2) {
+                                rankBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-xs bg-slate-200 text-slate-800 border border-slate-300 shadow-2xs">🥈 2</span>`;
+                            } else if (st.rank === 3) {
+                                rankBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-xs bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">🥉 3</span>`;
+                            } else {
+                                rankBadge = `<span class="font-bold text-text-main text-xs px-2 py-0.5 rounded bg-slate-100">${st.rank}</span>`;
+                            }
+                        }
+
+                        html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap text-text-main bg-slate-50">${totalText}</td>`;
+                        html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap ${getColorClass(st.avg)} bg-slate-50">${avgText}</td>`;
+                        html += `<td class="p-2.5 text-center font-semibold whitespace-nowrap bg-amber-50/40">${rankBadge}</td>`;
                     }
                 }
                 html += `</tr>`;
@@ -601,13 +714,10 @@ require_once '../components/header.php';
                 html += `<th class="p-2.5 border-r border-border-main bg-primary-subtle text-primary text-center min-w-[65px]">KKM</th>`;
             }
             
-            currentStudents.forEach(stu => {
+            studentsToRender.forEach(stu => {
                 html += `<th class="p-2.5 border-r border-border-main text-center min-w-[90px] max-w-[120px] whitespace-normal leading-tight" title="${stu.nama}">${stu.nama}</th>`;
             });
             html += `</tr></thead><tbody class="divide-y divide-border-main">`;
-            
-            let colTotals = {};
-            let colCounts = {};
 
             subjectsToRender.forEach(sub => {
                 let actionHtml = '';
@@ -626,25 +736,58 @@ require_once '../components/header.php';
                     html += `<td class="p-2.5 border-r border-border-main text-center font-semibold text-text-muted bg-slate-50">${kkmValue}</td>`;
                 }
                 
-                currentStudents.forEach(stu => {
+                studentsToRender.forEach(stu => {
                     let score = activeMatrix[stu.id] && activeMatrix[stu.id][sub.id] !== undefined ? activeMatrix[stu.id][sub.id] : null;
-                    if (score !== null) {
-                        colTotals[stu.id] = (colTotals[stu.id] || 0) + parseFloat(score);
-                        colCounts[stu.id] = (colCounts[stu.id] || 0) + 1;
-                    }
                     html += `<td class="p-2.5 border-r border-border-main text-center whitespace-nowrap data-cell ${getColorClass(score)}">${fNum(score)}</td>`;
                 });
                 html += `</tr>`;
             });
 
-            // Baris Rata-rata (hanya tampil di mode nilai akhir jika bukan single focus)
+            // Baris Total, Rata-rata & Peringkat (hanya tampil di mode nilai akhir jika bukan single focus)
             if (currentScoreType === 'akhir' && !isSingleFocus) {
+                const kkmTotal = kkmValue * subjectsToRender.length;
+
+                // Baris Total Nilai
+                html += `<tr class="bg-slate-50/80 font-semibold total-row">
+                            <td class="p-3 border-r border-border-main font-bold text-primary sticky left-0 z-10 bg-slate-100 shadow-xs">TOTAL NILAI SISWA</td>
+                            <td class="p-2.5 border-r border-border-main text-center text-text-muted font-bold">${kkmTotal}</td>`;
+                studentsToRender.forEach(stu => {
+                    const st = studentStats[stu.id] || { total: null };
+                    const totalText = st.total !== null ? Math.round(st.total) : '-';
+                    html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap text-text-main">${totalText}</td>`;
+                });
+                html += `</tr>`;
+
+                // Baris Rata-rata
                 html += `<tr class="bg-slate-50/80 font-semibold avg-row">
                             <td class="p-3 border-r border-border-main font-bold text-primary sticky left-0 z-10 bg-slate-100 shadow-xs">RATA-RATA SISWA</td>
                             <td class="p-2.5 border-r border-border-main text-center text-text-muted">${kkmValue}</td>`;
-                currentStudents.forEach(stu => {
-                    let avg = colCounts[stu.id] > 0 ? (colTotals[stu.id] / colCounts[stu.id]) : null;
-                    html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap ${getColorClass(avg)}">${fNum(avg)}</td>`;
+                studentsToRender.forEach(stu => {
+                    const st = studentStats[stu.id] || { avg: null };
+                    const avgText = st.avg !== null ? fNum(st.avg) : '-';
+                    html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap ${getColorClass(st.avg)}">${avgText}</td>`;
+                });
+                html += `</tr>`;
+
+                // Baris Peringkat
+                html += `<tr class="bg-amber-50/60 font-semibold rank-row">
+                            <td class="p-3 border-r border-border-main font-bold text-amber-900 sticky left-0 z-10 bg-amber-100/90 shadow-xs">PERINGKAT SISWA</td>
+                            <td class="p-2.5 border-r border-border-main text-center text-text-muted">-</td>`;
+                studentsToRender.forEach(stu => {
+                    const st = studentStats[stu.id] || { rank: null };
+                    let rankBadge = '<span class="text-slate-400 font-normal">-</span>';
+                    if (st.rank !== null) {
+                        if (st.rank === 1) {
+                            rankBadge = `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full font-bold text-xs bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs">🥇 1</span>`;
+                        } else if (st.rank === 2) {
+                            rankBadge = `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full font-bold text-xs bg-slate-200 text-slate-800 border border-slate-300 shadow-2xs">🥈 2</span>`;
+                        } else if (st.rank === 3) {
+                            rankBadge = `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full font-bold text-xs bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">🥉 3</span>`;
+                        } else {
+                            rankBadge = `<span class="font-bold text-text-main text-xs px-2 py-0.5 rounded bg-white border border-slate-200">${st.rank}</span>`;
+                        }
+                    }
+                    html += `<td class="p-2.5 border-r border-border-main text-center whitespace-nowrap">${rankBadge}</td>`;
                 });
                 html += `</tr>`;
             }
@@ -847,6 +990,8 @@ require_once '../components/header.php';
 
         updateSelectFilterOptions();
         updateFilterNotice(sortSiswa, sortMapel);
+        isRankSorted = false;
+        updateSortRankButton();
         renderTable();
 
         const hasHidden = (sortSiswa.hidden.length > 0) || (sortMapel.hidden.length > 0);
@@ -923,6 +1068,8 @@ require_once '../components/header.php';
         currentSubjects = [...rawSubjects];
         updateSelectFilterOptions();
         updateFilterNotice({ hidden: [], unmatched: [] }, { hidden: [], unmatched: [] });
+        isRankSorted = false;
+        updateSortRankButton();
         renderTable();
         Swal.fire({
             icon: 'info',
@@ -991,7 +1138,7 @@ require_once '../components/header.php';
         if (!table) return;
         
         let tsv = "";
-        const rows = table.querySelectorAll('tbody tr:not(.avg-row):not(.kkm-row)');
+        const rows = table.querySelectorAll('tbody tr:not(.avg-row):not(.kkm-row):not(.total-row):not(.rank-row)');
         
         rows.forEach(row => {
             const cells = row.querySelectorAll('.data-cell');
