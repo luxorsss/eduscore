@@ -184,8 +184,8 @@ require_once '../components/header.php';
             </div>
 
             <button type="button" id="btnSortRank" onclick="toggleSortRank()" class="bg-white hover:bg-slate-50 border border-slate-300 text-text-main px-3.5 py-2.5 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-colors min-h-[44px] active:scale-[0.99] cursor-pointer">
-                <span class="material-symbols-outlined text-base text-amber-500">military_tech</span>
-                <span id="btnSortRankText">Urutkan Ranking</span>
+                <span class="material-symbols-outlined text-base text-primary">format_list_numbered</span>
+                <span id="btnSortRankText">Urutkan Peringkat</span>
             </button>
 
             <button type="button" onclick="copyHanyaNilai()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-colors min-h-[44px] active:scale-[0.99]">
@@ -203,7 +203,7 @@ require_once '../components/header.php';
             <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 flex-1 min-w-0">
                 <label for="selectFilterMapel" class="text-xs font-semibold text-text-muted shrink-0">Fokus Mapel:</label>
                 <select id="selectFilterMapel" onchange="setFilterMapel(this.value)" class="w-full sm:max-w-xs bg-white rounded-lg px-3 py-2 text-xs font-semibold text-text-main border border-slate-300 focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer min-h-[44px]">
-                    <option value="all">📊 Semua Mapel (Tabel Penuh)</option>
+                    <option value="all">Semua Mapel (Tabel Lengkap)</option>
                     <?php foreach ($subjects as $idx => $s): ?>
                         <option value="<?= $s['id'] ?>"><?= ($idx + 1) ?>. <?= htmlspecialchars($s['nama_mapel']) ?></option>
                     <?php endforeach; ?>
@@ -258,7 +258,7 @@ require_once '../components/header.php';
                 </div>
             </div>
             <div class="md:col-span-2 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-1 pt-2 border-t border-slate-200">
-                <span class="text-[11px] text-text-muted">💡 <strong>Tips:</strong> Langsung blok deret nama/mapel horizontal di Excel lalu Ctrl+C dan Ctrl+V di sini, sistem langsung memisahkannya otomatis.</span>
+                <span class="text-[11px] text-text-muted"><strong>Panduan:</strong> Anda dapat menyalin deret nama atau mapel langsung dari Excel (vertikal maupun horizontal), sistem akan memisahkan baris otomatis.</span>
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <button type="button" onclick="resetUrutan()" class="text-danger text-xs font-semibold hover:underline py-2.5 min-h-[44px] flex items-center justify-center text-center cursor-pointer">Reset Urutan Asli</button>
                     <button type="button" onclick="terapkanUrutan()" class="bg-primary hover:bg-primary-hover text-white px-4 py-2.5 rounded-lg text-xs font-semibold shadow-xs transition-colors min-h-[44px] inline-flex items-center justify-center active:scale-[0.99] cursor-pointer">Terapkan Urutan</button>
@@ -283,8 +283,8 @@ require_once '../components/header.php';
                         <span class="font-bold text-xs text-text-main block truncate"><?= htmlspecialchars($s['nama_mapel']) ?></span>
                         <div class="flex items-center gap-1.5 mt-0.5">
                             <?php if (empty($s['teacher_id'])): ?>
-                                <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                                    🟡 Belum Ada Guru (Bisa Diisi Wali Kelas)
+                                <span class="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                    Belum Ada Guru (Bisa Diisi Wali Kelas)
                                 </span>
                             <?php elseif ((int)$s['is_manual'] === 1): ?>
                                 <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
@@ -396,11 +396,11 @@ require_once '../components/header.php';
         if (!btn || !text) return;
 
         if (isRankSorted) {
-            btn.className = 'bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 px-3.5 py-2.5 rounded-lg text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition-colors min-h-[44px] active:scale-[0.99] cursor-pointer';
+            btn.className = 'bg-primary-subtle hover:bg-primary-subtle/80 border border-primary/30 text-primary px-3.5 py-2.5 rounded-lg text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition-colors min-h-[44px] active:scale-[0.99] cursor-pointer';
             text.textContent = 'Kembalikan Urutan Asli';
         } else {
             btn.className = 'bg-white hover:bg-slate-50 border border-slate-300 text-text-main px-3.5 py-2.5 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-colors min-h-[44px] active:scale-[0.99] cursor-pointer';
-            text.textContent = 'Urutkan Ranking';
+            text.textContent = 'Urutkan Peringkat';
         }
     }
 
@@ -455,7 +455,7 @@ require_once '../components/header.php';
         const select = document.getElementById('selectFilterMapel');
         if (!select) return;
         const currentVal = String(selectedMapelId);
-        let html = '<option value="all">📊 Semua Mapel (Tabel Penuh)</option>';
+        let html = '<option value="all">Semua Mapel (Tabel Lengkap)</option>';
         rawSubjects.forEach((s, idx) => {
             const isSel = String(s.id) === currentVal ? 'selected' : '';
             html += `<option value="${s.id}" ${isSel}>${idx + 1}. ${s.nama_mapel}</option>`;
@@ -631,7 +631,7 @@ require_once '../components/header.php';
                 if (currentScoreType === 'akhir') {
                     html += `<th class="p-2.5 font-bold border-r border-border-main text-center bg-primary-subtle text-primary min-w-[80px]">TOTAL</th>`;
                     html += `<th class="p-2.5 font-bold border-r border-border-main text-center bg-primary-subtle text-primary min-w-[85px]">RATA-RATA</th>`;
-                    html += `<th class="p-2.5 font-bold border-border-main text-center bg-amber-50 text-amber-900 min-w-[85px]">PERINGKAT</th>`;
+                    html += `<th class="p-2.5 font-bold border-border-main text-center bg-primary-subtle text-primary min-w-[85px]">PERINGKAT</th>`;
                 }
             }
 
@@ -651,7 +651,7 @@ require_once '../components/header.php';
                     const kkmTotal = kkmValue * subjectsToRender.length;
                     html += `<td class="p-2.5 border-r border-border-main text-center font-bold text-primary bg-primary-subtle">${kkmTotal}</td>`;
                     html += `<td class="p-2.5 border-r border-border-main text-center font-bold text-primary bg-primary-subtle">${kkmValue}</td>`;
-                    html += `<td class="p-2.5 text-center font-semibold text-text-muted bg-amber-50/50">-</td>`;
+                    html += `<td class="p-2.5 text-center font-semibold text-text-muted bg-primary-subtle/40">-</td>`;
                 }
                 html += `</tr>`;
             }
@@ -687,20 +687,16 @@ require_once '../components/header.php';
                         
                         let rankBadge = '<span class="text-slate-400 font-normal">-</span>';
                         if (st.rank !== null) {
-                            if (st.rank === 1) {
-                                rankBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-xs bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs">🥇 1</span>`;
-                            } else if (st.rank === 2) {
-                                rankBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-xs bg-slate-200 text-slate-800 border border-slate-300 shadow-2xs">🥈 2</span>`;
-                            } else if (st.rank === 3) {
-                                rankBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-xs bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">🥉 3</span>`;
+                            if (st.rank <= 3) {
+                                rankBadge = `<span class="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-md font-bold text-xs bg-primary-subtle text-primary border border-primary/20">${st.rank}</span>`;
                             } else {
-                                rankBadge = `<span class="font-bold text-text-main text-xs px-2 py-0.5 rounded bg-slate-100">${st.rank}</span>`;
+                                rankBadge = `<span class="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-md text-xs font-medium text-text-muted bg-slate-100 border border-slate-200">${st.rank}</span>`;
                             }
                         }
 
                         html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap text-text-main bg-slate-50">${totalText}</td>`;
                         html += `<td class="p-2.5 border-r border-border-main text-center font-bold whitespace-nowrap ${getColorClass(st.avg)} bg-slate-50">${avgText}</td>`;
-                        html += `<td class="p-2.5 text-center font-semibold whitespace-nowrap bg-amber-50/40">${rankBadge}</td>`;
+                        html += `<td class="p-2.5 text-center font-semibold whitespace-nowrap bg-slate-50">${rankBadge}</td>`;
                     }
                 }
                 html += `</tr>`;
@@ -770,21 +766,17 @@ require_once '../components/header.php';
                 html += `</tr>`;
 
                 // Baris Peringkat
-                html += `<tr class="bg-amber-50/60 font-semibold rank-row">
-                            <td class="p-3 border-r border-border-main font-bold text-amber-900 sticky left-0 z-10 bg-amber-100/90 shadow-xs">PERINGKAT SISWA</td>
+                html += `<tr class="bg-slate-50/80 font-semibold rank-row">
+                            <td class="p-3 border-r border-border-main font-bold text-primary sticky left-0 z-10 bg-slate-100 shadow-xs">PERINGKAT SISWA</td>
                             <td class="p-2.5 border-r border-border-main text-center text-text-muted">-</td>`;
                 studentsToRender.forEach(stu => {
                     const st = studentStats[stu.id] || { rank: null };
                     let rankBadge = '<span class="text-slate-400 font-normal">-</span>';
                     if (st.rank !== null) {
-                        if (st.rank === 1) {
-                            rankBadge = `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full font-bold text-xs bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs">🥇 1</span>`;
-                        } else if (st.rank === 2) {
-                            rankBadge = `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full font-bold text-xs bg-slate-200 text-slate-800 border border-slate-300 shadow-2xs">🥈 2</span>`;
-                        } else if (st.rank === 3) {
-                            rankBadge = `<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full font-bold text-xs bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">🥉 3</span>`;
+                        if (st.rank <= 3) {
+                            rankBadge = `<span class="inline-flex items-center justify-center min-w-[24px] px-1.5 py-0.5 rounded font-bold text-xs bg-primary-subtle text-primary border border-primary/20">${st.rank}</span>`;
                         } else {
-                            rankBadge = `<span class="font-bold text-text-main text-xs px-2 py-0.5 rounded bg-white border border-slate-200">${st.rank}</span>`;
+                            rankBadge = `<span class="inline-flex items-center justify-center min-w-[24px] px-1.5 py-0.5 rounded text-xs font-medium text-text-muted bg-white border border-slate-200">${st.rank}</span>`;
                         }
                     }
                     html += `<td class="p-2.5 border-r border-border-main text-center whitespace-nowrap">${rankBadge}</td>`;
@@ -942,16 +934,16 @@ require_once '../components/header.php';
 
         let detailHtml = '';
         if (hasHiddenMapel) {
-            detailHtml += `<p>🙈 <b>Mapel disembunyikan:</b> ${sortMapel.hidden.map(m => m.nama_mapel).join(', ')}</p>`;
+            detailHtml += `<p><b>Mapel tidak ditampilkan:</b> ${sortMapel.hidden.map(m => m.nama_mapel).join(', ')}</p>`;
         }
         if (hasHiddenSiswa) {
-            detailHtml += `<p>🙈 <b>Siswa disembunyikan:</b> ${sortSiswa.hidden.map(s => s.nama).join(', ')}</p>`;
+            detailHtml += `<p><b>Siswa tidak ditampilkan:</b> ${sortSiswa.hidden.map(s => s.nama).join(', ')}</p>`;
         }
         if (hasUnmatchedMapel && sortMapel.unmatched.length > 0) {
-            detailHtml += `<p class="text-rose-700">⚠️ <b>Mapel tidak ditemukan di database:</b> ${sortMapel.unmatched.join(', ')}</p>`;
+            detailHtml += `<p class="text-rose-700"><b>Mapel tidak ditemukan di database:</b> ${sortMapel.unmatched.join(', ')}</p>`;
         }
         if (hasUnmatchedSiswa && sortSiswa.unmatched.length > 0) {
-            detailHtml += `<p class="text-rose-700">⚠️ <b>Siswa tidak ditemukan di database:</b> ${sortSiswa.unmatched.join(', ')}</p>`;
+            detailHtml += `<p class="text-rose-700"><b>Siswa tidak ditemukan di database:</b> ${sortSiswa.unmatched.join(', ')}</p>`;
         }
         detailEl.innerHTML = detailHtml;
     }
@@ -1000,8 +992,8 @@ require_once '../components/header.php';
         if (!hasHidden && !hasUnmatched) {
             Swal.fire({
                 icon: 'success',
-                title: 'Urutan Disesuaikan & Disimpan',
-                text: 'Urutan tabel berhasil disesuaikan dan tersimpan permanen di peramban ini.',
+                title: 'Urutan Berhasil Diterapkan',
+                text: 'Urutan tampilan tabel telah diperbarui dan disimpan.',
                 timer: 1500,
                 showConfirmButton: false
             });
@@ -1011,7 +1003,7 @@ require_once '../components/header.php';
             
             if (sortMapel.hidden.length > 0) {
                 msgHtml += `<div class="bg-amber-50 p-2.5 rounded-lg border border-amber-200 text-amber-900">
-                    <p class="font-bold">🙈 ${sortMapel.hidden.length} Mapel Disembunyikan:</p>
+                    <p class="font-bold">${sortMapel.hidden.length} Mapel Tidak Ditampilkan:</p>
                     <p class="mt-0.5 text-[11px] leading-relaxed">${sortMapel.hidden.map(m => m.nama_mapel).join(', ')}</p>
                 </div>`;
             }
@@ -1021,14 +1013,14 @@ require_once '../components/header.php';
                     ? sortSiswa.hidden.map(s => s.nama).join(', ')
                     : sortSiswa.hidden.slice(0, 6).map(s => s.nama).join(', ') + ` <i>dan ${sortSiswa.hidden.length - 6} lainnya</i>`;
                 msgHtml += `<div class="bg-amber-50 p-2.5 rounded-lg border border-amber-200 text-amber-900">
-                    <p class="font-bold">🙈 ${sortSiswa.hidden.length} Siswa Disembunyikan:</p>
+                    <p class="font-bold">${sortSiswa.hidden.length} Siswa Tidak Ditampilkan:</p>
                     <p class="mt-0.5 text-[11px] leading-relaxed">${listStr}</p>
                 </div>`;
             }
 
             if (sortMapel.unmatched.length > 0) {
                 msgHtml += `<div class="bg-rose-50 p-2.5 rounded-lg border border-rose-200 text-rose-900">
-                    <p class="font-bold">⚠️ ${sortMapel.unmatched.length} Mapel Tidak Cocok di Database:</p>
+                    <p class="font-bold">${sortMapel.unmatched.length} Mapel Tidak Cocok di Database:</p>
                     <p class="mt-0.5 text-[11px] leading-relaxed">${sortMapel.unmatched.join(', ')}</p>
                 </div>`;
             }
@@ -1038,7 +1030,7 @@ require_once '../components/header.php';
                     ? sortSiswa.unmatched.join(', ')
                     : sortSiswa.unmatched.slice(0, 6).join(', ') + ` <i>dan ${sortSiswa.unmatched.length - 6} lainnya</i>`;
                 msgHtml += `<div class="bg-rose-50 p-2.5 rounded-lg border border-rose-200 text-rose-900">
-                    <p class="font-bold">⚠️ ${sortSiswa.unmatched.length} Siswa Tidak Cocok di Database:</p>
+                    <p class="font-bold">${sortSiswa.unmatched.length} Siswa Tidak Cocok di Database:</p>
                     <p class="mt-0.5 text-[11px] leading-relaxed">${unStr}</p>
                 </div>`;
             }
@@ -1121,8 +1113,8 @@ require_once '../components/header.php';
                     const badgeId = (id === 'urutSiswa') ? 'badgeTransposeSiswa' : 'badgeTransposeMapel';
                     const badge = document.getElementById(badgeId);
                     if (badge) {
-                        badge.textContent = `✓ ${items.length} data otomatis ditranspose ke bawah!`;
-                        badge.className = 'text-[10px] font-bold text-emerald-600';
+                        badge.textContent = `${items.length} data disesuaikan otomatis`;
+                        badge.className = 'text-[10px] font-semibold text-emerald-700';
                         setTimeout(() => {
                             badge.textContent = 'Mendukung tempel horizontal';
                             badge.className = 'text-[10px] text-text-muted';
@@ -1157,8 +1149,8 @@ require_once '../components/header.php';
             Swal.fire({
                 icon: 'success',
                 title: 'Nilai Berhasil Disalin',
-                text: 'Data angka murni siap ditempel ke aplikasi atau lembar kerja lain.',
-                timer: 2000,
+                text: 'Data nilai telah disalin ke papan klip (clipboard).',
+                timer: 1500,
                 showConfirmButton: false
             });
         });
